@@ -1,3 +1,6 @@
+repository:
+  default_branch: main
+
 branches:
   - name: main
     protection:
