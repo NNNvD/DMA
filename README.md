@@ -1,30 +1,30 @@
-# Dungeon Master Assistant (DMA)
+# 🐉 Dungeon Master Assistant (DMA)
 
-The Dungeon Master Assistant (DMA) is an LLM-powered co-DM for tabletop RPGs.
+The Dungeon Master Assistant (DMA) is an LLM-powered co-DM for tabletop RPGs, ready to join your party with spellbooks, maps, and quick rulings.
 
 It ingests:
 
-- Rulebooks and compendia for the chosen system
-- Campaign text, images, and maps
-- Party character sheets and DM notes
+- 📜 Rulebooks and compendia for the chosen system
+- 🗺️ Campaign text, images, and maps
+- 🧙‍♂️ Party character sheets and DM notes
 
 It then assists the DM in **three stages**:
 
-1. **Overall Campaign Preparation**  
+1. **Overall Campaign Preparation**
    Build a structured understanding of rules, world, factions, NPCs, and party backstories, including house rules and table conventions.
 
-2. **Per-Session Preparation**  
+2. **Per-Session Preparation**
    Generate session recaps, surface unresolved hooks, design encounters and scenes, and check continuity.
 
-3. **Real-Time Session Assistance**  
+3. **Real-Time Session Assistance**
    Provide fast, rules-aware, context-aware support during play (rules lookups, improv NPCs, continuity reminders, pacing suggestions) with low latency and high reliability.
 
 The DMA is *not* meant to replace the DM. It acts as a quiet, knowledgeable assistant that:
 
-- Knows the rules and the campaign
-- Helps with organization and prep
-- Supports improvisation and consistency during sessions
-- Minimizes latency and API costs
+- 🧭 Knows the rules and the campaign
+- 📂 Helps with organization and prep
+- 🎭 Supports improvisation and consistency during sessions
+- ⚡ Minimizes latency and API costs
 
 For a detailed description of goals and functionality, see:
 
@@ -35,31 +35,31 @@ For a detailed description of goals and functionality, see:
 - [`docs/05-roadmap-and-milestones.md`](docs/05-roadmap-and-milestones.md)
 - [`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md)
 
-## High-Level Features
+## ✨ High-Level Features
 
 At maturity, the DMA should support:
 
-- **Rules Engine (RAG-based)**  
-  - Ingest rulebooks and compendia  
+- **Rules Engine (RAG-based)** 🧾
+  - Ingest rulebooks and compendia
   - Answer rules questions with citations and “strict mode” (no hallucinations when unsure)
 
-- **Campaign Model**  
-  - Structured representation of locations, NPCs, factions, timelines, secrets, and world state  
+- **Campaign Model** 🏰
+  - Structured representation of locations, NPCs, factions, timelines, secrets, and world state
   - Party and PC backstory integration
 
-- **Prep Tools**  
-  - Session recaps based on logs/notes  
-  - Suggest likely player directions and prepare branches  
-  - Encounter and scene generation, tuned to party and campaign tone  
+- **Prep Tools** 📓
+  - Session recaps based on logs/notes
+  - Suggest likely player directions and prepare branches
+  - Encounter and scene generation, tuned to party and campaign tone
   - Consistency checks and hook surfacing
 
-- **Live Session Tools**  
-  - Fast rules lookups and rulings consistent with house rules  
-  - On-the-fly NPCs, descriptions, rumors, and small encounters  
-  - Continuity and name recall (“What was the innkeeper’s name?”)  
+- **Live Session Tools** 🗡️
+  - Fast rules lookups and rulings consistent with house rules
+  - On-the-fly NPCs, descriptions, rumors, and small encounters
+  - Continuity and name recall (“What was the innkeeper’s name?”)
   - Pacing and tension suggestions
 
-## Development Approach
+## 🛠️ Development Approach
 
 This repository is designed to be compatible with human developers and coding agents (e.g., OpenAI’s coding agent “Codex”). The **docs** directory contains:
 
@@ -69,7 +69,7 @@ This repository is designed to be compatible with human developers and coding ag
 - A phased roadmap  
 - Testing, debugging, linting, benchmarking, and integration-testing guidelines per phase
 
-## Getting Started (for Developers / Agents)
+## 🚪 Getting Started (for Developers / Agents)
 
 1. Clone this repository into GitHub.
 2. Decide on the primary implementation stack (e.g., Python backend + React frontend, or Node.js + VTT plugin).
@@ -81,6 +81,6 @@ This repository is designed to be compatible with human developers and coding ag
    - Phase 5: Hardening & Polish
 4. After each phase, follow the relevant testing and QA steps in [`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md).
 
-## Contributing
+## 🤝 Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md).
