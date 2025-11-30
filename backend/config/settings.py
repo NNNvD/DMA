@@ -28,6 +28,13 @@ class Settings(BaseSettings):
         "http://localhost:5173",
     ])
 
+    # MapTool integration
+    maptool_base_url: str = "http://localhost:5000/api"
+    maptool_username: Optional[str] = None
+    maptool_password: Optional[str] = None
+    maptool_timeout_seconds: float = 10.0
+    maptool_max_retries: int = 3
+
 
 settings = Settings()
 
