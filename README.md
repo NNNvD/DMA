@@ -84,3 +84,7 @@ This repository is designed to be compatible with human developers and coding ag
 ## 🤝 Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## 🔌 MapTool integration
+
+The backend includes an adapter for syncing map state with MapTool. Configure the base URL and credentials via environment variables (`MAPTOOL_BASE_URL`, `MAPTOOL_USERNAME`, `MAPTOOL_PASSWORD`, `MAPTOOL_TIMEOUT_SECONDS`, `MAPTOOL_MAX_RETRIES`) and use the `/api/maptool` routes to pull map state or push token updates. See [`docs/maptool-sync.md`](docs/maptool-sync.md) for details.

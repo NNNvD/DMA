@@ -9,6 +9,7 @@ from backend.services.scheduler import scheduler
 from backend.api.routes.documents import router as documents_router
 from backend.api.routes.admin import router as admin_router
 from backend.api.routes.context import router as context_router
+from backend.api.routes.maptool import router as maptool_router
 from backend.api.errors import install_exception_handlers
 
 
@@ -69,3 +70,4 @@ async def health():
 app.include_router(documents_router, prefix="/api/documents", tags=["documents"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 app.include_router(context_router, prefix="/api/context", tags=["context"])
+app.include_router(maptool_router, prefix="/api/maptool", tags=["maptool"])
