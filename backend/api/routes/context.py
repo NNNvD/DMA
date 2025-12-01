@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
