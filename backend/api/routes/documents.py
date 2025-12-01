@@ -1,4 +1,4 @@
-from typing import Optional, List, Any
+from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +10,14 @@ from backend.services.embedding_service import embedding_service
 
 
 router = APIRouter()
+
+
+class PaginatedResponse(BaseModel):
+    items: List[Any]
+    total: int
+    page: int
+    page_size: int
+    pages: int
 
 
 class DocumentCreate(BaseModel):
@@ -132,13 +140,6 @@ async def update_document(doc_id: int, payload: DocumentUpdate, db: AsyncSession
         emb = await embedding_service.generate_embedding(text)
         if emb:
             doc.embedding = emb
-
-class PaginatedResponse(BaseModel):
-    items: List[Any]
-    total: int
-    page: int
-    page_size: int
-    pages: int
 
     await db.commit()
     await db.refresh(doc)

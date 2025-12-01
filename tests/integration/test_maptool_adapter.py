@@ -2,7 +2,6 @@ from typing import Dict
 
 import asyncio
 import httpx
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 

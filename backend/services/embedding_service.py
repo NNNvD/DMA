@@ -59,7 +59,8 @@ class EmbeddingService:
                 out, idx = [], 0
                 for t in texts:
                     if t and t.strip():
-                        out.append(embs[idx]); idx += 1
+                        out.append(embs[idx])
+                        idx += 1
                     else:
                         out.append(None)
                 return out
@@ -68,7 +69,8 @@ class EmbeddingService:
                 out, idx = [], 0
                 for t in texts:
                     if t and t.strip():
-                        out.append(embs[idx].tolist()); idx += 1
+                        out.append(embs[idx].tolist())
+                        idx += 1
                     else:
                         out.append(None)
                 return out
