@@ -46,32 +46,33 @@ This roadmap is structured into five phases. Each phase has:
 - Allow ingestion and updating of:
   - Campaign notes
   - Maps (with metadata)
-  - NPCs, factions, and timelines
-  - PC sheets and backstories
+  - NPCs, factions, timelines, calendars, and environmental cycles
+  - PC sheets and backstories (including languages and scripts)
 
 ### Deliverables
 
 - Schema definitions for:
-  - PCs, NPCs, factions, locations, artifacts, events.
+  - PCs, NPCs, factions, locations, artifacts, events, calendars, and holidays.
 - APIs or tools to:
   - Import campaign texts and notes.
   - Parse PC character sheets into structured form.
-  - Link PCs to hooks and factions.
+  - Link PCs to hooks, factions, languages, and locations.
 - Interfaces to:
-  - Query campaign entities by name or relationship.
+  - Query campaign entities by name, relationship, language, or location.
 - Persistence layer:
-  - Database or files for world/party state.
+  - Database or files for world/party state, magic item registry, and shop/service indexes.
 
 ### Build Requirements
 
 - Data model design and implementation.
 - Tools for:
-  - Tagging entities in text.
-  - Updating world state after each session.
+  - Tagging entities, languages, and time references in text.
+  - Updating world state after each session, including item ownership and calendars.
 - Minimal UI:
   - World overview.
   - NPC list.
-  - PC dossiers.
+  - PC dossiers (with language capabilities and notable items).
+  - Calendar and shop/service views.
 
 ---
 
@@ -86,6 +87,7 @@ This roadmap is structured into five phases. Each phase has:
   - Encounter and scene design
   - Hook surfacing
   - Prop generation
+  - Time and calendar tracking
 
 ### Deliverables
 
@@ -97,8 +99,9 @@ This roadmap is structured into five phases. Each phase has:
   - Session outlines (scenes, branches)
   - Encounters and stat bundles
   - Props/handouts
+  - Time and calendar summaries (current day, season, upcoming events)
 - Continuity checker:
-  - Flags contradictions and unresolved hooks.
+  - Flags contradictions, unresolved hooks, unclaimed loot, and time-sensitive events.
 
 ### Build Requirements
 

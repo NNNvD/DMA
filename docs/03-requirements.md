@@ -18,26 +18,31 @@ This document combines functional and non-functional requirements, including key
 
 2. **Campaign and Party Modeling**
    - Extract and maintain structured data on:
-     - Locations, NPCs, factions, timelines, secrets.
+     - Locations, NPCs, factions, timelines, secrets, and calendars.
+     - Environmental cycles (seasons, moons) and culturally important holidays or festivals.
+     - Economic locations such as shops, markets, taverns, and guildhalls with owners and typical offerings.
    - Parse and store:
-     - PC character sheets and backstories.
+     - PC character sheets and backstories, including known languages and scripts.
    - Track:
-     - World state changes.
+     - World state changes, including where key NPCs, factions, and items currently are.
      - PC/NPC relationships and arcs.
+     - Ownership and location of notable magic items or artifacts.
+     - Versioned history of PC sheets and level progression.
 
 3. **Session Preparation**
    - Generate:
      - Recaps of previous sessions.
      - Scenario plans and likely branches.
-     - Encounters and scenes tuned to party and style.
-     - Props and handouts.
+     - Encounters and scenes tuned to party and style, including downtime and town visits.
+     - Props and handouts (letters, clues, rumors, shop inventories).
+     - Time and calendar summaries (current in-world date, upcoming holidays, weather when applicable).
    - Perform:
-     - Continuity checks and hook surfacing.
+     - Continuity checks, hook surfacing, and detection of unclaimed loot or unresolved location changes.
 
 4. **Real-Time Assistance**
    - Provide fast rules Q&A.
    - Generate improvised content on demand.
-   - Provide continuity and recall assistance.
+   - Provide continuity and recall assistance (names, promises, language capabilities, calendars, and item/shop locations).
    - Offer pacing/tension suggestions.
 
 ---
