@@ -1,6 +1,14 @@
+from __future__ import annotations
+
+from typing import List, TYPE_CHECKING
+
 from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Index
+from sqlalchemy.orm import Mapped, relationship
 from datetime import datetime, timezone
 from backend.models.base import Base
+
+if TYPE_CHECKING:
+    from backend.models.chunk import DocumentChunk
 
 
 class Document(Base):
@@ -34,10 +42,13 @@ class Document(Base):
     # Vector embedding for retrieval
     embedding = Column(JSON, nullable=True)  # JSON array of floats
 
+    chunks: Mapped[List["DocumentChunk"]] = relationship(
+        "DocumentChunk", back_populates="document", cascade="all, delete-orphan", lazy="selectin"
+    )
+
     __table_args__ = (
         Index("idx_documents_kind_title", "kind", "title"),
     )
 
     def __repr__(self) -> str:
         return f"<Document(id={self.id}, kind={self.kind}, title={self.title[:40]!r})>"
-

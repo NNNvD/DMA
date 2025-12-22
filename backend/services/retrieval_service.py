@@ -1,7 +1,11 @@
 from typing import List, Dict, Any, Optional, Tuple
+
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select, desc
+
 from backend.models.document import Document
+from backend.models.chunk import DocumentChunk
 from backend.services.embedding_service import embedding_service
 
 
@@ -32,12 +36,17 @@ class RetrievalService:
         hits = sum(1 for t in terms if t in text_l)
         return hits / max(1, len(terms))
 
-    async def search_documents(self, query: str, db: AsyncSession, top_k: int = 5) -> List[Dict[str, Any]]:
+    async def search_documents(
+        self, query: str, db: AsyncSession, top_k: int = 5
+    ) -> List[Dict[str, Any]]:
         terms = self._expand_query(query)
 
         # Prefer docs with embeddings; fetch a candidate pool
         result = await db.execute(
-            select(Document).order_by(desc(Document.updated_at)).limit(500)
+            select(Document)
+            .options(selectinload(Document.chunks))
+            .order_by(desc(Document.updated_at))
+            .limit(500)
         )
         docs = result.scalars().all()
 
@@ -46,14 +55,13 @@ class RetrievalService:
 
         scored: List[Tuple[float, Document]] = []
         for d in docs:
-            kscore = self._keyword_score((d.title or "") + "\n" + (d.summary or "") + "\n" + (d.content or ""), terms)
-            escore = 0.0
-            if q_emb and isinstance(d.embedding, list) and d.embedding:
-                try:
-                    escore = embedding_service.compute_similarity(q_emb, d.embedding)
-                except Exception:
-                    escore = 0.0
-            score = self.weight_embedding * escore + self.weight_keyword * kscore
+            kscore = self._keyword_score(
+                (d.title or "") + "\n" + (d.summary or "") + "\n" + (d.content or ""),
+                terms,
+            )
+            escore = self._embedding_score(q_emb, d.embedding)
+            cscore = self._best_chunk_score(q_emb, terms, d.chunks or [])
+            score = self.weight_embedding * max(escore, cscore) + self.weight_keyword * kscore
             if score > 0:
                 scored.append((score, d))
 
@@ -64,6 +72,25 @@ class RetrievalService:
             for s, d in top
         ]
 
+    def _embedding_score(self, query_emb: Optional[List[float]], candidate_emb: Optional[List[float]]) -> float:
+        if not query_emb or not candidate_emb or not isinstance(candidate_emb, list):
+            return 0.0
+        try:
+            return embedding_service.compute_similarity(query_emb, candidate_emb)
+        except Exception:
+            return 0.0
+
+    def _best_chunk_score(
+        self, query_emb: Optional[List[float]], terms: List[str], chunks: List[DocumentChunk]
+    ) -> float:
+        if not chunks:
+            return 0.0
+        best = 0.0
+        for chunk in chunks:
+            kscore = self._keyword_score(chunk.content, terms)
+            escore = self._embedding_score(query_emb, chunk.embedding)
+            best = max(best, 0.6 * escore + 0.4 * kscore)
+        return best
+
 
 retrieval_service = RetrievalService()
-
