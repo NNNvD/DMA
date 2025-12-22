@@ -1,9 +1,14 @@
-from typing import List
+from __future__ import annotations
+
+from typing import List, TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Index
 from sqlalchemy.orm import Mapped, relationship
 from datetime import datetime, timezone
 from backend.models.base import Base
+
+if TYPE_CHECKING:
+    from backend.models.chunk import DocumentChunk
 
 
 class Document(Base):

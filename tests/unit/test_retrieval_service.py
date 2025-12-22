@@ -1,8 +1,6 @@
 import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 from backend.models.base import Base
 from backend.models.document import Document
@@ -54,4 +52,3 @@ def test_retrieval_prefers_chunk_hits_when_embeddings_disabled():
         assert results[0]["document"]["id"] == doc_id
     finally:
         asyncio.run(engine.dispose())
-
