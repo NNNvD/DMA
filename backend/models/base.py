@@ -23,6 +23,11 @@ async_session_maker = async_sessionmaker(
 
 async def init_db():
     """Create database tables for all registered models."""
+    # Import models to ensure metadata is populated before create_all
+    import backend.models.document  # noqa: F401
+    import backend.models.context  # noqa: F401
+    import backend.models.chunk  # noqa: F401
+
     async with engine.begin() as conn:
         logger.info("Initializing DMA database tables…")
         await conn.run_sync(Base.metadata.create_all)
@@ -40,4 +45,3 @@ async def get_db() -> AsyncSession:
             raise
         finally:
             await session.close()
-
