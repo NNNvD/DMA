@@ -1,0 +1,101 @@
+[
+  {
+    "query": "What area does fireball affect?",
+    "expected_kind": "rule",
+    "expected_doc_id": "example-spells-fireball-invisibility-shield",
+    "expected_snippet": "20-foot burst",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "What happens when a creature is invisible?",
+    "expected_kind": "rule",
+    "expected_doc_id": "conditions-invisibility-and-prone",
+    "expected_snippet": "undetected",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "Who can I grapple?",
+    "expected_kind": "rule",
+    "expected_doc_id": "grapple-and-attack-trait",
+    "expected_snippet": "no more than one size larger",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "When does Reactive Strike happen?",
+    "expected_kind": "rule",
+    "expected_doc_id": "movement-and-reactive-strike",
+    "expected_snippet": "uses a manipulate action, uses a move action",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "What does lesser cover do?",
+    "expected_kind": "rule",
+    "expected_doc_id": "cover-and-visibility",
+    "expected_snippet": "+1 circumstance bonus to AC",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "How far can I move on my turn with Stride?",
+    "expected_kind": "rule",
+    "expected_doc_id": "movement-and-reactive-strike",
+    "expected_snippet": "move up to your Speed",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "What does prone do?",
+    "expected_kind": "rule",
+    "expected_doc_id": "conditions-invisibility-and-prone",
+    "expected_snippet": "off-guard and take a –2 circumstance penalty to attack rolls",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "What is needed to cast a spell?",
+    "expected_kind": "rule",
+    "expected_doc_id": "spellcasting-basics",
+    "expected_snippet": "number of actions required",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "How many actions do I get on my turn?",
+    "expected_kind": "rule",
+    "expected_doc_id": "combat-basics",
+    "expected_snippet": "3 actions and 1 reaction",
+    "category": "rules_retrieval"
+  },
+  {
+    "query": "How does underwater basket weaving work?",
+    "expected_strict_abstain": true,
+    "category": "strict_mode_abstention"
+  },
+  {
+    "query": "What are the tax laws of the Moon Kingdom?",
+    "expected_strict_abstain": true,
+    "category": "strict_mode_abstention"
+  },
+  {
+    "query": "What bonus does the Ruby Crown of Ashes give?",
+    "expected_strict_abstain": true,
+    "category": "strict_mode_abstention"
+  },
+  {
+    "query": "What does fireball do?",
+    "expected_kind": "rule",
+    "expected_doc_id": "example-spells-fireball-invisibility-shield",
+    "expected_snippet": "20-foot burst",
+    "category": "decoy_resistance"
+  },
+  {
+    "query": "Tell me the rule for invisibility.",
+    "expected_kind": "rule",
+    "expected_doc_id": "conditions-invisibility-and-prone",
+    "expected_snippet": "undetected",
+    "category": "decoy_resistance"
+  },
+  {
+    "query": "What are the grapple rules?",
+    "expected_kind": "rule",
+    "expected_doc_id": "grapple-and-attack-trait",
+    "expected_snippet": "Athletics check against the target’s Fortitude DC",
+    "category": "decoy_resistance"
+  }
+]

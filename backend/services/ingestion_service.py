@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional, Sequence
 
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.models.document import Document
@@ -111,7 +112,9 @@ class IngestionService:
         await db.refresh(document)
         return document
 
-    async def _attach_chunks(self, document: Document, chunks: Sequence[str], db: AsyncSession) -> None:
+    async def _attach_chunks(
+        self, document: Document, chunks: Sequence[str], db: AsyncSession
+    ) -> None:
         if not chunks:
             return
         embeddings = await self._maybe_embed_chunks(chunks)
@@ -126,15 +129,29 @@ class IngestionService:
             db.add(doc_chunk)
         await db.flush()
 
+    async def refresh_document(
+        self, db: AsyncSession, document: Document, *, rechunk: bool = False
+    ) -> Document:
+        if rechunk:
+            await db.execute(
+                delete(DocumentChunk).where(DocumentChunk.document_id == document.id)
+            )
+            await db.flush()
+            chunks = self.chunk_strategy.chunk(document.content or "")
+            await self._attach_chunks(document, chunks, db)
+
+        await self._maybe_embed_document(document)
+        await db.commit()
+        await db.refresh(document)
+        return document
+
     async def _maybe_embed_document(self, document: Document) -> None:
-        if embedding_service.provider == "disabled":
-            return
         text = embedding_service.create_document_text(document.__dict__)
         document.embedding = await embedding_service.generate_embedding(text)
 
-    async def _maybe_embed_chunks(self, chunks: Sequence[str]) -> List[Optional[List[float]]]:
-        if embedding_service.provider == "disabled":
-            return [None] * len(chunks)
+    async def _maybe_embed_chunks(
+        self, chunks: Sequence[str]
+    ) -> List[Optional[List[float]]]:
         if not chunks:
             return []
         # Batch for efficiency

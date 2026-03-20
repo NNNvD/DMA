@@ -11,8 +11,13 @@ This repository uses a lightweight hybrid retrieval approach suitable for DMA:
 
 Endpoints and services:
 - Service: `backend/services/retrieval_service.py` (`search_documents`)
+- Rules Q&A: `backend/services/rules_service.py`
 - Embeddings: `backend/services/embedding_service.py` (OpenAI or local)
 - Data model: `backend/models/document.py`
+- API:
+  - `POST /api/documents` ingests documents and stores chunks
+  - `GET /api/documents/search` returns ranked retrieval results
+  - `POST /api/documents/rules/query` returns a retrieval-backed answer with citations
 
 Next steps:
 - Replace heuristic expansion with LLM-backed query rewriting when keys are available.

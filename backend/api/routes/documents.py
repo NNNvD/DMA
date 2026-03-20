@@ -1,12 +1,18 @@
 from typing import Any, List, Optional
+from time import perf_counter
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 
 from backend.models.base import get_db
 from backend.models.document import Document
-from backend.services.embedding_service import embedding_service
+from backend.services.ingestion_service import ingestion_service
+from backend.services.metrics_service import metrics_service
+from backend.services.retrieval_service import retrieval_service
+from backend.services.rules_service import rules_service
 
 
 router = APIRouter()
@@ -37,6 +43,17 @@ class DocumentUpdate(BaseModel):
     source_name: Optional[str] = None
     url: Optional[str] = None
     refresh_embedding: Optional[bool] = None
+
+
+class RulesQueryRequest(BaseModel):
+    query: str
+    top_k: int = 3
+    strict: bool = False
+
+
+class SearchQueryResponse(BaseModel):
+    query: str
+    results: List[Any]
 
 
 def _to_dict(d: Document):
@@ -82,9 +99,68 @@ async def list_documents(
     res = await db.execute(stmt)
     docs = res.scalars().all()
     payload = PaginatedResponse(
-        items=[_to_dict(d) for d in docs], total=total, page=page, page_size=page_size, pages=pages
+        items=[_to_dict(d) for d in docs],
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
     ).model_dump()
     return payload
+
+
+@router.get("/search", response_model=SearchQueryResponse)
+async def search_documents(
+    q: str = Query(min_length=1),
+    kind: Optional[str] = Query(default=None),
+    top_k: int = Query(default=5, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+):
+    start = perf_counter()
+    response_payload = None
+    success = False
+    try:
+        results = await retrieval_service.search_documents(
+            q, db, top_k=top_k, kind=kind
+        )
+        response_payload = {"query": q, "results": results}
+        success = True
+        return response_payload
+    finally:
+        metrics_service.record(
+            "documents.search",
+            latency_ms=(perf_counter() - start) * 1000,
+            input_tokens=metrics_service.estimate_tokens(
+                {"q": q, "kind": kind, "top_k": top_k}
+            ),
+            output_tokens=metrics_service.estimate_tokens(response_payload),
+            success=success,
+            token_source="estimated",
+        )
+
+
+@router.post("/rules/query")
+async def query_rules(payload: RulesQueryRequest, db: AsyncSession = Depends(get_db)):
+    start = perf_counter()
+    response_payload = None
+    success = False
+    try:
+        response_payload = await rules_service.answer_question(
+            payload.query,
+            db,
+            top_k=payload.top_k,
+            strict=payload.strict,
+        )
+        success = True
+        return response_payload
+    finally:
+        metrics_service.record(
+            "rules.query",
+            latency_ms=(perf_counter() - start) * 1000,
+            input_tokens=metrics_service.estimate_tokens(payload.model_dump()),
+            output_tokens=metrics_service.estimate_tokens(response_payload),
+            success=success,
+            token_source="estimated",
+        )
 
 
 @router.get("/{doc_id}")
@@ -98,51 +174,67 @@ async def get_document(doc_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("")
 async def create_document(payload: DocumentCreate, db: AsyncSession = Depends(get_db)):
-    doc = Document(
-        title=payload.title,
-        kind=payload.kind,
-        content=payload.content,
-        summary=payload.summary,
-        source_name=payload.source_name,
-        url=payload.url,
-    )
-    db.add(doc)
-    await db.flush()
-
-    # Optionally compute embedding
-    if embedding_service.provider != "disabled":
-        text = embedding_service.create_document_text(doc.__dict__)
-        emb = await embedding_service.generate_embedding(text)
-        if emb:
-            doc.embedding = emb
-
-    await db.commit()
-    await db.refresh(doc)
-    return _to_dict(doc)
+    start = perf_counter()
+    response_payload = None
+    success = False
+    try:
+        response_payload = _to_dict(
+            await ingestion_service.ingest_document(
+                db,
+                title=payload.title,
+                kind=payload.kind,
+                content=payload.content,
+                summary=payload.summary,
+                source_name=payload.source_name,
+                url=payload.url,
+            )
+        )
+        success = True
+        return response_payload
+    finally:
+        metrics_service.record(
+            "documents.create",
+            latency_ms=(perf_counter() - start) * 1000,
+            input_tokens=metrics_service.estimate_tokens(
+                payload.model_dump(exclude_none=True)
+            ),
+            output_tokens=metrics_service.estimate_tokens(response_payload),
+            success=success,
+            token_source="estimated",
+        )
 
 
 @router.patch("/{doc_id}")
-async def update_document(doc_id: int, payload: DocumentUpdate, db: AsyncSession = Depends(get_db)):
-    res = await db.execute(select(Document).where(Document.id == doc_id))
+async def update_document(
+    doc_id: int, payload: DocumentUpdate, db: AsyncSession = Depends(get_db)
+):
+    res = await db.execute(
+        select(Document)
+        .options(selectinload(Document.chunks))
+        .where(Document.id == doc_id)
+    )
     doc = res.scalar_one_or_none()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
     changed_fields = []
-    for field, value in payload.model_dump(exclude_unset=True, exclude={"refresh_embedding"}).items():
+    for field, value in payload.model_dump(
+        exclude_unset=True, exclude={"refresh_embedding"}
+    ).items():
         setattr(doc, field, value)
         changed_fields.append(field)
 
-    # Recompute embedding when relevant fields changed or explicitly requested
-    should_refresh = payload.refresh_embedding or any(f in changed_fields for f in ("title", "summary", "content", "kind", "source_name"))
-    if should_refresh and embedding_service.provider != "disabled":
-        text = embedding_service.create_document_text(doc.__dict__)
-        emb = await embedding_service.generate_embedding(text)
-        if emb:
-            doc.embedding = emb
+    content_changed = "content" in changed_fields
+    should_refresh = payload.refresh_embedding or any(
+        field in changed_fields
+        for field in ("title", "summary", "content", "kind", "source_name")
+    )
+    if should_refresh:
+        await ingestion_service.refresh_document(db, doc, rechunk=content_changed)
+    else:
+        await db.commit()
+        await db.refresh(doc)
 
-    await db.commit()
-    await db.refresh(doc)
     return _to_dict(doc)
 
 

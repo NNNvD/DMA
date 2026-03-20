@@ -71,15 +71,73 @@ This repository is designed to be compatible with human developers and coding ag
 
 ## 🚪 Getting Started (for Developers / Agents)
 
-1. Clone this repository into GitHub.
-2. Decide on the primary implementation stack (e.g., Python backend + React frontend, or Node.js + VTT plugin).
-3. Implement the roadmap phases in order:
-   - Phase 1: Rules Engine & RAG
-   - Phase 2: Campaign and Party Modeling
-   - Phase 3: Prep Assistant
-   - Phase 4: Real-Time Session Assistant
-   - Phase 5: Hardening & Polish
-4. After each phase, follow the relevant testing and QA steps in [`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md).
+### Local setup
+
+```bash
+cp .env.example .env
+make install
+make db-upgrade
+make dev
+```
+
+Optional local embedding dependencies:
+
+```bash
+python3 -m pip install -r backend/requirements-local.txt
+```
+
+### Common development commands
+
+```bash
+make test
+make lint
+make format
+make format-check
+make typecheck
+make ci
+make phase1-benchmark
+```
+
+Phase 1 sign-off:
+
+```bash
+make phase1-check
+```
+
+Phase 1 benchmarking:
+
+```bash
+make phase1-benchmark
+```
+
+### Phase 1 API surface
+
+- `POST /api/documents`: ingest a document through the chunking pipeline.
+- `GET /api/documents/search?q=...`: search ingested documents.
+- `POST /api/documents/rules/query`: query rule documents with citations and optional strict mode.
+- `GET /api/admin/metrics`: inspect Phase 1 latency/token-cost summaries.
+
+### Migration workflow
+
+```bash
+# Create a migration
+make db-revision m="describe change"
+
+# Apply migrations
+make db-upgrade
+```
+
+### Delivery roadmap
+
+Implement the roadmap phases in order:
+
+- Phase 1: Rules Engine & RAG
+- Phase 2: Campaign and Party Modeling
+- Phase 3: Prep Assistant
+- Phase 4: Real-Time Session Assistant
+- Phase 5: Hardening & Polish
+
+After each phase, follow the relevant testing and QA steps in [`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md).
 
 ## 🤝 Contributing
 

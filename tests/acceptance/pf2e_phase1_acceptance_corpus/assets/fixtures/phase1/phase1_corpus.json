@@ -1,0 +1,112 @@
+[
+  {
+    "id": "combat-basics",
+    "title": "Combat Basics",
+    "kind": "rule",
+    "source_name": "Archives of Nethys (Pathfinder 2e)",
+    "url": "https://2e.aonprd.com/Rules.aspx?ID=2266",
+    "content": "In an encounter, you normally get 3 actions and 1 reaction each turn. Single actions can be taken in any order on your turn. A Strike is an attack action. If you use an action with the attack trait more than once on the same turn, you take a multiple attack penalty: your second attack takes a –5 penalty and your third or later attacks take a –10 penalty. Attacks made when it is not your turn, such as a reaction like Reactive Strike, do not take this turn’s multiple attack penalty.",
+    "source_urls": [
+      "https://2e.aonprd.com/Rules.aspx?ID=2266",
+      "https://2e.aonprd.com/Rules.aspx?ID=2188",
+      "https://2e.aonprd.com/Rules.aspx?ID=2186"
+    ]
+  },
+  {
+    "id": "spellcasting-basics",
+    "title": "Spellcasting Basics",
+    "kind": "rule",
+    "source_name": "Archives of Nethys (Pathfinder 2e)",
+    "url": "https://2e.aonprd.com/Rules.aspx?ID=259",
+    "content": "Any spell counts as a Cast a Spell activity. A spell entry tells you the number of actions required to cast it, its components, and whether it has a cost, requirement, or trigger. Spell entries can also list range, targets, area, duration, and defense information. Some spells require a spell attack roll, while others require a saving throw from the target.",
+    "source_urls": [
+      "https://2e.aonprd.com/Rules.aspx?ID=280",
+      "https://2e.aonprd.com/Rules.aspx?ID=259",
+      "https://2e.aonprd.com/Rules.aspx?ID=2263"
+    ]
+  },
+  {
+    "id": "conditions-invisibility-and-prone",
+    "title": "Conditions: Invisible and Prone",
+    "kind": "rule",
+    "source_name": "Archives of Nethys (Pathfinder 2e)",
+    "url": "https://2e.aonprd.com/Conditions.aspx",
+    "content": "Invisible means you cannot be seen. Against creatures relying on sight as their only precise sense, an invisible creature is usually undetected. Other creatures can Seek to narrow the creature’s location, making it hidden instead. Prone means you are lying on the ground. While prone, you are off-guard and take a –2 circumstance penalty to attack rolls. The only move actions you can use while prone are Crawl and Stand.",
+    "source_urls": [
+      "https://2e.aonprd.com/Conditions.aspx?ID=26",
+      "https://2e.aonprd.com/Rules.aspx?ID=2420",
+      "https://2e.aonprd.com/Conditions.aspx?ID=31"
+    ]
+  },
+  {
+    "id": "movement-and-reactive-strike",
+    "title": "Movement and Reactive Strike",
+    "kind": "rule",
+    "source_name": "Archives of Nethys (Pathfinder 2e)",
+    "url": "https://2e.aonprd.com/Actions.aspx?ID=88",
+    "content": "Stride is a move action that lets you move up to your Speed. You might need to Stride multiple times in one turn if you want to move farther. Move actions can trigger reactions during the movement, not only when the action starts. Reactive Strike is a reaction that triggers when a creature within your reach uses a manipulate action, uses a move action, makes a ranged attack, or leaves a square during a move action it is using. On a critical hit against a manipulate trigger, the action is disrupted.",
+    "source_urls": [
+      "https://2e.aonprd.com/Actions.aspx?ID=88",
+      "https://2e.aonprd.com/Rules.aspx?ID=2271",
+      "https://2e.aonprd.com/Actions.aspx?ID=2256"
+    ]
+  },
+  {
+    "id": "cover-and-visibility",
+    "title": "Cover and Visibility",
+    "kind": "rule",
+    "source_name": "Archives of Nethys (Pathfinder 2e)",
+    "url": "https://2e.aonprd.com/Rules.aspx?ID=2372",
+    "content": "Lesser cover usually comes from a creature or a light obstacle and grants a +1 circumstance bonus to AC. Standard cover grants a +2 circumstance bonus to AC, a +2 circumstance bonus to Reflex saves against area effects, and a +2 circumstance bonus to Stealth checks to Hide, Sneak, or otherwise avoid detection. If you Take Cover behind standard cover, it can become greater cover, which increases the circumstance bonus to +4.",
+    "source_urls": [
+      "https://2e.aonprd.com/Rules.aspx?ID=459",
+      "https://2e.aonprd.com/Rules.aspx?ID=2372"
+    ]
+  },
+  {
+    "id": "example-spells-fireball-invisibility-shield",
+    "title": "Example Spells: Fireball, Invisibility, and Shield",
+    "kind": "rule",
+    "source_name": "Archives of Nethys (Pathfinder 2e)",
+    "url": "https://2e.aonprd.com/Spells.aspx?ID=119",
+    "content": "Fireball explodes at a point you choose and affects creatures in a 20-foot burst, dealing fire damage with a basic Reflex save. Invisibility makes the target invisible and usually undetected; creatures can still try to find the target, making it hidden instead. At lower rank, invisibility ends after the target completes a hostile action. Shield raises a magical shield of force and counts as the Raise a Shield action, giving a +1 circumstance bonus to AC until the start of your next turn.",
+    "source_urls": [
+      "https://2e.aonprd.com/Spells.aspx?ID=119",
+      "https://2e.aonprd.com/Spells.aspx?ID=164",
+      "https://2e.aonprd.com/Spells.aspx?ID=280"
+    ]
+  },
+  {
+    "id": "grapple-and-attack-trait",
+    "title": "Grapple and the Attack Trait",
+    "kind": "rule",
+    "source_name": "Archives of Nethys (Pathfinder 2e)",
+    "url": "https://2e.aonprd.com/Actions.aspx?ID=2376",
+    "content": "To Grapple, you normally need at least one free hand, and your target must be no more than one size larger than you. You attempt an Athletics check against the target’s Fortitude DC. Grapple has the attack trait, so it counts toward your multiple attack penalty. Checks with the attack trait, including skill attacks such as Grapple, become less accurate if you use several of them on the same turn.",
+    "source_urls": [
+      "https://2e.aonprd.com/Actions.aspx?ID=2376",
+      "https://2e.aonprd.com/Rules.aspx?ID=2288"
+    ]
+  },
+  {
+    "id": "lore-fireball-tavern",
+    "title": "The Fireball Tavern",
+    "kind": "lore",
+    "source_name": "Project acceptance corpus (decoy)",
+    "content": "The Fireball Tavern is a busy inn near the south gate. Its sign shows a burst of painted flame over a kettle. Locals joke that the stew has a 20-foot aroma and a Reflex save will not help you if the cook decides to add extra pepper. Adventurers often meet there to talk about spells, explosions, and who nearly set the rafters on fire last winter."
+  },
+  {
+    "id": "lore-session-log-combat",
+    "title": "Session Log: The Grapple at the Bridge",
+    "kind": "lore",
+    "source_name": "Project acceptance corpus (decoy)",
+    "content": "At the old bridge, Mara tried to grapple the bandit captain while Deren ran for cover behind a broken cart. Someone shouted that an invisible scout was nearby, but nobody could agree where. The fight turned chaotic when a fireball went off too close to the wagon and sent smoke over the river."
+  },
+  {
+    "id": "lore-invisible-courier-rumor",
+    "title": "Rumor: The Invisible Courier",
+    "kind": "lore",
+    "source_name": "Project acceptance corpus (decoy)",
+    "content": "Dockworkers whisper about an invisible courier who carries sealed letters through the market without ever being seen. One rumor says the courier moves faster than any guard can react, then disappears into the crowd before a hand can catch a cloak or bag. Nobody agrees whether the figure is a mage, a thief, or simply a story told after dark."
+  }
+]
