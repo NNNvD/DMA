@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format format-check typecheck ci phase1-check phase1-benchmark db-revision db-upgrade
+.PHONY: help install dev test lint format format-check typecheck ci phase1-check phase1-benchmark phase2-benchmark db-revision db-upgrade
 
 PYTHON ?= python3
 UVICORN ?= uvicorn
@@ -18,6 +18,7 @@ help:
 	@echo "  make typecheck      Run MyPy"
 	@echo "  make phase1-check   Run Phase 1 acceptance checks"
 	@echo "  make phase1-benchmark  Run Phase 1 latency/token-cost benchmark"
+	@echo "  make phase2-benchmark  Run Phase 2 campaign import/query benchmark"
 	@echo "  make ci             Run local CI checks"
 	@echo "  make db-upgrade     Apply Alembic migrations"
 	@echo "  make db-revision m='message'  Create a new Alembic revision"
@@ -51,6 +52,9 @@ phase1-check: lint
 
 phase1-benchmark:
 	$(PYTHON) -m scripts.benchmark_phase1
+
+phase2-benchmark:
+	$(PYTHON) -m scripts.benchmark_phase2
 
 ci: lint format-check typecheck test
 

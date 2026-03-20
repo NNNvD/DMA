@@ -117,6 +117,8 @@ The concrete tools (e.g., `pytest` vs `jest`) depend on the chosen stack; this d
 - Measure ingestion time for:
   - A typical rulebook.
   - A modest campaign (e.g., 50–100 pages of notes).
+- Use `make phase2-benchmark` to run the sample Phase 2 campaign import/query flow against the canonical fixtures in `tests/fixtures/phase2/`.
+- Use `GET /api/admin/metrics` while exercising `/api/campaign` routes to inspect accumulated campaign latency and token/cost summaries.
 
 ---
 

@@ -1,0 +1,27 @@
+{
+  "source_id": "pc-sheet-talia-v1",
+  "entity_key": "talia-storm",
+  "name": "Talia Storm",
+  "summary": "A half-elf ranger who scouts the fogfen trails around Otari.",
+  "status": "active",
+  "tags": ["scout", "ranger"],
+  "ancestry": "Half-Elf",
+  "character_class": "Ranger",
+  "level": 4,
+  "background": "Scout",
+  "backstory": "Talia grew up in Otari and now ranges beyond the town walls to keep trade routes safe.",
+  "homeland": "Otari",
+  "languages": ["Common", "Elven", "Goblin"],
+  "notable_items": ["Stormbow", "Fogfen map"],
+  "current_location": "otari",
+  "factions": ["dawnwatch"],
+  "relationships": [
+    {
+      "target_key": "captain-mira",
+      "target_type": "npc",
+      "target_name": "Captain Mira",
+      "relationship_type": "ally_of",
+      "note": "They coordinate patrol routes around the harbor."
+    }
+  ]
+}

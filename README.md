@@ -96,6 +96,7 @@ make format-check
 make typecheck
 make ci
 make phase1-benchmark
+make phase2-benchmark
 ```
 
 Phase 1 sign-off:
@@ -110,12 +111,29 @@ Phase 1 benchmarking:
 make phase1-benchmark
 ```
 
+Phase 2 benchmarking:
+
+```bash
+make phase2-benchmark
+```
+
 ### Phase 1 API surface
 
 - `POST /api/documents`: ingest a document through the chunking pipeline.
 - `GET /api/documents/search?q=...`: search ingested documents.
 - `POST /api/documents/rules/query`: query rule documents with citations and optional strict mode.
 - `GET /api/admin/metrics`: inspect Phase 1 latency/token-cost summaries.
+
+### Phase 2 API surface
+
+- `POST /api/campaign/entities`: create or update a typed campaign entity (`pc`, `npc`, `faction`, `location`, `event`).
+- `GET /api/campaign/entities/search`: query campaign entities by name, type, relationship, or location.
+- `GET /api/campaign/entities/{entity_key}`: fetch a campaign entity by stable key.
+- `GET /api/campaign/npcs?location=...`: list NPCs tied to a location.
+- `GET /api/campaign/pcs/{entity_key}/factions`: inspect a PC's faction ties.
+- `POST /api/campaign/import/notes`: import canonical markdown campaign notes with typed `##` headings and a `## Relationships` table.
+- `POST /api/campaign/import/pc-sheet`: import a normalized JSON PC sheet.
+- `GET /api/campaign/consistency`: report duplicate-key or forbidden-cycle issues in campaign state.
 
 ### Migration workflow
 
