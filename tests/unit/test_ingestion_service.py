@@ -28,7 +28,7 @@ def test_chunk_strategy_respects_paragraphs_and_overlap():
 
     assert len(chunks) >= 2
     assert "Intro paragraph." in chunks[0]
-    assert chunks[1].startswith(chunks[0][-strategy.overlap:].strip())
+    assert chunks[1].startswith(chunks[0][-strategy.overlap :].strip())
 
 
 def test_ingest_document_creates_chunks_and_persists():
@@ -45,7 +45,9 @@ def test_ingest_document_creates_chunks_and_persists():
                 summary="Two paragraphs",
                 source_name="Core",
             )
-            result = await session.execute(select(Document).options(selectinload(Document.chunks)))
+            result = await session.execute(
+                select(Document).options(selectinload(Document.chunks))
+            )
             return result.scalars().first()
 
     try:
@@ -56,4 +58,3 @@ def test_ingest_document_creates_chunks_and_persists():
         assert stored.chunks[0].document_id == stored.id
     finally:
         asyncio.run(engine.dispose())
-

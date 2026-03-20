@@ -11,17 +11,23 @@ router = APIRouter()
 
 class MapPullRequest(BaseModel):
     map_id: str = Field(description="MapTool map identifier")
-    retries: Optional[int] = Field(default=None, ge=1, description="Override retry attempts")
+    retries: Optional[int] = Field(
+        default=None, ge=1, description="Override retry attempts"
+    )
 
 
 class MapPushRequest(BaseModel):
     map_id: str = Field(description="MapTool map identifier")
-    retries: Optional[int] = Field(default=None, ge=1, description="Override retry attempts")
+    retries: Optional[int] = Field(
+        default=None, ge=1, description="Override retry attempts"
+    )
     updates: List[MapToolTokenUpdate]
 
 
 @router.post("/pull", response_model=CampaignMapState)
-async def pull_map_state(payload: MapPullRequest, authorization: Optional[str] = Header(default=None)):
+async def pull_map_state(
+    payload: MapPullRequest, authorization: Optional[str] = Header(default=None)
+):
     try:
         return await maptool_adapter.pull_map_state(
             payload.map_id, auth_header=authorization, retries=payload.retries
@@ -31,7 +37,9 @@ async def pull_map_state(payload: MapPullRequest, authorization: Optional[str] =
 
 
 @router.post("/push")
-async def push_token_updates(payload: MapPushRequest, authorization: Optional[str] = Header(default=None)):
+async def push_token_updates(
+    payload: MapPushRequest, authorization: Optional[str] = Header(default=None)
+):
     try:
         tokens = await maptool_adapter.push_token_updates(
             map_id=payload.map_id,

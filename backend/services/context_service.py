@@ -5,7 +5,9 @@ from backend.models.context import ContextEntry
 
 
 class ContextService:
-    async def save(self, key: str, data: Dict[str, Any], db: AsyncSession) -> ContextEntry:
+    async def save(
+        self, key: str, data: Dict[str, Any], db: AsyncSession
+    ) -> ContextEntry:
         res = await db.execute(select(ContextEntry).where(ContextEntry.key == key))
         entry = res.scalar_one_or_none()
         if entry:
@@ -33,4 +35,3 @@ class ContextService:
 
 
 context_service = ContextService()
-

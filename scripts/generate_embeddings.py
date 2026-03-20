@@ -29,7 +29,9 @@ logger = logging.getLogger("generate_embeddings")
 async def generate_missing_embeddings(batch_size: int = 20, max_docs: int = 500):
     async with async_session_maker() as db:
         # Count
-        result = await db.execute(text("SELECT COUNT(*) FROM documents WHERE embedding IS NULL"))
+        result = await db.execute(
+            text("SELECT COUNT(*) FROM documents WHERE embedding IS NULL")
+        )
         total_missing = result.scalar() or 0
         logger.info("Documents missing embeddings: %s", total_missing)
         if total_missing == 0:
@@ -70,7 +72,11 @@ async def generate_missing_embeddings(batch_size: int = 20, max_docs: int = 500)
                 updated = 0
                 for doc, emb in zip(docs, embeddings):
                     if emb:
-                        doc.embedding = emb if isinstance(emb, list) else json.loads(json.dumps(emb))
+                        doc.embedding = (
+                            emb
+                            if isinstance(emb, list)
+                            else json.loads(json.dumps(emb))
+                        )
                         updated += 1
                 await db.commit()
                 processed += len(docs)

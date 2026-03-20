@@ -20,7 +20,14 @@ def test_pull_map_state_uses_authorization_header():
                 "id": "cavern",
                 "name": "Crystal Cavern",
                 "tokens": [
-                    {"id": "rogue", "name": "Rogue", "x": 2, "y": 4, "notes": "Ready", "layer": "objects"}
+                    {
+                        "id": "rogue",
+                        "name": "Rogue",
+                        "x": 2,
+                        "y": 4,
+                        "notes": "Ready",
+                        "layer": "objects",
+                    }
                 ],
                 "fog_state": "clear",
                 "light_state": "dim",
@@ -28,8 +35,12 @@ def test_pull_map_state_uses_authorization_header():
             return httpx.Response(200, json=payload)
         raise AssertionError(f"Unexpected path {request.url.path}")
 
-    adapter = MapToolAdapter(base_url="http://maptool.example", transport=httpx.MockTransport(handler))
-    result = asyncio.run(adapter.pull_map_state("cavern", auth_header="Bearer session-token"))
+    adapter = MapToolAdapter(
+        base_url="http://maptool.example", transport=httpx.MockTransport(handler)
+    )
+    result = asyncio.run(
+        adapter.pull_map_state("cavern", auth_header="Bearer session-token")
+    )
 
     assert calls["authorization"] == "Bearer session-token"
     assert result.map_id == "cavern"
@@ -88,16 +99,26 @@ def test_maptool_routes_wire_adapter(monkeypatch):
 
     async def fake_push(map_id: str, updates, auth_header=None, retries=None):
         calls["push"] += 1
-        return [MapToolToken(id="alpha", name="Alpha", x=updates[0].x or 0, y=updates[0].y or 0)]
+        return [
+            MapToolToken(
+                id="alpha", name="Alpha", x=updates[0].x or 0, y=updates[0].y or 0
+            )
+        ]
 
-    monkeypatch.setattr("backend.api.routes.maptool.maptool_adapter.pull_map_state", fake_pull)
-    monkeypatch.setattr("backend.api.routes.maptool.maptool_adapter.push_token_updates", fake_push)
+    monkeypatch.setattr(
+        "backend.api.routes.maptool.maptool_adapter.pull_map_state", fake_pull
+    )
+    monkeypatch.setattr(
+        "backend.api.routes.maptool.maptool_adapter.push_token_updates", fake_push
+    )
 
     app = FastAPI()
     app.include_router(maptool_router, prefix="/api/maptool")
     client = TestClient(app)
 
-    pull_response = client.post("/api/maptool/pull", json={"map_id": "demo"}, headers={"Authorization": "token"})
+    pull_response = client.post(
+        "/api/maptool/pull", json={"map_id": "demo"}, headers={"Authorization": "token"}
+    )
     push_response = client.post(
         "/api/maptool/push",
         json={"map_id": "demo", "updates": [{"token_id": "alpha", "x": 3, "y": 5}]},
