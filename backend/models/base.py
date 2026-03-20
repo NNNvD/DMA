@@ -1,11 +1,17 @@
 import logging
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
+
 from backend.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
+
 
 engine = create_async_engine(
     settings.database_url,
@@ -34,7 +40,7 @@ async def init_db():
         logger.info("DMA database initialized")
 
 
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Yield an async DB session for request handlers/services."""
     async with async_session_maker() as session:
         try:

@@ -1,0 +1,4 @@
+# Optional dependencies for EMBEDDING_PROVIDER=local.
+# Local sentence-transformer stacks typically require Python <= 3.12.
+sentence-transformers==3.2.1 ; python_version < '3.13'
+torch>=2.2.0 ; python_version < '3.13'

@@ -4,22 +4,23 @@ Generate embeddings for DMA documents missing vectors.
 Adapted from ainewslive pattern; targets backend.models.document.Document.
 """
 
+import logging
 import asyncio
+import json
 import os
 import sys
-import json
-import logging
 from typing import List
+
+from sqlalchemy import select, text
 
 # Ensure project root on path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from sqlalchemy import select, and_, text
-from backend.models.base import async_session_maker
-from backend.models.document import Document
-from backend.services.embedding_service import embedding_service
+from backend.models.base import async_session_maker  # noqa: E402
+from backend.models.document import Document  # noqa: E402
+from backend.services.embedding_service import embedding_service  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("generate_embeddings")
@@ -97,4 +98,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

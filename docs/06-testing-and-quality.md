@@ -72,6 +72,8 @@ The concrete tools (e.g., `pytest` vs `jest`) depend on the chosen stack; this d
 - Measure average latency for:
   - Single rules questions.
 - Track token usage per request.
+- Use `make phase1-benchmark` to run the active acceptance corpus as a lightweight benchmark.
+- Use `GET /api/admin/metrics` to inspect accumulated Phase 1 latency and token/cost summaries while exercising the API.
 
 ---
 

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
-
-from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Index
-from sqlalchemy.orm import Mapped, relationship
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+from sqlalchemy import JSON, DateTime, Index, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from backend.models.base import Base
 
 if TYPE_CHECKING:
@@ -16,23 +17,29 @@ class Document(Base):
 
     __tablename__ = "documents"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Classification and source
-    kind = Column(String(50), nullable=False, index=True)  # e.g., 'rule', 'npc', 'session_log'
-    source_name = Column(String(255), nullable=True)  # e.g., 'PHB', 'DM Notes', 'Homebrew'
+    kind: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True
+    )  # e.g., 'rule', 'npc', 'session_log'
+    source_name: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )  # e.g., 'PHB', 'DM Notes', 'Homebrew'
 
     # Content
-    title = Column(Text, nullable=False)
-    content = Column(Text, nullable=True)
-    summary = Column(Text, nullable=True)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # URL/path if applicable
-    url = Column(String(500), nullable=True, index=True)
+    url: Mapped[str | None] = mapped_column(String(500), nullable=True, index=True)
 
     # Timestamps
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
@@ -40,15 +47,18 @@ class Document(Base):
     )
 
     # Vector embedding for retrieval
-    embedding = Column(JSON, nullable=True)  # JSON array of floats
+    embedding: Mapped[list[float] | None] = mapped_column(
+        JSON, nullable=True
+    )  # JSON array of floats
 
-    chunks: Mapped[List["DocumentChunk"]] = relationship(
-        "DocumentChunk", back_populates="document", cascade="all, delete-orphan", lazy="selectin"
+    chunks: Mapped[list["DocumentChunk"]] = relationship(
+        "DocumentChunk",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
-    __table_args__ = (
-        Index("idx_documents_kind_title", "kind", "title"),
-    )
+    __table_args__ = (Index("idx_documents_kind_title", "kind", "title"),)
 
     def __repr__(self) -> str:
         return f"<Document(id={self.id}, kind={self.kind}, title={self.title[:40]!r})>"
