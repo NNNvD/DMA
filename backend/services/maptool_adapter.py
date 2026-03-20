@@ -5,6 +5,7 @@ import logging
 from typing import List, Optional
 
 import httpx
+from httpx import AsyncBaseTransport
 
 from backend.config.settings import settings
 from backend.models.maptool import (
@@ -29,7 +30,7 @@ class MapToolAdapter:
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         backoff_factor: float = 0.2,
-        transport: Optional[httpx.BaseTransport] = None,
+        transport: Optional[AsyncBaseTransport] = None,
     ) -> None:
         self.base_url = (base_url or settings.maptool_base_url).rstrip("/")
         self.username = username or settings.maptool_username
@@ -62,15 +63,23 @@ class MapToolAdapter:
         token = data.get("token") or data.get("session")
         if not token:
             raise RuntimeError("MapTool authentication response missing token")
-        self.session_token = token if str(token).startswith("Bearer") else f"Bearer {token}"
+        self.session_token = (
+            token if str(token).startswith("Bearer") else f"Bearer {token}"
+        )
         logger.debug("Authenticated to MapTool, token cached")
         return self.session_token
 
     async def fetch_map(
-        self, map_id: str, auth_header: Optional[str] = None, attempts: Optional[int] = None
+        self,
+        map_id: str,
+        auth_header: Optional[str] = None,
+        attempts: Optional[int] = None,
     ) -> MapToolMap:
         response = await self._request_with_retries(
-            "GET", f"/maps/{map_id}", headers=self._auth_headers(auth_header), attempts=attempts
+            "GET",
+            f"/maps/{map_id}",
+            headers=self._auth_headers(auth_header),
+            attempts=attempts,
         )
         return MapToolMap.model_validate(response.json())
 
@@ -86,7 +95,10 @@ class MapToolAdapter:
         return MapToolToken.model_validate(response.json())
 
     async def update_token(
-        self, map_id: str, token_update: MapToolTokenUpdate, auth_header: Optional[str] = None
+        self,
+        map_id: str,
+        token_update: MapToolTokenUpdate,
+        auth_header: Optional[str] = None,
     ) -> MapToolToken:
         response = await self._request_with_retries(
             "PATCH",
@@ -96,13 +108,19 @@ class MapToolAdapter:
         )
         return MapToolToken.model_validate(response.json())
 
-    async def delete_token(self, map_id: str, token_id: str, auth_header: Optional[str] = None) -> bool:
+    async def delete_token(
+        self, map_id: str, token_id: str, auth_header: Optional[str] = None
+    ) -> bool:
         response = await self._request_with_retries(
-            "DELETE", f"/maps/{map_id}/tokens/{token_id}", headers=self._auth_headers(auth_header)
+            "DELETE",
+            f"/maps/{map_id}/tokens/{token_id}",
+            headers=self._auth_headers(auth_header),
         )
         return response.status_code == 204
 
-    async def update_fog(self, map_id: str, fog: MapToolFogUpdate, auth_header: Optional[str] = None) -> dict:
+    async def update_fog(
+        self, map_id: str, fog: MapToolFogUpdate, auth_header: Optional[str] = None
+    ) -> dict:
         response = await self._request_with_retries(
             "PATCH",
             f"/maps/{map_id}/fog",
@@ -123,7 +141,10 @@ class MapToolAdapter:
         return response.json()
 
     async def pull_map_state(
-        self, map_id: str, auth_header: Optional[str] = None, retries: Optional[int] = None
+        self,
+        map_id: str,
+        auth_header: Optional[str] = None,
+        retries: Optional[int] = None,
     ) -> CampaignMapState:
         await self.ensure_auth(auth_header)
         map_payload = await self.fetch_map(
@@ -177,11 +198,16 @@ class MapToolAdapter:
                     timeout=self.timeout,
                     transport=self._transport,
                 ) as client:
-                    response = await client.request(method, path, json=json, headers=headers)
+                    response = await client.request(
+                        method, path, json=json, headers=headers
+                    )
                 if response.status_code >= 500:
                     response.raise_for_status()
                 return response
-            except (httpx.RequestError, httpx.HTTPStatusError) as exc:  # pragma: no cover - exercised in tests
+            except (
+                httpx.RequestError,
+                httpx.HTTPStatusError,
+            ) as exc:  # pragma: no cover - exercised in tests
                 last_error = exc
                 logger.warning(
                     "MapTool request %s %s failed on attempt %s/%s: %s",

@@ -25,7 +25,11 @@ async def restore_context(key: str, db: AsyncSession = Depends(get_db)):
     entry = await context_service.load(key, db)
     if not entry:
         raise HTTPException(status_code=404, detail="Context not found")
-    return {"key": entry.key, "data": entry.data, "updated_at": entry.updated_at.isoformat()}
+    return {
+        "key": entry.key,
+        "data": entry.data,
+        "updated_at": entry.updated_at.isoformat(),
+    }
 
 
 @router.delete("/{key}")
@@ -34,4 +38,3 @@ async def delete_context(key: str, db: AsyncSession = Depends(get_db)):
     if not ok:
         raise HTTPException(status_code=404, detail="Context not found")
     return {"deleted": True, "key": key}
-

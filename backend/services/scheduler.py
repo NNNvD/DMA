@@ -31,7 +31,10 @@ class DmaScheduler:
 
     async def reindex_embeddings(self) -> None:
         """Placeholder: regenerate embeddings for changed docs."""
-        logger.info("Running DMA embedding reindex job at %s", datetime.now(timezone.utc).isoformat())
+        logger.info(
+            "Running DMA embedding reindex job at %s",
+            datetime.now(timezone.utc).isoformat(),
+        )
         # Implement: diff documents changed since last run and refresh embeddings
 
     async def maintenance(self) -> None:
@@ -41,4 +44,3 @@ class DmaScheduler:
 
 # Singleton
 scheduler = DmaScheduler()
-

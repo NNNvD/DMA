@@ -19,7 +19,9 @@ class MapToolToken(BaseModel):
 
 class MapToolLightUpdate(BaseModel):
     mode: str = Field(default="dim")
-    intensity: Optional[float] = Field(default=None, description="Light intensity or radius")
+    intensity: Optional[float] = Field(
+        default=None, description="Light intensity or radius"
+    )
 
 
 class MapToolFogUpdate(BaseModel):
@@ -45,8 +47,8 @@ class MapToolTokenUpdate(BaseModel):
     note: Optional[str] = None
     gm_note: Optional[str] = None
 
-    def to_payload(self) -> dict:
-        payload = {}
+    def to_payload(self) -> dict[str, float | str]:
+        payload: dict[str, float | str] = {}
         if self.x is not None:
             payload["x"] = self.x
         if self.y is not None:
