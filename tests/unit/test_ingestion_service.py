@@ -28,7 +28,7 @@ def test_chunk_strategy_respects_paragraphs_and_overlap():
 
     assert len(chunks) >= 2
     assert "Intro paragraph." in chunks[0]
-    assert chunks[1].startswith(chunks[0][-strategy.overlap:].strip())
+    assert chunks[1].startswith(chunks[0][-strategy.overlap :].strip())
 
 
 def test_ingest_document_creates_chunks_and_persists():
@@ -45,7 +45,9 @@ def test_ingest_document_creates_chunks_and_persists():
                 summary="Two paragraphs",
                 source_name="Core",
             )
-            result = await session.execute(select(Document).options(selectinload(Document.chunks)))
+            result = await session.execute(
+                select(Document).options(selectinload(Document.chunks))
+            )
             return result.scalars().first()
 
     try:
@@ -57,3 +59,45 @@ def test_ingest_document_creates_chunks_and_persists():
     finally:
         asyncio.run(engine.dispose())
 
+
+def test_ingest_document_can_refresh_existing_document_by_url():
+    engine, SessionLocal = _create_in_memory_db()
+    service = IngestionService(chunk_strategy=ChunkStrategy(max_chars=40, overlap=8))
+
+    async def _run():
+        async with SessionLocal() as session:
+            first = await service.ingest_document(
+                session,
+                title="Session 12",
+                kind="session_log",
+                content="Old content",
+                summary="First pass",
+                source_name="session-logs/session-12.md",
+                url="/tmp/session-12.md",
+                dedupe_on_url=True,
+            )
+            second = await service.ingest_document(
+                session,
+                title="Session 12 Harbor Fire",
+                kind="session_log",
+                content="Updated content\n\nWith another paragraph.",
+                summary="Refreshed",
+                source_name="session-logs/session-12.md",
+                url="/tmp/session-12.md",
+                dedupe_on_url=True,
+            )
+            result = await session.execute(
+                select(Document).options(selectinload(Document.chunks))
+            )
+            documents = list(result.scalars().all())
+            return first, second, documents
+
+    try:
+        first, second, documents = asyncio.run(_run())
+        assert first.id == second.id
+        assert len(documents) == 1
+        assert documents[0].title == "Session 12 Harbor Fire"
+        assert documents[0].summary == "Refreshed"
+        assert len(documents[0].chunks) >= 1
+    finally:
+        asyncio.run(engine.dispose())

@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 from typing import List, Optional, Sequence
 
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.models.document import Document
 from backend.models.chunk import DocumentChunk
@@ -93,7 +94,22 @@ class IngestionService:
         summary: Optional[str] = None,
         source_name: Optional[str] = None,
         url: Optional[str] = None,
+        dedupe_on_url: bool = False,
     ) -> Document:
+        if dedupe_on_url and url:
+            existing = await self._get_document_by_url(db, kind=kind, url=url)
+            if existing is not None:
+                content_changed = existing.content != content
+                existing.title = title
+                existing.kind = kind
+                existing.content = content
+                existing.summary = summary
+                existing.source_name = source_name
+                existing.url = url
+                return await self.refresh_document(
+                    db, existing, rechunk=content_changed
+                )
+
         document = Document(
             title=title,
             kind=kind,
@@ -111,6 +127,18 @@ class IngestionService:
         await db.commit()
         await db.refresh(document)
         return document
+
+    async def _get_document_by_url(
+        self, db: AsyncSession, *, kind: str, url: str
+    ) -> Optional[Document]:
+        stmt = (
+            select(Document)
+            .options(selectinload(Document.chunks))
+            .where(Document.kind == kind)
+            .where(Document.url == url)
+        )
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
 
     async def _attach_chunks(
         self, document: Document, chunks: Sequence[str], db: AsyncSession

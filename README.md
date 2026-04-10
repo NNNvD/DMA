@@ -95,7 +95,10 @@ make format
 make format-check
 make typecheck
 make ci
+make phase2-check
 make phase1-benchmark
+make preview-assets
+make import-assets
 ```
 
 Phase 1 sign-off:
@@ -104,18 +107,60 @@ Phase 1 sign-off:
 make phase1-check
 ```
 
+Phase 2 sign-off:
+
+```bash
+make phase2-check
+```
+
 Phase 1 benchmarking:
 
 ```bash
 make phase1-benchmark
 ```
 
-### Phase 1 API surface
+### Phase 1-2 API surface
 
 - `POST /api/documents`: ingest a document through the chunking pipeline.
 - `GET /api/documents/search?q=...`: search ingested documents.
 - `POST /api/documents/rules/query`: query rule documents with citations and optional strict mode.
 - `GET /api/admin/metrics`: inspect Phase 1 latency/token-cost summaries.
+- `POST /api/campaign/entities`: create structured campaign entities such as locations, factions, PCs, NPCs, artifacts, calendars, holidays, shops, and events.
+- `GET /api/campaign/entities`: query campaign entities by name, relationship, language, location, owner, and active status.
+- `POST /api/campaign/import/notes`: import structured campaign notes, optionally store the raw note as a `campaign_note` document, and upsert entities plus relationships.
+- `POST /api/campaign/import/pc-sheet`: import either a raw text sheet or a Pathbuilder 2 JSON export into a versioned PC record, resolve faction/location links, and optionally create notable-item artifact records.
+- `POST /api/campaign/import/session-update`: import a structured session log, update campaign state, advance calendar state, and persist the raw log as a `session_log` document.
+- `GET /api/campaign/import/dropzone`: preview the files currently sitting in `assets/imports/*` or another import root, including parse summaries and unresolved-reference warnings.
+- `POST /api/campaign/import/batch`: batch import drop-zone files with optional `dry_run` preview mode and repeat-safe document refresh.
+- `POST /api/campaign/relationships`: link entities together for faction ties, contacts, enemies, mentors, and other campaign relationships.
+- `POST /api/campaign/entities/{id}/sheet-versions`: store versioned PC sheet updates and sync high-signal campaign details like languages, goals, and notable items.
+- `GET /api/campaign/overview`: inspect the current structured Phase 2 world/party state grouped by entity type.
+- `GET /api/campaign/pcs/{id}/dossier`: inspect a PC dossier with sheet history, owned artifacts, faction ties, and grouped relationships.
+- `GET /api/campaign/session-history`: inspect imported session logs and matching event entities as a prep-friendly history feed.
+
+### Drop-zone batch import
+
+Put source material into:
+
+- `assets/imports/pathbuilder/`
+- `assets/imports/session-logs/`
+- `assets/imports/campaign-notes/`
+
+Then preview or import everything in one pass:
+
+```bash
+make preview-assets
+make import-assets
+```
+
+Until real campaign files are available, `make phase2-check` exercises these import
+flows against deterministic fixtures.
+
+The underlying script also accepts `--root`, repeated `--category`, `--dry-run`, `--no-store-documents`, and `--stop-on-error`:
+
+```bash
+python3 -m scripts.import_campaign_assets --dry-run
+```
 
 ### Migration workflow
 

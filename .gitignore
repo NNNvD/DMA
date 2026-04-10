@@ -41,3 +41,5 @@ logs/
 .vscode/
 .idea/
 
+# Tooling scratch files
+.Rhistory
