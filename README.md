@@ -96,6 +96,7 @@ make format-check
 make typecheck
 make ci
 make phase2-check
+make phase3-check
 make phase1-benchmark
 make preview-assets
 make import-assets
@@ -111,6 +112,12 @@ Phase 2 sign-off:
 
 ```bash
 make phase2-check
+```
+
+Phase 3 sign-off:
+
+```bash
+make phase3-check
 ```
 
 Phase 1 benchmarking:
@@ -137,6 +144,7 @@ make phase1-benchmark
 - `GET /api/campaign/overview`: inspect the current structured Phase 2 world/party state grouped by entity type.
 - `GET /api/campaign/pcs/{id}/dossier`: inspect a PC dossier with sheet history, owned artifacts, faction ties, and grouped relationships.
 - `GET /api/campaign/session-history`: inspect imported session logs and matching event entities as a prep-friendly history feed.
+- `POST /api/prep/session-brief`: generate a deterministic Phase 3 prep brief from campaign state, recent session history, hooks, continuity checks, and calendar state, with optional `session_prep` document storage.
 
 ### Drop-zone batch import
 
@@ -153,8 +161,8 @@ make preview-assets
 make import-assets
 ```
 
-Until real campaign files are available, `make phase2-check` exercises these import
-flows against deterministic fixtures.
+Until real campaign files are available, `make phase2-check` and `make phase3-check`
+exercise the import and prep flows against deterministic fixtures.
 
 The underlying script also accepts `--root`, repeated `--category`, `--dry-run`, `--no-store-documents`, and `--stop-on-error`:
 
