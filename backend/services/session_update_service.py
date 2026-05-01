@@ -11,6 +11,11 @@ from backend.services.campaign_note_import_service import (
 )
 from backend.services.campaign_service import campaign_service
 from backend.services.ingestion_service import ingestion_service
+from backend.services.obsidian_markdown import (
+    extract_tags,
+    replace_wikilinks,
+    split_frontmatter,
+)
 
 
 @dataclass
@@ -30,6 +35,7 @@ class SessionUpdateService:
         document_url: Optional[str] = None,
         default_tags: Optional[list[str]] = None,
         store_document: bool = True,
+        document_governance: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         parsed_meta = self.parse_metadata(content)
         parsed_entities = self.parse_entities(content, default_tags=default_tags)
@@ -61,6 +67,7 @@ class SessionUpdateService:
                 source_name=source_name,
                 url=document_url,
                 dedupe_on_url=bool(document_url),
+                **(document_governance or {}),
             )
 
         created_entities = entity_result["summary"]["created_entities"]
@@ -112,6 +119,12 @@ class SessionUpdateService:
                     "title": stored_document.title,
                     "kind": stored_document.kind,
                     "source_name": stored_document.source_name,
+                    "source_class": stored_document.source_class,
+                    "privacy_scope": stored_document.privacy_scope,
+                    "review_status": stored_document.review_status,
+                    "visibility_scope": stored_document.visibility_scope,
+                    "rag_eligible": stored_document.rag_eligible,
+                    "train_eligible": stored_document.train_eligible,
                 }
                 if stored_document is not None
                 else None
@@ -138,11 +151,13 @@ class SessionUpdateService:
         }
 
     def parse_metadata(self, content: str) -> ParsedSessionUpdate:
+        frontmatter, body = split_frontmatter(content)
+        normalized_body = replace_wikilinks(body)
         metadata: dict[str, str] = {}
         changelog: list[str] = []
         in_changelog = False
         seen_entity_header = False
-        for raw_line in content.splitlines():
+        for raw_line in normalized_body.splitlines():
             stripped = raw_line.strip()
             if not stripped:
                 continue
@@ -163,14 +178,27 @@ class SessionUpdateService:
             if ":" in stripped:
                 key, value = stripped.split(":", 1)
                 metadata[key.strip().lower()] = value.strip()
+        for key, value in frontmatter.items():
+            normalized_key = key.strip().lower().replace("_", " ")
+            if normalized_key == "tags" or normalized_key in metadata:
+                continue
+            if isinstance(value, list):
+                metadata[normalized_key] = ", ".join(str(item) for item in value)
+            elif value is not None:
+                metadata[normalized_key] = str(value)
         return ParsedSessionUpdate(metadata=metadata, changelog=changelog)
 
     def parse_entities(
         self, content: str, *, default_tags: Optional[list[str]] = None
     ) -> list[Any]:
+        frontmatter, body = split_frontmatter(content)
+        normalized_tags = campaign_service._normalize_strings(
+            [*(default_tags or []), *extract_tags(frontmatter)]
+        )
+        normalized_body = replace_wikilinks(body)
         entity_lines: list[str] = []
         capture = False
-        for raw_line in content.splitlines():
+        for raw_line in normalized_body.splitlines():
             stripped = raw_line.strip()
             if stripped.lower() == "## changelog":
                 capture = False
@@ -183,7 +211,7 @@ class SessionUpdateService:
             return []
         return campaign_note_import_service.parse_content(
             "\n".join(entity_lines),
-            default_tags=default_tags,
+            default_tags=normalized_tags,
         )
 
     def _parse_mapping(self, value: Optional[str]) -> dict[str, Any]:

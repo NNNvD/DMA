@@ -182,3 +182,26 @@ def test_pc_sheet_parser_detects_pathbuilder_json_exports():
     assert parsed.sheet_payload["feats"] == ["Shield Block", "Double Slice"]
     assert parsed.sheet_payload["ac"]["shieldBonus"] == 2
     assert parsed.notable_items == ["Longsword", "Splint Mail", "Steel Shield"]
+
+
+def test_pc_sheet_parser_accepts_obsidian_frontmatter_and_wikilinks():
+    content = """---
+tags:
+  - vault
+  - player-safe
+---
+Name: Talia Stormborn
+Class: Ranger
+Level: 4
+Location: [[Campaign/Locations/Greyhaven|Greyhaven]]
+Factions: [[Campaign/Factions/Lantern Guild|Lantern Guild]]
+Relationships: contact -> [[Campaign/NPCs/Captain Mira|Captain Mira]]
+"""
+
+    parsed = pc_sheet_import_service.parse_content(content, default_tags=["imported"])
+
+    assert parsed.name == "Talia Stormborn"
+    assert parsed.tags == ["imported", "vault", "player-safe"]
+    assert parsed.current_location_reference == "Greyhaven"
+    assert parsed.faction_references == ["Lantern Guild"]
+    assert parsed.relationship_specs == [("contact", "Captain Mira", None)]

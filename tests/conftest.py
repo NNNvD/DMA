@@ -1,4 +1,5 @@
 """Test configuration for DMA."""
+
 import sys
 from pathlib import Path
 

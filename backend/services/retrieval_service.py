@@ -102,10 +102,30 @@ class RetrievalService:
         return hits / max(1, len(terms))
 
     async def search_documents(
-        self, query: str, db: AsyncSession, top_k: int = 5, kind: Optional[str] = None
+        self,
+        query: str,
+        db: AsyncSession,
+        top_k: int = 5,
+        kind: Optional[str] = None,
+        source_class: Optional[str] = None,
+        privacy_scope: Optional[str] = None,
+        review_status: Optional[str] = None,
+        visibility_scope: Optional[str] = None,
+        rag_eligible: Optional[bool] = None,
+        train_eligible: Optional[bool] = None,
     ) -> List[Dict[str, Any]]:
         ranked = await self._rank_documents(
-            query, db, top_k=top_k, kind=kind, include_chunks=0
+            query,
+            db,
+            top_k=top_k,
+            kind=kind,
+            include_chunks=0,
+            source_class=source_class,
+            privacy_scope=privacy_scope,
+            review_status=review_status,
+            visibility_scope=visibility_scope,
+            rag_eligible=rag_eligible,
+            train_eligible=train_eligible,
         )
         return [
             {
@@ -123,6 +143,12 @@ class RetrievalService:
         top_k: int = 5,
         kind: Optional[str] = None,
         include_chunks: int = 2,
+        source_class: Optional[str] = None,
+        privacy_scope: Optional[str] = None,
+        review_status: Optional[str] = None,
+        visibility_scope: Optional[str] = None,
+        rag_eligible: Optional[bool] = None,
+        train_eligible: Optional[bool] = None,
     ) -> List[Dict[str, Any]]:
         return await self._rank_documents(
             query,
@@ -130,6 +156,12 @@ class RetrievalService:
             top_k=top_k,
             kind=kind,
             include_chunks=include_chunks,
+            source_class=source_class,
+            privacy_scope=privacy_scope,
+            review_status=review_status,
+            visibility_scope=visibility_scope,
+            rag_eligible=rag_eligible,
+            train_eligible=train_eligible,
         )
 
     async def _rank_documents(
@@ -140,6 +172,12 @@ class RetrievalService:
         top_k: int,
         kind: Optional[str],
         include_chunks: int,
+        source_class: Optional[str],
+        privacy_scope: Optional[str],
+        review_status: Optional[str],
+        visibility_scope: Optional[str],
+        rag_eligible: Optional[bool],
+        train_eligible: Optional[bool],
     ) -> List[Dict[str, Any]]:
         terms = self._expand_query(query)
 
@@ -152,6 +190,18 @@ class RetrievalService:
         )
         if kind:
             stmt = stmt.where(Document.kind == kind)
+        if source_class:
+            stmt = stmt.where(Document.source_class == source_class)
+        if privacy_scope:
+            stmt = stmt.where(Document.privacy_scope == privacy_scope)
+        if review_status:
+            stmt = stmt.where(Document.review_status == review_status)
+        if visibility_scope:
+            stmt = stmt.where(Document.visibility_scope == visibility_scope)
+        if rag_eligible is not None:
+            stmt = stmt.where(Document.rag_eligible == rag_eligible)
+        if train_eligible is not None:
+            stmt = stmt.where(Document.train_eligible == train_eligible)
 
         result = await db.execute(stmt)
         docs = result.scalars().all()
@@ -188,6 +238,12 @@ class RetrievalService:
                     "summary": d.summary,
                     "source_name": d.source_name,
                     "url": d.url,
+                    "source_class": d.source_class,
+                    "privacy_scope": d.privacy_scope,
+                    "review_status": d.review_status,
+                    "visibility_scope": d.visibility_scope,
+                    "rag_eligible": d.rag_eligible,
+                    "train_eligible": d.train_eligible,
                 },
                 "chunks": chunks,
             }

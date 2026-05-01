@@ -29,3 +29,26 @@ def test_campaign_note_parser_extracts_entities_lists_and_relationships():
     assert entity.relationships[0].relationship_type == "ally"
     assert entity.relationships[0].target_reference == "Lantern Guild"
     assert entity.relationships[1].notes == "Trusts her instincts"
+
+
+def test_campaign_note_parser_accepts_obsidian_frontmatter_and_wikilinks():
+    content = """---
+tags:
+  - imported
+  - harbor
+---
+# Captain Mira
+
+## NPC: Captain Mira
+Location: [[Campaign/Locations/Greyhaven|Greyhaven]]
+Relationships: ally -> [[Campaign/Factions/Lantern Guild|Lantern Guild]]
+Languages: Common, Varisian
+"""
+
+    parsed = campaign_note_import_service.parse_content(content)
+
+    assert len(parsed) == 1
+    entity = parsed[0]
+    assert entity.current_location_reference == "Greyhaven"
+    assert entity.tags == ["imported", "harbor"]
+    assert entity.relationships[0].target_reference == "Lantern Guild"

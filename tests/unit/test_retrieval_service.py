@@ -27,7 +27,9 @@ def test_retrieval_prefers_chunk_hits_when_embeddings_disabled():
     async def _seed():
         nonlocal doc_id
         async with SessionLocal() as session:
-            doc = Document(title="Rules Compendium", kind="rule", content="General rules overview")
+            doc = Document(
+                title="Rules Compendium", kind="rule", content="General rules overview"
+            )
             session.add(doc)
             await session.flush()
             chunk = DocumentChunk(
@@ -42,7 +44,9 @@ def test_retrieval_prefers_chunk_hits_when_embeddings_disabled():
 
     async def _run_search():
         async with SessionLocal() as session:
-            results = await retrieval_service.search_documents("fireball", session, top_k=1)
+            results = await retrieval_service.search_documents(
+                "fireball", session, top_k=1
+            )
             return results
 
     try:

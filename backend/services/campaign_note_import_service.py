@@ -8,6 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.services.campaign_service import campaign_service
 from backend.services.ingestion_service import ingestion_service
+from backend.services.obsidian_markdown import (
+    extract_tags,
+    replace_wikilinks,
+    split_frontmatter,
+)
 
 ENTITY_HEADER_RE = re.compile(
     r"^(?:##\s*)?"
@@ -132,6 +137,7 @@ class CampaignNoteImportService:
         document_url: Optional[str] = None,
         default_tags: Optional[list[str]] = None,
         store_document: bool = True,
+        document_governance: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         parsed_entities = self.parse_content(content, default_tags=default_tags)
         if not parsed_entities:
@@ -152,6 +158,7 @@ class CampaignNoteImportService:
                 source_name=source_name,
                 url=document_url,
                 dedupe_on_url=bool(document_url),
+                **(document_governance or {}),
             )
 
         return {
@@ -161,6 +168,12 @@ class CampaignNoteImportService:
                     "title": stored_document.title,
                     "kind": stored_document.kind,
                     "source_name": stored_document.source_name,
+                    "source_class": stored_document.source_class,
+                    "privacy_scope": stored_document.privacy_scope,
+                    "review_status": stored_document.review_status,
+                    "visibility_scope": stored_document.visibility_scope,
+                    "rag_eligible": stored_document.rag_eligible,
+                    "train_eligible": stored_document.train_eligible,
                 }
                 if stored_document is not None
                 else None
@@ -277,10 +290,14 @@ class CampaignNoteImportService:
     def parse_content(
         self, content: str, *, default_tags: Optional[list[str]] = None
     ) -> list[ParsedEntityNote]:
-        blocks = self._split_blocks(content)
+        frontmatter, body = split_frontmatter(content)
+        normalized_tags = campaign_service._normalize_strings(
+            [*(default_tags or []), *extract_tags(frontmatter)]
+        )
+        blocks = self._split_blocks(replace_wikilinks(body))
         parsed_entities: list[ParsedEntityNote] = []
         for block in blocks:
-            parsed = self._parse_block(block, default_tags=default_tags)
+            parsed = self._parse_block(block, default_tags=normalized_tags)
             if parsed is not None:
                 parsed_entities.append(parsed)
         return parsed_entities

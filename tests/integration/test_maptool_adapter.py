@@ -20,7 +20,18 @@ def test_pull_map_state_uses_authorization_header():
                 "id": "cavern",
                 "name": "Crystal Cavern",
                 "tokens": [
-                    {"id": "rogue", "name": "Rogue", "x": 2, "y": 4, "notes": "Ready", "layer": "objects"}
+                    {
+                        "id": "rogue",
+                        "name": "Rogue",
+                        "x": 2,
+                        "y": 4,
+                        "notes": "Ready",
+                        "layer": "objects",
+                        "hp_current": 22,
+                        "hp_max": 30,
+                        "initiative": 18,
+                        "conditions": ["hidden"],
+                    }
                 ],
                 "fog_state": "clear",
                 "light_state": "dim",
@@ -28,13 +39,50 @@ def test_pull_map_state_uses_authorization_header():
             return httpx.Response(200, json=payload)
         raise AssertionError(f"Unexpected path {request.url.path}")
 
-    adapter = MapToolAdapter(base_url="http://maptool.example", transport=httpx.MockTransport(handler))
-    result = asyncio.run(adapter.pull_map_state("cavern", auth_header="Bearer session-token"))
+    adapter = MapToolAdapter(
+        base_url="http://maptool.example", transport=httpx.MockTransport(handler)
+    )
+    result = asyncio.run(
+        adapter.pull_map_state("cavern", auth_header="Bearer session-token")
+    )
 
     assert calls["authorization"] == "Bearer session-token"
     assert result.map_id == "cavern"
     assert result.tokens[0].label == "Rogue"
+    assert result.tokens[0].hp_current == 22
+    assert result.tokens[0].initiative == 18
+    assert result.tokens[0].conditions == ["hidden"]
     assert result.fog_state == "clear"
+
+
+def test_pull_map_state_allows_unauthenticated_bridge_mode():
+    calls: Dict[str, str | None] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["authorization"] = request.headers.get("Authorization")
+        if request.url.path == "/maps/harbor-docks":
+            return httpx.Response(
+                200,
+                json={
+                    "id": "harbor-docks",
+                    "name": "Greyhaven Docks",
+                    "tokens": [],
+                    "fog_state": "partial",
+                    "light_state": "dim",
+                },
+            )
+        raise AssertionError(f"Unexpected path {request.url.path}")
+
+    adapter = MapToolAdapter(
+        base_url="http://bridge.example", transport=httpx.MockTransport(handler)
+    )
+
+    result = asyncio.run(adapter.pull_map_state("harbor-docks"))
+
+    assert calls["authorization"] is None
+    assert result.map_id == "harbor-docks"
+    assert result.fog_state == "partial"
+    assert result.light_state == "dim"
 
 
 def test_push_token_updates_retries_on_failure():
@@ -55,6 +103,10 @@ def test_push_token_updates_retries_on_failure():
                 "notes": "Moved",
                 "gm_notes": None,
                 "layer": "objects",
+                "hp_current": 28,
+                "hp_max": 40,
+                "initiative": 14,
+                "conditions": ["shield raised"],
             }
             return httpx.Response(200, json=payload)
         raise AssertionError(f"Unexpected path {request.url.path}")
@@ -67,12 +119,25 @@ def test_push_token_updates_retries_on_failure():
         backoff_factor=0,
     )
 
-    updates = [MapToolTokenUpdate(token_id="fighter", x=9, y=12, note="Moved")]
+    updates = [
+        MapToolTokenUpdate(
+            token_id="fighter",
+            x=9,
+            y=12,
+            note="Moved",
+            hp_current=28,
+            hp_max=40,
+            initiative=14,
+            conditions=["shield raised"],
+        )
+    ]
     results = asyncio.run(adapter.push_token_updates("dungeon", updates))
 
     assert attempts["count"] == 2
     assert results[0].x == 9
     assert results[0].notes == "Moved"
+    assert results[0].hp_current == 28
+    assert results[0].initiative == 14
 
 
 def test_maptool_routes_wire_adapter(monkeypatch):
@@ -88,16 +153,26 @@ def test_maptool_routes_wire_adapter(monkeypatch):
 
     async def fake_push(map_id: str, updates, auth_header=None, retries=None):
         calls["push"] += 1
-        return [MapToolToken(id="alpha", name="Alpha", x=updates[0].x or 0, y=updates[0].y or 0)]
+        return [
+            MapToolToken(
+                id="alpha", name="Alpha", x=updates[0].x or 0, y=updates[0].y or 0
+            )
+        ]
 
-    monkeypatch.setattr("backend.api.routes.maptool.maptool_adapter.pull_map_state", fake_pull)
-    monkeypatch.setattr("backend.api.routes.maptool.maptool_adapter.push_token_updates", fake_push)
+    monkeypatch.setattr(
+        "backend.api.routes.maptool.maptool_adapter.pull_map_state", fake_pull
+    )
+    monkeypatch.setattr(
+        "backend.api.routes.maptool.maptool_adapter.push_token_updates", fake_push
+    )
 
     app = FastAPI()
     app.include_router(maptool_router, prefix="/api/maptool")
     client = TestClient(app)
 
-    pull_response = client.post("/api/maptool/pull", json={"map_id": "demo"}, headers={"Authorization": "token"})
+    pull_response = client.post(
+        "/api/maptool/pull", json={"map_id": "demo"}, headers={"Authorization": "token"}
+    )
     push_response = client.post(
         "/api/maptool/push",
         json={"map_id": "demo", "updates": [{"token_id": "alpha", "x": 3, "y": 5}]},

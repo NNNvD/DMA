@@ -27,6 +27,7 @@ class RulesService:
             top_k=top_k,
             kind="rule",
             include_chunks=2,
+            rag_eligible=True,
         )
 
         citations = self._build_citations(matches)

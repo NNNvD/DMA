@@ -1,0 +1,45 @@
+{
+  "id": "harbor-docks",
+  "name": "Greyhaven Docks",
+  "tokens": [
+    {
+      "id": "captain-mira",
+      "name": "Captain Mira",
+      "x": 14,
+      "y": 7,
+      "notes": "Holding the line",
+      "gm_notes": "Knows the smugglers are backed by House Vane",
+      "layer": "objects",
+      "hp_current": 22,
+      "hp_max": 35,
+      "initiative": 18,
+      "conditions": ["frightened 1"]
+    },
+    {
+      "id": "talia-stormborn",
+      "name": "Talia Stormborn",
+      "x": 12,
+      "y": 8,
+      "notes": "Investigating the crates",
+      "layer": "objects",
+      "hp_current": 31,
+      "hp_max": 38,
+      "initiative": 21,
+      "conditions": []
+    },
+    {
+      "id": "smuggler-lookout",
+      "name": "Smuggler Lookout",
+      "x": 18,
+      "y": 4,
+      "notes": "Backing toward the skiff",
+      "layer": "objects",
+      "hp_current": 8,
+      "hp_max": 20,
+      "initiative": 12,
+      "conditions": ["off-guard"]
+    }
+  ],
+  "fog_state": "partial",
+  "light_state": "dim"
+}

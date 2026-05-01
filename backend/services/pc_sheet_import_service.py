@@ -9,6 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.services.campaign_service import campaign_service
 from backend.services.ingestion_service import ingestion_service
+from backend.services.obsidian_markdown import (
+    extract_tags,
+    replace_wikilinks,
+    split_frontmatter,
+)
 
 
 @dataclass
@@ -62,6 +67,7 @@ class PCSheetImportService:
         document_url: Optional[str] = None,
         default_tags: Optional[list[str]] = None,
         store_document: bool = True,
+        document_governance: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         parsed = self.parse_content(content, default_tags=default_tags)
 
@@ -76,6 +82,7 @@ class PCSheetImportService:
                 source_name=source_name,
                 url=document_url,
                 dedupe_on_url=bool(document_url),
+                **(document_governance or {}),
             )
 
         warnings: list[str] = []
@@ -194,6 +201,12 @@ class PCSheetImportService:
                     "title": stored_document.title,
                     "kind": stored_document.kind,
                     "source_name": stored_document.source_name,
+                    "source_class": stored_document.source_class,
+                    "privacy_scope": stored_document.privacy_scope,
+                    "review_status": stored_document.review_status,
+                    "visibility_scope": stored_document.visibility_scope,
+                    "rag_eligible": stored_document.rag_eligible,
+                    "train_eligible": stored_document.train_eligible,
                 }
                 if stored_document is not None
                 else None
@@ -224,14 +237,20 @@ class PCSheetImportService:
     def parse_content(
         self, content: str, *, default_tags: Optional[list[str]] = None
     ) -> ParsedPCSheet:
-        pathbuilder_payload = self._parse_json(content)
+        frontmatter, body = split_frontmatter(content)
+        normalized_tags = campaign_service._normalize_strings(
+            [*(default_tags or []), *extract_tags(frontmatter)]
+        )
+
+        pathbuilder_payload = self._parse_json(body)
         if self._looks_like_pathbuilder_export(pathbuilder_payload):
             assert pathbuilder_payload is not None
             return self._parse_pathbuilder_export(
-                pathbuilder_payload, default_tags=default_tags
+                pathbuilder_payload, default_tags=normalized_tags
             )
 
-        raw_fields = self._parse_key_values(content)
+        normalized_body = replace_wikilinks(body)
+        raw_fields = self._parse_key_values(normalized_body)
         name = raw_fields.get("name")
         if not name:
             raise ValueError("PC sheet import requires a 'Name:' field")
@@ -281,7 +300,7 @@ class PCSheetImportService:
             stable_key=raw_fields.get("stable key") or raw_fields.get("stable_key"),
             summary=raw_fields.get("summary"),
             tags=campaign_service._normalize_strings(
-                [*(default_tags or []), *self._split_items(raw_fields.get("tags"))]
+                [*normalized_tags, *self._split_items(raw_fields.get("tags"))]
             ),
             entity_details=entity_details,
             sheet_payload={

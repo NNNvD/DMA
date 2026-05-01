@@ -1,0 +1,4446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DMA DM Panel</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23f8edd5'/%3E%3Cstop offset='1' stop-color='%238a2f1d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cpath d='M16 47V15h11c9 0 15 6 15 16s-6 16-15 16H16zm9-8h2c5 0 8-3 8-8s-3-8-8-8h-2v16z' fill='%23211814'/%3E%3Cpath d='M44 17l7 30h-7l-1-6h-7l-1 6h-7l8-30h8zm-2 18l-2-10-2 10h4z' fill='%23fff7f2'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --paper: #f4ebd8;
+      --paper-strong: #efe1c0;
+      --ink: #211814;
+      --ink-soft: #5a473b;
+      --accent: #8a2f1d;
+      --accent-soft: #c45b39;
+      --line: #c8b38f;
+      --panel: rgba(255, 251, 242, 0.92);
+      --shadow: 0 20px 45px rgba(44, 27, 17, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      background:
+        radial-gradient(circle at top left, rgba(196, 91, 57, 0.2), transparent 28%),
+        radial-gradient(circle at top right, rgba(98, 49, 27, 0.15), transparent 22%),
+        linear-gradient(180deg, #f6efdf 0%, #efe3c6 100%);
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .shell {
+      width: min(1400px, calc(100vw - 32px));
+      margin: 24px auto 48px;
+    }
+
+    .hero {
+      padding: 28px 30px;
+      border: 1px solid rgba(138, 47, 29, 0.18);
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, rgba(255, 249, 238, 0.92), rgba(247, 235, 208, 0.88)),
+        repeating-linear-gradient(
+          -45deg,
+          rgba(138, 47, 29, 0.02),
+          rgba(138, 47, 29, 0.02) 8px,
+          transparent 8px,
+          transparent 16px
+        );
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.82rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 0.96;
+    }
+
+    .hero p {
+      max-width: 820px;
+      margin: 12px 0 0;
+      font-size: 1.04rem;
+      color: var(--ink-soft);
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .summary-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 250, 241, 0.82);
+      border: 1px solid rgba(138, 47, 29, 0.12);
+    }
+
+    .summary-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .summary-value {
+      font-size: 1.08rem;
+      line-height: 1.3;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .launch-status {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 252, 246, 0.72);
+      border: 1px solid rgba(138, 47, 29, 0.12);
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .stack {
+      display: contents;
+    }
+
+    .panel {
+      align-self: start;
+      padding: 20px;
+      border-radius: 24px;
+      background: var(--panel);
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      box-shadow: var(--shadow);
+    }
+
+    .panel.is-dragging {
+      opacity: 0.55;
+      outline: 2px dashed rgba(138, 47, 29, 0.38);
+    }
+
+    .panel.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .module-map-room {
+      order: -30;
+    }
+
+    .module-pc-sheet-viewer {
+      order: -29;
+    }
+
+    .module-npc-dossier-viewer {
+      order: -28;
+    }
+
+    .module-campaign-overview {
+      order: -27;
+    }
+
+    .module-session-overview {
+      order: -26;
+    }
+
+    .panel.is-collapsed {
+      padding: 14px 16px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .panel.is-collapsed .panel-header {
+      margin-bottom: 0;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .panel-tools {
+      display: inline-flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      padding: 0;
+      line-height: 1;
+      background: rgba(255, 252, 246, 0.8);
+      border: 1px solid rgba(138, 47, 29, 0.18);
+      color: var(--accent);
+    }
+
+    .icon-button:hover {
+      background: rgba(138, 47, 29, 0.08);
+    }
+
+    .drag-handle {
+      cursor: grab;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .panel-body[hidden] {
+      display: none;
+    }
+
+    .module-help {
+      margin: 0 0 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(138, 47, 29, 0.14);
+      background: rgba(255, 252, 246, 0.74);
+    }
+
+    .module-help summary {
+      cursor: pointer;
+      padding: 10px 12px;
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    .module-help-content {
+      padding: 0 12px 12px;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+
+    .panel h3 {
+      margin: 16px 0 10px;
+      font-size: 1rem;
+      color: var(--ink-soft);
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      margin-top: 6px;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 252, 246, 0.94);
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff7f2;
+      transition: transform 140ms ease, background 140ms ease;
+    }
+
+    button.secondary {
+      background: #3c3029;
+    }
+
+    button.ghost {
+      background: transparent;
+      border: 1px solid rgba(138, 47, 29, 0.2);
+      color: var(--accent);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: var(--accent-soft);
+    }
+
+    button.secondary:hover {
+      background: #55443a;
+    }
+
+    button.ghost:hover {
+      background: rgba(138, 47, 29, 0.08);
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .check-card {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 11px;
+      border-radius: 14px;
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      background: rgba(255, 252, 246, 0.86);
+    }
+
+    .check-card input {
+      width: auto;
+      margin: 2px 0 0;
+      padding: 0;
+    }
+
+    .subtle {
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(138, 47, 29, 0.08);
+      color: var(--accent);
+      font-size: 0.82rem;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .result-box {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(252, 247, 236, 0.95);
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      min-height: 0;
+    }
+
+    .result-box pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      font-family: "Menlo", "Monaco", "Courier New", monospace;
+      font-size: 0.9rem;
+      color: #2a221d;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .list-item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 252, 246, 0.92);
+      border: 1px solid rgba(90, 71, 59, 0.12);
+    }
+
+    .list-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .utility-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+      margin-top: 12px;
+    }
+
+    .utility-chip {
+      width: 100%;
+      border-radius: 16px;
+      padding: 10px 12px;
+      background: rgba(255, 252, 246, 0.92);
+      border: 1px solid rgba(138, 47, 29, 0.16);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .utility-chip:hover {
+      background: rgba(245, 231, 211, 0.98);
+      transform: translateY(-1px);
+    }
+
+    .stat-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(138, 47, 29, 0.1);
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .history-item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 252, 246, 0.92);
+      border: 1px solid rgba(90, 71, 59, 0.12);
+    }
+
+    .history-item strong {
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    .history-meta {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+    }
+
+    .sound-card {
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255, 252, 246, 0.92);
+      border: 1px solid rgba(90, 71, 59, 0.12);
+    }
+
+    .sound-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .sound-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .voice-presets {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-top: 12px;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .small-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chat-log {
+      display: grid;
+      gap: 10px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .chat-message {
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      background: rgba(255, 252, 246, 0.9);
+    }
+
+    .chat-message.dm {
+      border-color: rgba(138, 47, 29, 0.2);
+      background: rgba(252, 247, 236, 0.96);
+    }
+
+    .chat-message strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.4fr);
+      gap: 12px;
+    }
+
+    .scroll-list {
+      max-height: 440px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .note-button {
+      width: 100%;
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255, 252, 246, 0.92);
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .note-button:hover {
+      background: rgba(138, 47, 29, 0.08);
+      color: var(--accent);
+    }
+
+    .markdown-preview {
+      max-height: 540px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "Menlo", "Monaco", "Courier New", monospace;
+      font-size: 0.86rem;
+      line-height: 1.48;
+      color: #2a221d;
+    }
+
+    .markdown-render {
+      display: grid;
+      gap: 10px;
+      line-height: 1.55;
+      color: var(--ink-soft);
+    }
+
+    .markdown-render h1,
+    .markdown-render h2,
+    .markdown-render h3 {
+      margin: 10px 0 0;
+      color: var(--ink);
+      line-height: 1.15;
+    }
+
+    .markdown-render h1 {
+      font-size: 1.55rem;
+    }
+
+    .markdown-render h2 {
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+
+    .markdown-render h3 {
+      font-size: 1.02rem;
+    }
+
+    .markdown-render p,
+    .markdown-render ul {
+      margin: 0;
+    }
+
+    .markdown-render ul {
+      padding-left: 20px;
+    }
+
+    .vault-wikilink {
+      border: 0;
+      border-radius: 999px;
+      padding: 1px 7px;
+      background: rgba(138, 47, 29, 0.08);
+      color: var(--accent);
+      font: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      cursor: pointer;
+    }
+
+    .vault-wikilink.embed {
+      display: inline-block;
+      border-radius: 10px;
+      padding: 4px 8px;
+      text-decoration: none;
+    }
+
+    .vault-wikilink.missing {
+      color: #8b1320;
+      background: rgba(139, 19, 32, 0.08);
+      text-decoration-style: dotted;
+    }
+
+    .command-note-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    .safety-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background: rgba(255, 252, 246, 0.88);
+      color: var(--ink-soft);
+    }
+
+    .safety-badge.safe {
+      border-color: rgba(56, 118, 82, 0.22);
+      background: rgba(56, 118, 82, 0.1);
+      color: #2f6e4d;
+    }
+
+    .safety-badge.gm {
+      border-color: rgba(138, 47, 29, 0.22);
+      background: rgba(138, 47, 29, 0.1);
+      color: var(--accent);
+    }
+
+    .session-tracker {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(138, 47, 29, 0.14);
+      background: rgba(255, 252, 246, 0.72);
+    }
+
+    .session-tracker summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .session-tracker-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .session-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .session-tab {
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 252, 246, 0.94);
+      border: 1px solid rgba(138, 47, 29, 0.16);
+      color: var(--accent);
+    }
+
+    .session-tab.active {
+      background: var(--accent);
+      color: #fff7f2;
+    }
+
+    .command-note-editor[hidden],
+    .command-note-view[hidden],
+    .command-note-save[hidden],
+    .command-note-cancel[hidden] {
+      display: none;
+    }
+
+    .command-note-editor {
+      min-height: 460px;
+      font-family: "Menlo", "Monaco", "Courier New", monospace;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .pdf-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pdf-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 252, 246, 0.94);
+      border: 1px solid rgba(138, 47, 29, 0.16);
+      color: var(--accent);
+    }
+
+    .pdf-tab.active {
+      background: var(--accent);
+      color: #fff7f2;
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: min(72vh, 720px);
+      margin-top: 12px;
+      border: 1px solid rgba(90, 71, 59, 0.16);
+      border-radius: 18px;
+      background: rgba(255, 252, 246, 0.9);
+    }
+
+    .pdf-frame:not([src]) {
+      display: none;
+    }
+
+    .map-room-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.8fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .map-viewer {
+      min-height: 420px;
+      max-height: 72vh;
+      overflow: auto;
+      border: 1px solid rgba(90, 71, 59, 0.16);
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, rgba(39, 30, 24, 0.08), rgba(255, 252, 246, 0.8)),
+        rgba(255, 252, 246, 0.9);
+    }
+
+    .map-viewer img {
+      display: block;
+      width: 100%;
+      min-width: 720px;
+      height: auto;
+    }
+
+    .room-card {
+      border-radius: 16px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background: rgba(255, 252, 246, 0.92);
+      overflow: hidden;
+    }
+
+    .room-card summary {
+      cursor: pointer;
+      padding: 11px 13px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .room-card-body {
+      display: grid;
+      gap: 10px;
+      padding: 0 13px 13px;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .room-card-section strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--ink);
+    }
+
+    .room-card-section ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .room-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .room-tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(138, 47, 29, 0.08);
+      color: var(--accent);
+      font-size: 0.78rem;
+    }
+
+    .sheet-module-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .sheet-browser {
+      display: grid;
+      grid-template-columns: minmax(240px, 0.36fr) minmax(0, 0.64fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .sheet-view {
+      display: grid;
+      gap: 12px;
+    }
+
+    .sheet-overview-table {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background: rgba(255, 252, 246, 0.88);
+    }
+
+    .sheet-overview-table .mini-table {
+      min-width: 980px;
+    }
+
+    .overview-cell-list {
+      display: grid;
+      gap: 3px;
+      min-width: 130px;
+    }
+
+    .overview-cell-list span {
+      display: block;
+    }
+
+    .overview-note {
+      max-width: 230px;
+      line-height: 1.35;
+    }
+
+    .sheet-hero {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .portrait-frame {
+      width: 112px;
+      height: 132px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(138, 47, 29, 0.22);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(196, 91, 57, 0.14), transparent 34%),
+        linear-gradient(135deg, rgba(255, 252, 246, 0.95), rgba(239, 225, 192, 0.76));
+      color: var(--ink-soft);
+      text-align: center;
+      font-size: 0.82rem;
+      padding: 10px;
+    }
+
+    .portrait-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .sheet-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .sheet-stat {
+      padding: 9px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      background: rgba(255, 252, 246, 0.86);
+    }
+
+    .sheet-stat span {
+      display: block;
+      color: var(--accent);
+      font-size: 0.76rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .sheet-stat strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 1.12rem;
+    }
+
+    .sheet-section {
+      border-radius: 16px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background: rgba(255, 252, 246, 0.88);
+      overflow: hidden;
+    }
+
+    .sheet-section summary {
+      cursor: pointer;
+      padding: 11px 13px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .sheet-section-body {
+      padding: 0 13px 13px;
+      color: var(--ink-soft);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .mini-table th,
+    .mini-table td {
+      padding: 7px 6px;
+      border-bottom: 1px solid rgba(90, 71, 59, 0.12);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .mini-table th {
+      color: var(--accent);
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .empty {
+      color: var(--ink-soft);
+      font-style: italic;
+    }
+
+    .inline-toggle {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .inline-toggle input {
+      width: auto;
+      margin: 0;
+    }
+
+    .error {
+      color: #8b1320;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .grid-two {
+        grid-template-columns: 1fr;
+      }
+
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .map-room-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sheet-browser {
+        grid-template-columns: 1fr;
+      }
+
+      .shell {
+        width: min(100vw - 18px, 1400px);
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Phase 4 Live Assistance</p>
+      <h1>DMA DM Panel</h1>
+      <p>
+        Keep the current scene, active cast, and fast lookup tools in one place while you run the session.
+        This panel is intentionally small: save live context, run slash-style commands, sync session mechanics, query rules, pull continuity, and spin up a quick prep brief.
+      </p>
+      <div class="summary-row" id="summary-row">
+        <div class="summary-card"><span class="summary-label">Scene</span><span class="summary-value">Loading…</span></div>
+      </div>
+      <div class="actions">
+        <button type="button" id="launch-session-button">Launch Current Session</button>
+        <button type="button" class="ghost" id="open-player-recap-button">Open Player Recap</button>
+        <button type="button" class="ghost" id="open-gm-recap-button">Open GM Recap</button>
+        <button type="button" class="secondary" id="export-player-recap-button">Export Player PDF</button>
+        <button type="button" id="refresh-button" class="ghost">Refresh Panel</button>
+        <button type="button" id="reset-button" class="secondary">Reset Live State</button>
+      </div>
+      <div class="launch-status" id="launch-status">
+        Session Launch Mode will open the active session prep, spoiler-safe recap, GM recap, Level 3 map at C7, party overview, and NPC dossier.
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="stack">
+        <article class="panel">
+          <h2>Current Scene</h2>
+          <form id="state-form">
+            <div class="grid-two">
+              <label>
+                Scene Title
+                <input id="scene-title" name="scene_title" placeholder="Audience with Baron Vandermir" />
+              </label>
+              <label>
+                Focus
+                <input id="scene-focus" name="focus" placeholder="social tension, negotiation, hidden agenda" />
+              </label>
+            </div>
+            <div class="grid-two" style="margin-top: 12px;">
+              <label>
+                Current Location
+                <select id="current-location" name="current_location_id">
+                  <option value="">No location selected</option>
+                </select>
+              </label>
+              <label>
+                MapTool Map ID
+                <input id="maptool-map-id" name="maptool_map_id" placeholder="dock-encounter" />
+              </label>
+            </div>
+            <label style="margin-top: 12px;">
+              DM Notes
+              <textarea id="scene-notes" name="notes" placeholder="Keep these short and tactical. What matters right now?"></textarea>
+            </label>
+            <div class="inline-toggle">
+              <input id="frugal-mode" type="checkbox" name="frugal_mode" />
+              <label for="frugal-mode" style="margin: 0;">Frugal mode for live use</label>
+            </div>
+
+            <h3>Active PCs</h3>
+            <div class="check-grid" id="active-pcs"></div>
+
+            <h3>Active NPCs</h3>
+            <div class="check-grid" id="active-npcs"></div>
+
+            <div class="actions">
+              <button type="submit">Save Live State</button>
+            </div>
+            <div class="result-box" id="state-message"><span class="empty">No changes yet.</span></div>
+          </form>
+        </article>
+
+        <article class="panel full-width module-map-room" data-module-id="map-room">
+          <h2>Map Room</h2>
+          <form id="map-room-form">
+            <div class="grid-two">
+              <label>
+                Dungeon Map
+                <select id="map-room-select">
+                  <option value="">Loading maps…</option>
+                </select>
+              </label>
+              <label>
+                Room Filter
+                <input id="map-room-filter" placeholder="A10, haunt, loot, secret…" />
+              </label>
+            </div>
+            <div class="actions">
+              <button type="submit">Load Map</button>
+              <button type="button" class="ghost" id="map-room-refresh">Refresh Maps</button>
+            </div>
+          </form>
+          <div class="stat-line" id="map-room-meta">
+            <span class="stat-badge">No dungeon map loaded</span>
+          </div>
+          <div class="map-room-grid" style="margin-top: 12px;">
+            <div class="map-viewer" id="map-room-viewer">
+              <div class="empty" style="padding: 16px;">Choose a dungeon map to load it here.</div>
+            </div>
+            <div class="list scroll-list" id="map-room-list">
+              <div class="empty">Room notes will appear here.</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel full-width module-campaign-overview" data-module-id="campaign-overview">
+          <h2>Campaign Overview</h2>
+          <div class="session-tabs" id="campaign-overview-tabs">
+            <button type="button" class="session-tab active" data-campaign-tab="overview">Overview</button>
+            <button type="button" class="session-tab" data-campaign-tab="gm-summary">GM Summary</button>
+            <button type="button" class="session-tab" data-campaign-tab="pc-summary">PC Summary</button>
+          </div>
+          <div class="command-note-toolbar">
+            <button type="button" id="campaign-overview-refresh">Refresh</button>
+            <button type="button" class="ghost" id="campaign-overview-edit">Edit Text</button>
+            <button type="button" class="secondary command-note-save" id="campaign-overview-save" hidden>Save Changes</button>
+            <button type="button" class="ghost command-note-cancel" id="campaign-overview-cancel" hidden>Cancel</button>
+          </div>
+          <div class="stat-line" id="campaign-overview-meta">
+            <span class="stat-badge">Campaign overview not loaded yet</span>
+          </div>
+          <div class="result-box command-note-view markdown-render" id="campaign-overview-view">
+            <span class="empty">Campaign overview will appear here.</span>
+          </div>
+          <textarea class="command-note-editor" id="campaign-overview-editor" hidden></textarea>
+          <div class="result-box" id="campaign-overview-status"><span class="empty">No campaign overview edits saved yet.</span></div>
+        </article>
+
+        <article class="panel full-width module-session-overview" data-module-id="session-overview">
+          <h2>Session Overview</h2>
+          <div class="session-tabs" id="session-overview-tabs">
+            <span class="empty">Session tabs will appear here.</span>
+          </div>
+          <div class="command-note-toolbar">
+            <button type="button" id="session-overview-refresh">Refresh Sessions</button>
+            <button type="button" class="ghost" id="session-overview-edit">Edit Text</button>
+            <button type="button" class="secondary command-note-save" id="session-overview-save" hidden>Save Changes</button>
+            <button type="button" class="ghost command-note-cancel" id="session-overview-cancel" hidden>Cancel</button>
+          </div>
+          <div class="stat-line" id="session-overview-meta">
+            <span class="stat-badge">No session overview loaded yet</span>
+          </div>
+          <details class="session-tracker" open>
+            <summary>Live Session Tracker</summary>
+            <p class="subtle">
+              Track the table state here during play, then write it into the active Obsidian session note.
+              This is GM-facing and meant for quick continuity, not polished prose.
+            </p>
+            <div class="session-tracker-grid">
+              <label>
+                Current Room / Area
+                <input id="session-track-room" placeholder="C7, C8, Otari, downtime…" />
+              </label>
+              <label>
+                Party Status / Resources
+                <input id="session-track-party" placeholder="Wounded, low spells, cursed, rested…" />
+              </label>
+              <label>
+                Explored Rooms
+                <input id="session-track-explored" placeholder="C7, C8…" />
+              </label>
+              <label>
+                Active NPCs
+                <input id="session-track-npcs" placeholder="Korlok, Wrin, Augrael…" />
+              </label>
+              <label>
+                Unresolved Clues
+                <input id="session-track-clues" placeholder="contract, ghost trail, canker signs…" />
+              </label>
+              <label>
+                Next Likely Beat
+                <input id="session-track-next" placeholder="negotiate, search library, retreat…" />
+              </label>
+            </div>
+            <label style="margin-top: 12px;">
+              Live Notes / Post-Session Recap Draft
+              <textarea id="session-track-notes" placeholder="Short bullet notes from play."></textarea>
+            </label>
+            <div class="actions">
+              <button type="button" id="session-track-save">Write Tracker To Active Session Note</button>
+              <button type="button" class="ghost" id="session-track-clear">Clear Tracker Fields</button>
+            </div>
+          </details>
+          <div class="result-box command-note-view markdown-render" id="session-overview-view">
+            <span class="empty">Choose a session tab to view its overview.</span>
+          </div>
+          <textarea class="command-note-editor" id="session-overview-editor" hidden></textarea>
+          <div class="result-box" id="session-overview-status"><span class="empty">No session overview edits saved yet.</span></div>
+        </article>
+
+        <article class="panel">
+          <h2>Quick Rules</h2>
+          <form id="rules-form">
+            <div class="grid-two">
+              <label>
+                Rules Query
+                <input id="rules-query" placeholder="How does frightened stack with demoralize?" />
+              </label>
+              <label>
+                Top K
+                <select id="rules-top-k">
+                  <option value="3" selected>3</option>
+                  <option value="5">5</option>
+                  <option value="8">8</option>
+                </select>
+              </label>
+            </div>
+            <div class="inline-toggle">
+              <input id="rules-strict" type="checkbox" checked />
+              <label for="rules-strict" style="margin: 0;">Strict rules mode</label>
+            </div>
+            <div class="actions">
+              <button type="submit">Ask Rules</button>
+            </div>
+          </form>
+          <div class="result-box" id="rules-result"><span class="empty">Rules answers will appear here.</span></div>
+        </article>
+
+        <article class="panel">
+          <h2>Quick Prep</h2>
+          <form id="prep-form">
+            <div class="grid-two">
+              <label>
+                Brief Title
+                <input id="prep-title" placeholder="Live Session Brief" />
+              </label>
+              <label>
+                Session Count
+                <select id="prep-session-count">
+                  <option value="2">2</option>
+                  <option value="3" selected>3</option>
+                  <option value="5">5</option>
+                </select>
+              </label>
+            </div>
+            <label style="margin-top: 12px;">
+              Prep Focus
+              <input id="prep-focus" placeholder="default: current live focus" />
+            </label>
+            <div class="inline-toggle">
+              <input id="prep-store" type="checkbox" />
+              <label for="prep-store" style="margin: 0;">Store as session_prep document</label>
+            </div>
+            <div class="actions">
+              <button type="submit">Generate Brief</button>
+            </div>
+          </form>
+          <div class="result-box" id="prep-result"><span class="empty">Live prep output will appear here.</span></div>
+        </article>
+
+        <article class="panel">
+          <h2>Vault Workspace</h2>
+          <div class="workspace-grid">
+            <div>
+              <form id="vault-search-form">
+                <label>
+                  Search Vault Notes
+                  <input id="vault-search" placeholder="Wrin, Session 1, Gauntlight…" />
+                </label>
+                <div class="actions">
+                  <button type="submit">Search Vault</button>
+                  <button type="button" class="ghost" id="vault-refresh">Refresh</button>
+                  <button type="button" class="ghost" id="vault-export">Export DMA To Vault</button>
+                  <button type="button" class="secondary" id="vault-import">Sync Vault To DMA</button>
+                </div>
+              </form>
+              <div class="result-box" id="vault-sync-status">
+                <span class="empty">Vault sync actions will appear here.</span>
+              </div>
+              <div class="list scroll-list" id="vault-note-list" style="margin-top: 12px;">
+                <div class="empty">Vault notes will appear here.</div>
+              </div>
+            </div>
+            <div>
+              <div class="stat-line" id="vault-note-meta">
+                <span class="stat-badge">No note selected</span>
+              </div>
+              <div class="result-box markdown-preview" id="vault-note-viewer">
+                <span class="empty">Open a vault note to read it inside DMA.</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="stack">
+        <article class="panel">
+          <h2>DMA Chat Workbench</h2>
+          <div class="chat-log" id="chat-log">
+            <div class="empty">Ask DMA a campaign question or assign a small live task.</div>
+          </div>
+          <form id="chat-form" style="margin-top: 12px;">
+            <div class="grid-two">
+              <label>
+                Chat Mode
+                <select id="chat-mode">
+                  <option value="auto" selected>Auto</option>
+                  <option value="scene">Scene</option>
+                  <option value="rules">Rules</option>
+                  <option value="continuity">Continuity</option>
+                  <option value="recap">Recap</option>
+                  <option value="npc">NPC</option>
+                  <option value="prep">Prep</option>
+                </select>
+              </label>
+              <label>
+                Quick Prompt
+                <input id="chat-message" placeholder="What should I know before the next room?" />
+              </label>
+            </div>
+            <div class="small-actions">
+              <button type="button" class="ghost" data-chat-template="/scene" data-chat-mode="scene">/scene</button>
+              <button type="button" class="ghost" data-chat-template="/rules frightened" data-chat-mode="rules">/rules</button>
+              <button type="button" class="ghost" data-chat-template="/recap" data-chat-mode="recap">/recap</button>
+              <button type="button" class="ghost" data-chat-template="/prep next likely encounters" data-chat-mode="prep">/prep</button>
+              <button type="button" class="ghost" data-chat-template="/search Wrin" data-chat-mode="continuity">/search</button>
+              <button type="button" class="ghost" id="chat-clear">Clear Chat</button>
+            </div>
+            <div class="actions">
+              <button type="submit">Send To DMA</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="panel full-width module-pc-sheet-viewer" data-module-id="pc-sheet-viewer">
+          <h2>PC Sheet Viewer</h2>
+          <div class="sheet-module-stack" id="pc-sheet-viewer">
+            <div class="result-box sheet-view" id="pc-sheet-overview">
+              <span class="empty">PC overview will appear here.</span>
+            </div>
+            <div class="sheet-browser">
+              <div>
+                <form id="pc-sheet-search-form">
+                  <label>
+                    Search PCs
+                    <input id="pc-sheet-search" placeholder="Daan, Fahral, cleric…" />
+                  </label>
+                  <div class="actions">
+                    <button type="submit">Search PCs</button>
+                    <button type="button" class="ghost" id="pc-sheet-refresh">Refresh</button>
+                  </div>
+                </form>
+                <div class="list scroll-list" id="pc-sheet-list" style="margin-top: 12px;">
+                  <div class="empty">PC sheets will appear here.</div>
+                </div>
+              </div>
+              <div class="result-box sheet-view" id="pc-sheet-detail">
+                <span class="empty">Open a PC sheet to inspect full details here.</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel full-width module-npc-dossier-viewer" data-module-id="npc-dossier-viewer">
+          <h2>NPC Dossier Viewer</h2>
+          <div class="sheet-module-stack" id="npc-sheet-viewer">
+            <div class="result-box sheet-view" id="npc-sheet-overview">
+              <span class="empty">NPC overview will appear here.</span>
+            </div>
+            <div class="sheet-browser">
+              <div>
+                <form id="npc-sheet-search-form">
+                  <label>
+                    Search NPCs
+                    <input id="npc-sheet-search" placeholder="Wrin, mayor, patron…" />
+                  </label>
+                  <div class="actions">
+                    <button type="submit">Search NPCs</button>
+                    <button type="button" class="ghost" id="npc-sheet-refresh">Refresh</button>
+                  </div>
+                </form>
+                <div class="list scroll-list" id="npc-sheet-list" style="margin-top: 12px;">
+                  <div class="empty">NPC dossiers will appear here.</div>
+                </div>
+              </div>
+              <div class="result-box sheet-view" id="npc-sheet-detail">
+                <span class="empty">Open an NPC dossier to inspect full details here.</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Dice Roller</h2>
+          <p class="subtle">
+            Roll quick checks, damage, and custom expressions without leaving the panel. Supports formulas like
+            <code>1d20+7</code>, <code>2d6+4</code>, <code>4d6kh3</code>, and <code>2d20kl1+9</code>.
+          </p>
+          <form id="dice-form">
+            <label>
+              Roll Expression
+              <input id="dice-expression" placeholder="1d20+7" value="1d20" />
+            </label>
+            <div class="utility-grid">
+              <button type="button" class="utility-chip" data-dice-fragment="d4">d4</button>
+              <button type="button" class="utility-chip" data-dice-fragment="d6">d6</button>
+              <button type="button" class="utility-chip" data-dice-fragment="d8">d8</button>
+              <button type="button" class="utility-chip" data-dice-fragment="d10">d10</button>
+              <button type="button" class="utility-chip" data-dice-fragment="d12">d12</button>
+              <button type="button" class="utility-chip" data-dice-fragment="d20">d20</button>
+              <button type="button" class="utility-chip" data-dice-fragment="+1">+1</button>
+              <button type="button" class="utility-chip" data-dice-fragment="-1">-1</button>
+            </div>
+            <div class="small-actions">
+              <button type="button" class="ghost" data-dice-template="1d20">Flat Check</button>
+              <button type="button" class="ghost" data-dice-template="1d20+7">Skill Check</button>
+              <button type="button" class="ghost" data-dice-template="2d20kh1+7">Fortune</button>
+              <button type="button" class="ghost" data-dice-template="2d20kl1+7">Misfortune</button>
+              <button type="button" class="ghost" id="dice-clear-history">Clear History</button>
+            </div>
+            <div class="actions">
+              <button type="submit">Roll Dice</button>
+            </div>
+          </form>
+          <div class="result-box" id="dice-result"><span class="empty">Dice results will appear here.</span></div>
+          <div class="history-list" id="dice-history">
+            <div class="empty">Recent rolls will appear here.</div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Session Soundboard</h2>
+          <p class="subtle">
+            Trigger quick browser-generated scene cues and ambience. Recommendations adapt to the saved scene, focus, and location.
+          </p>
+          <div class="stat-line" id="soundboard-tags">
+            <span class="stat-badge">Loading scene cues…</span>
+          </div>
+          <div class="list" id="soundboard-list">
+            <div class="empty">Sound recommendations will appear once the panel loads.</div>
+          </div>
+          <div class="actions">
+            <button type="button" id="stop-all-audio" class="secondary">Stop All Audio</button>
+          </div>
+          <div class="result-box" id="soundboard-status"><span class="empty">No sound playing.</span></div>
+        </article>
+
+        <article class="panel">
+          <h2>Voice Reader</h2>
+          <p class="subtle">
+            Use your browser’s installed voices to read boxed text, NPC dialogue, or moderator recap in-character.
+          </p>
+          <form id="tts-form">
+            <div class="grid-two">
+              <label>
+                Voice Preset
+                <select id="tts-preset">
+                  <option value="moderator" selected>Moderator</option>
+                  <option value="friendly">Friendly NPC</option>
+                  <option value="stern">Stern NPC</option>
+                  <option value="ominous">Ominous NPC</option>
+                  <option value="urgent">Urgent Caller</option>
+                </select>
+              </label>
+              <label>
+                Installed Voice
+                <select id="tts-voice">
+                  <option value="">Loading browser voices…</option>
+                </select>
+              </label>
+            </div>
+            <div class="range-row">
+              <label>
+                Rate
+                <input id="tts-rate" type="range" min="0.6" max="1.4" step="0.05" value="1.0" />
+              </label>
+              <label>
+                Pitch
+                <input id="tts-pitch" type="range" min="0.6" max="1.5" step="0.05" value="1.0" />
+              </label>
+            </div>
+            <div class="voice-presets">
+              <div class="sound-card">
+                <strong>Quick Source</strong>
+                <div class="small-actions">
+                  <button type="button" class="ghost" id="tts-use-assistant">Use Assistant Reply</button>
+                  <button type="button" class="ghost" id="tts-use-scene-notes">Use Scene Notes</button>
+                </div>
+              </div>
+              <div class="sound-card">
+                <strong>Status</strong>
+                <div class="subtle" id="tts-status-copy">Ready to read aloud.</div>
+              </div>
+            </div>
+            <label style="margin-top: 12px;">
+              Text To Read
+              <textarea id="tts-text" placeholder="Paste boxed text, NPC lines, or a recap here."></textarea>
+            </label>
+            <div class="actions">
+              <button type="submit">Speak</button>
+              <button type="button" class="secondary" id="tts-stop">Stop Speaking</button>
+            </div>
+          </form>
+          <div class="result-box" id="tts-result"><span class="empty">Voice output status will appear here.</span></div>
+        </article>
+
+        <article class="panel">
+          <h2>Reference PDFs</h2>
+          <form id="pdf-search-form">
+            <div class="grid-two">
+              <label>
+                Source PDF
+                <select id="pdf-select">
+                  <option value="">Loading references…</option>
+                </select>
+              </label>
+              <label>
+                Filter
+                <input id="pdf-search" placeholder="players guide, gauntlight, book 2…" />
+              </label>
+            </div>
+            <div class="actions">
+              <button type="submit">Open PDF Tab</button>
+              <button type="button" class="ghost" id="pdf-refresh">Refresh PDFs</button>
+            </div>
+          </form>
+          <div class="pdf-tabs" id="pdf-tabs"></div>
+          <iframe class="pdf-frame" id="pdf-frame" title="Reference PDF viewer"></iframe>
+        </article>
+
+        <article class="panel">
+          <h2>Session Mechanics</h2>
+          <p class="subtle">
+            Pull the active MapTool map into the live panel to surface initiative, HP pressure, and conditions without leaving the scene view.
+          </p>
+          <form id="maptool-form">
+            <div class="grid-two">
+              <label>
+                Authorization Header
+                <input id="maptool-auth" placeholder="Bearer session-token (optional)" />
+              </label>
+              <label>
+                Retry Limit
+                <select id="maptool-retries">
+                  <option value="">Default</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </label>
+            </div>
+            <div class="actions">
+              <button type="submit">Sync MapTool</button>
+            </div>
+          </form>
+          <div class="result-box" id="maptool-message"><span class="empty">No map synced yet.</span></div>
+          <div class="list" id="maptool-mechanics">
+            <div class="empty">Initiative, HP, and conditions will appear here after sync.</div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Continuity Search</h2>
+          <form id="entity-search-form">
+            <label>
+              Search Campaign Entities
+              <input id="entity-search" placeholder="Isabel, Balentyne, Vandermir…" />
+            </label>
+            <div class="actions">
+              <button type="submit">Search</button>
+            </div>
+          </form>
+          <div class="list" id="entity-results">
+            <div class="empty">Search results will appear here.</div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Session Context</h2>
+          <div class="list" id="session-context">
+            <div class="empty">Recent sessions and latest prep will appear here.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const endpoints = {
+      state: "/api/live/session-state",
+      maptoolSync: "/api/live/maptool-sync",
+      assistant: "/api/live/respond",
+      rules: "/api/documents/rules/query",
+      entities: "/api/campaign/entities",
+      prep: "/api/prep/session-brief",
+      exportVault: "/api/campaign/export/obsidian-vault",
+      importVault: "/api/campaign/import/obsidian-vault",
+      vaultNotes: "/api/live/vault/notes",
+      vaultNote: "/api/live/vault/note",
+      vaultResolveLink: "/api/live/vault/resolve-link",
+      campaignOverview: "/api/live/campaign-overview",
+      sessionOverviews: "/api/live/session-overviews",
+      sessionOverview: "/api/live/session-overview",
+      playerHandoutExport: "/api/live/player-handout-export",
+      referencePdfs: "/api/live/reference-pdfs",
+      dungeonMaps: "/api/live/dungeon-maps",
+      dungeonRoomKey: "/api/live/dungeon-room-key",
+      pcSheets: "/api/live/pc-sheets",
+      pcSheet: "/api/live/pc-sheet",
+      npcSheets: "/api/live/npc-sheets",
+      npcSheet: "/api/live/npc-sheet",
+    };
+
+    let panelSnapshot = null;
+    let lastAssistantAnswer = "";
+    let chatHistory = [];
+    let diceHistory = [];
+    let vaultNotes = [];
+    let vaultPath = "";
+    let referencePdfs = [];
+    let pdfTabs = [];
+    let activePdfPath = "";
+    let dungeonMaps = [];
+    let activeRoomKey = null;
+    let pcSheets = [];
+    let npcSheets = [];
+    let campaignOverviewNote = null;
+    let activeCampaignOverviewTab = "overview";
+    let sessionOverviews = [];
+    let activeSessionOverview = null;
+    let activeNpcDossierId = null;
+    const launchSessionPath = "Command Center/Sessions/Session 04 - Level 3 C7 Start.md";
+    const playerRecapPath = "Command Center/Campaign Recaps/Player Summary Through Level 3 C7.md";
+    const gmRecapPath = "Command Center/Campaign Recaps/GM Summary Through Level 3 C7.md";
+    const campaignOverviewTabs = {
+      overview: {
+        label: "Overview",
+        endpoint: endpoints.campaignOverview,
+        saveEndpoint: endpoints.campaignOverview,
+      },
+      "gm-summary": {
+        label: "GM Summary",
+        path: gmRecapPath,
+      },
+      "pc-summary": {
+        label: "PC Summary",
+        path: playerRecapPath,
+      },
+    };
+    let availableVoices = [];
+    let audioContext = null;
+    let activeAudioNodes = [];
+
+    const moduleInstructions = {
+      "Current Scene": "Use this first at the start of play and whenever the table moves to a new situation.\n\nScene Title is the short label for what is happening now. Focus tells DMA what kind of help to prioritize, such as scouting, social tension, combat, or rules friction. Current Location, Active PCs, and Active NPCs give chat, prep, sound recommendations, and continuity tools the right context. MapTool Map ID is used by Session Mechanics when you sync a map. DM Notes are for short reminders that matter right now, not full session notes. Save Live State after changing these fields.",
+      "Map Room": "Use this during dungeon exploration when you want the map and room key on one screen.\n\nDungeon Map loads a local map image from the configured campaign media folder. Room Filter narrows the sidebar by room number, title, monster, haunt, trap, loot, secret, or any matching text in the room key. Each room card is collapsed by default. Expand the room the party is entering to see what the PCs notice first, then GM-only contents such as monsters, NPCs, traps, haunts, loot, secret doors, visibility notes, and detection notes. This first version does not place clickable hotspots on the map yet; use the printed room labels on the image and the sidebar together.",
+      "Campaign Overview": "Use this as the campaign-level compass.\n\nThis note is stored in the Obsidian vault at Command Center/Campaign Overview.md, so edits here remain available in Obsidian and vice versa. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, and DM notes. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
+      "Session Overview": "Use this as the immediate session command center.\n\nEach tab opens a session note from the Obsidian vault. Next Session is the working prep tab; other Session tabs can hold runbooks, recaps, or future prep. Keep each session note organized around goal, starting situation, likely scenes, important NPCs, monsters/hazards/treasure, secrets, unexpected-player contingencies, live notes, and after-session recap. Use Edit Text during or after play to keep the DMA memory fresh.",
+      "Quick Rules": "Use this when you want a direct rules answer with citations rather than a conversational answer.\n\nType the rules question in plain language. Strict rules mode keeps the answer close to approved rules documents and is best during live play. Top K controls how many source chunks DMA considers; use 3 for fast focused answers and 5 or 8 when the first answer needs more context. For looser questions, the /rules button in DMA Chat is often enough.",
+      "Quick Prep": "Use this to generate a structured prep brief from the current live scene, recent sessions, and campaign state.\n\nBrief Title names the generated prep document. Prep Focus can override the current scene focus if you want a more specific brief, such as Level 1 hazards or Otari social fallout. Session Count controls how much recent history DMA considers. Store as session_prep document writes the brief back into DMA so it appears later in Session Context and the Obsidian export.",
+      "Vault Workspace": "Use this when you want to read the Obsidian campaign command center without leaving DMA.\n\nSearch Vault Notes filters note paths and titles, then the list opens notes in the viewer on the right. This is read-oriented, so it is best for consulting map keys, NPC notes, session runbooks, player handouts, and command-center pages during play. Export DMA To Vault regenerates supported vault content from DMA. Sync Vault To DMA imports supported edited vault sections back into the database. Use those sync buttons deliberately, especially after editing notes in Obsidian.",
+      "DMA Chat Workbench": "Use this as the main place to talk to DMA.\n\nAsk normal questions, or use the quick slash prompt buttons. /scene summarizes the current live situation. /rules starts a rules question. /recap asks for recent continuity. /prep asks for preparation help. /search looks up campaign memory. Chat Mode lets you steer the assistant when your request is ambiguous. Chat responses stay in this browser session and can be sent to Voice Reader with Use Assistant Reply.",
+      "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
+      "NPC Dossier Viewer": "Use this to inspect and update NPC campaign dossiers during play.\n\nSearch by NPC name, role, status, or summary, then open the dossier. NPCs are displayed differently from PCs: the focus is portrait, appearance, role, current location, player-facing description, GM summary, whether the party has encountered them, relationship to the PCs, campaign encounter points, goals, secrets, clues, relationships, and optional combat/statblock data. Use Edit NPC Notes And Details for table notes, better status values, appearance text, and disposition changes.",
+      "Dice Roller": "Use this for quick checks, saves, attacks, damage, and fortune or misfortune rolls.\n\nType formulas like 1d20+7, 2d6+4, 4d6kh3, or 2d20kl1+9. The die and modifier buttons help build common expressions quickly. Flat Check, Skill Check, Fortune, and Misfortune load useful templates that you can edit before rolling. Roll history keeps the latest results visible while the page stays open.",
+      "Session Soundboard": "Use this for lightweight sound cues and ambience during play.\n\nThe recommended sounds are based on the saved scene title, focus, and current location, so update Current Scene first if the suggestions feel off. One-shot cues play briefly. Ambience loops until you stop it or start a different ambience. Stop All Audio cuts off all sounds started by this panel. These are browser-generated sounds, not imported audio tracks.",
+      "Voice Reader": "Use this to read boxed text, NPC dialogue, recaps, or assistant answers aloud.\n\nChoose a Voice Preset for pacing and tone, then pick one of the voices installed in your browser or operating system. Rate and Pitch fine-tune the result. Use Assistant Reply loads the latest chat answer. Use Scene Notes loads the current DM notes. Paste or edit the text, then press Speak. Stop Speaking cancels the current read-aloud.",
+      "Reference PDFs": "Use this when you need the original books beside the DMA tools.\n\nFilter narrows the configured PDF list, Source PDF chooses the book, and Open PDF Tab adds it to the in-panel reader. The PDF viewer uses Chrome's native controls, so page search, zoom, download, and page navigation behave like normal Chrome PDFs. Open multiple tabs when you want the adventure volume, player guide, and another reference available at the same time.",
+      "Session Mechanics": "Use this to pull live MapTool state into DMA.\n\nSet the MapTool Map ID in Current Scene first, or type a map id there before syncing. Authorization Header is optional and only needed if the bridge requires it. Retry Limit controls how many attempts DMA makes. Sync MapTool refreshes initiative, HP pressure, and conditions from the active map. This panel shows the latest synced snapshot; it does not replace MapTool itself.",
+      "Continuity Search": "Use this for fast structured lookup when you already know the name or keyword.\n\nSearch for an NPC, PC, location, shop, faction, item, or event. Results come from DMA's campaign entity database and are intentionally concise. For a conversational explanation, use /search in DMA Chat. For reading the full human-facing note, use Vault Workspace.",
+      "Session Context": "Use this as the small memory strip for where the campaign has recently been.\n\nRecent Sessions shows the latest imported session events or logs. Latest Prep shows the most recently stored prep brief. This is passive context: it helps orient you before asking chat for a recap, generating new prep, or checking whether the current scene follows from the last session.",
+    };
+
+    const soundDefinitions = {
+      battleClash: {
+        title: "Battle Clash",
+        description: "A short metal-on-metal strike for sudden combat beats.",
+        tags: ["combat", "impact"],
+        loop: false,
+      },
+      heartbeat: {
+        title: "Heartbeat",
+        description: "A tense pulse for danger, chase scenes, and rising dread.",
+        tags: ["danger", "tension"],
+        loop: false,
+      },
+      arcaneChime: {
+        title: "Arcane Chime",
+        description: "A magical shimmer for occult moments, relics, and reveals.",
+        tags: ["magic", "mystery"],
+        loop: false,
+      },
+      doorKnock: {
+        title: "Door Knock",
+        description: "A quick practical cue for entrances, taverns, and homes.",
+        tags: ["social", "urban"],
+        loop: false,
+      },
+      thunderRoll: {
+        title: "Thunder Roll",
+        description: "Low atmospheric thunder for looming threats or storms.",
+        tags: ["storm", "threat"],
+        loop: false,
+      },
+      windAmbience: {
+        title: "Haunted Wind",
+        description: "Looping hush for ruins, cliffs, towers, and eerie travel.",
+        tags: ["ruins", "haunt", "ambience"],
+        loop: true,
+      },
+      dripAmbience: {
+        title: "Dungeon Drip",
+        description: "Looping cavern or sewer drip for underground spaces.",
+        tags: ["dungeon", "cave", "ambience"],
+        loop: true,
+      },
+      crowdMurmur: {
+        title: "Crowd Murmur",
+        description: "Looping public-space murmur for town scenes and inns.",
+        tags: ["town", "social", "ambience"],
+        loop: true,
+      },
+    };
+
+    const ttsPresets = {
+      moderator: { rate: 1.0, pitch: 1.0 },
+      friendly: { rate: 1.02, pitch: 1.18 },
+      stern: { rate: 0.95, pitch: 0.92 },
+      ominous: { rate: 0.82, pitch: 0.78 },
+      urgent: { rate: 1.12, pitch: 1.06 },
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function parseFlatFrontmatter(content) {
+      const fields = {};
+      const text = String(content || "");
+      if (!text.startsWith("---\n")) {
+        return fields;
+      }
+      const end = text.indexOf("\n---", 4);
+      if (end === -1) {
+        return fields;
+      }
+      text.slice(4, end).split("\n").forEach((line) => {
+        const match = line.match(/^([^:#]+):\s*(.*)$/);
+        if (!match) {
+          return;
+        }
+        fields[match[1].trim()] = match[2].trim().replace(/^["']|["']$/g, "");
+      });
+      return fields;
+    }
+
+    function safetyBadgeForNote(note) {
+      const fields = parseFlatFrontmatter(note?.content || "");
+      const visibility = (fields.visibility || "").toLowerCase();
+      const playerSafe = String(fields.player_safe || "").toLowerCase();
+      if (playerSafe === "yes" || visibility.includes("player safe")) {
+        return '<span class="safety-badge safe">Player-safe</span>';
+      }
+      if (playerSafe === "no" || visibility.includes("gm") || visibility.includes("dm")) {
+        return '<span class="safety-badge gm">GM only</span>';
+      }
+      return '<span class="safety-badge">Unmarked visibility</span>';
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options,
+      });
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const payload = await response.json();
+          detail = payload.detail || JSON.stringify(payload);
+        } catch (_error) {
+          detail = await response.text();
+        }
+        throw new Error(detail || "Request failed");
+      }
+      return response.json();
+    }
+
+    function summaryCard(label, value) {
+      return `
+        <div class="summary-card">
+          <span class="summary-label">${escapeHtml(label)}</span>
+          <span class="summary-value">${escapeHtml(value || "Not set")}</span>
+        </div>
+      `;
+    }
+
+    function nowLabel() {
+      return new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function storageKeyForPanel(title) {
+      return `dma.dmPanel.module.${title.replace(/\s+/g, "-").toLowerCase()}.collapsed`;
+    }
+
+    const moduleOrderKey = "dma.dmPanel.module.order";
+    const defaultTopModuleIds = [
+      "map-room",
+      "campaign-overview",
+      "session-overview",
+      "pc-sheet-viewer",
+      "npc-dossier-viewer",
+    ];
+
+    function moduleIdFromTitle(title) {
+      return title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+
+    function panelsInVisualOrder() {
+      return Array.from(document.querySelectorAll(".layout > .panel"))
+        .sort((left, right) => {
+          const leftOrder = Number.parseInt(left.style.order || "0", 10);
+          const rightOrder = Number.parseInt(right.style.order || "0", 10);
+          if (leftOrder !== rightOrder) {
+            return leftOrder - rightOrder;
+          }
+          return 0;
+        });
+    }
+
+    function applyModuleOrder(orderIds, persist = false) {
+      const panels = Array.from(document.querySelectorAll(".layout > .panel"));
+      const byId = new Map(panels.map((panel) => [panel.dataset.moduleId, panel]));
+      const resolvedIds = [
+        ...orderIds.filter((id) => byId.has(id)),
+        ...panels.map((panel) => panel.dataset.moduleId).filter((id) => !orderIds.includes(id)),
+      ];
+      resolvedIds.forEach((id, index) => {
+        byId.get(id).style.order = String(index);
+      });
+      if (persist) {
+        window.localStorage.setItem(moduleOrderKey, JSON.stringify(resolvedIds));
+      }
+    }
+
+    function initializeModuleLayout() {
+      const layout = document.querySelector(".layout");
+      const panels = Array.from(layout.querySelectorAll(".panel"));
+      panels.forEach((panel) => {
+        const heading = panel.querySelector("h2");
+        if (!panel.dataset.moduleId && heading) {
+          panel.dataset.moduleId = moduleIdFromTitle(heading.textContent);
+        }
+        layout.appendChild(panel);
+      });
+
+      let savedOrder = [];
+      try {
+        savedOrder = JSON.parse(window.localStorage.getItem(moduleOrderKey) || "[]");
+      } catch (_error) {
+        savedOrder = [];
+      }
+      if (Array.isArray(savedOrder) && savedOrder.length) {
+        const missingDefaultTopIds = defaultTopModuleIds.filter((id) => !savedOrder.includes(id));
+        applyModuleOrder([...missingDefaultTopIds, ...savedOrder]);
+      } else {
+        const moduleIds = Array.from(document.querySelectorAll(".layout > .panel"))
+          .map((panel) => panel.dataset.moduleId);
+        applyModuleOrder([
+          ...defaultTopModuleIds,
+          ...moduleIds.filter((id) => !defaultTopModuleIds.includes(id)),
+        ]);
+      }
+    }
+
+    function setupDraggablePanels() {
+      let draggedPanel = null;
+      document.querySelectorAll(".layout > .panel").forEach((panel) => {
+        const headerTools = panel.querySelector(".panel-tools");
+        if (!headerTools || headerTools.querySelector(".drag-handle")) {
+          return;
+        }
+        const dragButton = document.createElement("button");
+        dragButton.type = "button";
+        dragButton.className = "icon-button drag-handle";
+        dragButton.title = "Drag to move this module";
+        dragButton.setAttribute("aria-label", "Drag to move this module");
+        dragButton.textContent = "::";
+        headerTools.prepend(dragButton);
+
+        dragButton.addEventListener("pointerdown", () => {
+          panel.setAttribute("draggable", "true");
+          panel.dataset.dragArmed = "true";
+        });
+        dragButton.addEventListener("pointerup", () => {
+          panel.removeAttribute("draggable");
+          delete panel.dataset.dragArmed;
+        });
+
+        panel.addEventListener("dragstart", (event) => {
+          if (panel.dataset.dragArmed !== "true") {
+            event.preventDefault();
+            return;
+          }
+          draggedPanel = panel;
+          panel.classList.add("is-dragging");
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", panel.dataset.moduleId || "");
+        });
+
+        panel.addEventListener("dragover", (event) => {
+          if (draggedPanel && draggedPanel !== panel) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+          }
+        });
+
+        panel.addEventListener("drop", (event) => {
+          event.preventDefault();
+          if (!draggedPanel || draggedPanel === panel) {
+            return;
+          }
+          const ordered = panelsInVisualOrder();
+          const draggedId = draggedPanel.dataset.moduleId;
+          const targetId = panel.dataset.moduleId;
+          const nextOrder = ordered
+            .map((item) => item.dataset.moduleId)
+            .filter((id) => id !== draggedId);
+          const targetIndex = nextOrder.indexOf(targetId);
+          nextOrder.splice(Math.max(targetIndex, 0), 0, draggedId);
+          applyModuleOrder(nextOrder, true);
+        });
+
+        panel.addEventListener("dragend", () => {
+          panel.classList.remove("is-dragging");
+          panel.removeAttribute("draggable");
+          delete panel.dataset.dragArmed;
+          draggedPanel = null;
+        });
+      });
+    }
+
+    function setupCollapsiblePanels() {
+      document.querySelectorAll(".panel").forEach((panel) => {
+        if (panel.dataset.panelReady === "true") {
+          return;
+        }
+        const heading = panel.querySelector("h2");
+        if (!heading) {
+          return;
+        }
+        const title = heading.textContent.trim();
+        const body = document.createElement("div");
+        body.className = "panel-body";
+        while (heading.nextSibling) {
+          body.appendChild(heading.nextSibling);
+        }
+
+        const header = document.createElement("div");
+        header.className = "panel-header";
+        const tools = document.createElement("div");
+        tools.className = "panel-tools";
+        const helpButton = document.createElement("button");
+        helpButton.type = "button";
+        helpButton.className = "icon-button";
+        helpButton.title = `Show instructions for ${title}`;
+        helpButton.setAttribute("aria-label", `Show instructions for ${title}`);
+        helpButton.textContent = "?";
+        const collapseButton = document.createElement("button");
+        collapseButton.type = "button";
+        collapseButton.className = "icon-button";
+        collapseButton.title = `Collapse ${title}`;
+        collapseButton.setAttribute("aria-label", `Collapse ${title}`);
+        collapseButton.textContent = "–";
+
+        tools.append(helpButton, collapseButton);
+        header.append(heading, tools);
+
+        const help = document.createElement("details");
+        help.className = "module-help";
+        help.innerHTML = `
+          <summary>How to use this module</summary>
+          <div class="module-help-content">${escapeHtml(moduleInstructions[title] || "Use this module during live play when it is relevant to the current session.")}</div>
+        `;
+        body.prepend(help);
+        panel.append(header, body);
+        panel.dataset.panelReady = "true";
+
+        const storedCollapsed = window.localStorage.getItem(storageKeyForPanel(title));
+        const setCollapsed = (collapsed) => {
+          body.hidden = collapsed;
+          panel.classList.toggle("is-collapsed", collapsed);
+          collapseButton.textContent = collapsed ? "+" : "–";
+          collapseButton.title = `${collapsed ? "Expand" : "Collapse"} ${title}`;
+          collapseButton.setAttribute(
+            "aria-label",
+            `${collapsed ? "Expand" : "Collapse"} ${title}`,
+          );
+          window.localStorage.setItem(storageKeyForPanel(title), String(collapsed));
+        };
+        setCollapsed(storedCollapsed === "true");
+
+        collapseButton.addEventListener("click", () => setCollapsed(!body.hidden));
+        helpButton.addEventListener("click", () => {
+          help.open = !help.open;
+          if (body.hidden) {
+            setCollapsed(false);
+          }
+        });
+      });
+    }
+
+    function renderChatLog() {
+      const host = document.getElementById("chat-log");
+      if (!chatHistory.length) {
+        host.innerHTML = '<div class="empty">Ask DMA a campaign question or assign a small live task.</div>';
+        return;
+      }
+      host.innerHTML = chatHistory.map((item) => `
+        <div class="chat-message ${item.role === "dm" ? "dm" : "dma"}">
+          <strong>${item.role === "dm" ? "DM" : "DMA"} · ${escapeHtml(item.time)}</strong>
+          <div>${escapeHtml(item.text)}</div>
+        </div>
+      `).join("");
+      host.scrollTop = host.scrollHeight;
+    }
+
+    function chatAnswerText(payload) {
+      const lines = [payload.answer || "No answer returned."];
+      const citations = (payload.citations || [])
+        .slice(0, 3)
+        .map((citation) => citation.title || `Document ${citation.document_id}`);
+      if (citations.length) {
+        lines.push(`Sources: ${citations.join(", ")}`);
+      }
+      const entities = (payload.entities || [])
+        .slice(0, 4)
+        .map((entity) => `${entity.name}${entity.entity_type ? ` (${entity.entity_type})` : ""}`);
+      if (entities.length) {
+        lines.push(`Matches: ${entities.join(", ")}`);
+      }
+      if (payload.prep?.markdown) {
+        lines.push(`Prep brief:\n${payload.prep.markdown}`);
+      }
+      return lines.join("\n\n");
+    }
+
+    async function sendChatMessage(event) {
+      event.preventDefault();
+      const input = document.getElementById("chat-message");
+      const text = input.value.trim();
+      if (!text) {
+        return;
+      }
+      chatHistory.push({ role: "dm", text, time: nowLabel() });
+      chatHistory.push({ role: "dma", text: "Working…", time: nowLabel(), pending: true });
+      renderChatLog();
+      input.value = "";
+
+      try {
+        const payload = await fetchJson(endpoints.assistant, {
+          method: "POST",
+          body: JSON.stringify({
+            mode: document.getElementById("chat-mode").value,
+            message: text,
+          }),
+        });
+        lastAssistantAnswer = chatAnswerText(payload);
+        chatHistory = chatHistory.filter((item) => !item.pending);
+        chatHistory.push({
+          role: "dma",
+          text: lastAssistantAnswer,
+          time: nowLabel(),
+        });
+        renderChatLog();
+      } catch (error) {
+        chatHistory = chatHistory.filter((item) => !item.pending);
+        chatHistory.push({
+          role: "dma",
+          text: `Error: ${error.message}`,
+          time: nowLabel(),
+        });
+        renderChatLog();
+      }
+    }
+
+    function renderVaultNotes() {
+      const host = document.getElementById("vault-note-list");
+      if (!vaultNotes.length) {
+        host.innerHTML = '<div class="empty">No vault notes matched that search.</div>';
+        return;
+      }
+      host.innerHTML = vaultNotes.map((note) => `
+        <button type="button" class="note-button" data-vault-path="${escapeHtml(note.path)}">
+          <strong>${escapeHtml(note.title)}</strong>
+          <span class="history-meta">${escapeHtml(note.folder || "Vault root")}</span>
+        </button>
+      `).join("");
+    }
+
+    async function loadVaultNotes(query = "") {
+      const host = document.getElementById("vault-note-list");
+      host.innerHTML = '<div class="empty">Loading vault notes…</div>';
+      try {
+        const payload = await fetchJson(
+          `${endpoints.vaultNotes}?limit=120&q=${encodeURIComponent(query)}`,
+        );
+        vaultPath = payload.vault_path || vaultPath;
+        vaultNotes = payload.items || [];
+        renderVaultNotes();
+      } catch (error) {
+        host.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function openVaultNote(path) {
+      const viewer = document.getElementById("vault-note-viewer");
+      const meta = document.getElementById("vault-note-meta");
+      viewer.innerHTML = '<span class="empty">Opening note…</span>';
+      try {
+        const payload = await fetchJson(
+          `${endpoints.vaultNote}?path=${encodeURIComponent(path)}`,
+        );
+        meta.innerHTML = `
+          <span class="stat-badge">${escapeHtml(payload.title)}</span>
+          <span class="stat-badge">${escapeHtml(payload.path)}</span>
+        `;
+        viewer.textContent = payload.content || "";
+      } catch (error) {
+        viewer.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function wikilinkLabel(target, alias) {
+      if (alias) {
+        return alias.trim();
+      }
+      const noteTarget = target.split("#")[0].trim();
+      return (noteTarget.split("/").pop() || noteTarget || target).replace(/\.md$/i, "");
+    }
+
+    function renderInlineMarkdown(text) {
+      const source = String(text || "");
+      let html = "";
+      let cursor = 0;
+      const wikilinkPattern = /(!)?\[\[([^\]]+)\]\]/g;
+      let match;
+      while ((match = wikilinkPattern.exec(source)) !== null) {
+        html += escapeHtml(source.slice(cursor, match.index));
+        const isEmbed = Boolean(match[1]);
+        const [rawTarget, rawAlias] = match[2].split("|");
+        const target = rawTarget.trim();
+        const label = wikilinkLabel(target, rawAlias);
+        html += `
+          <button
+            type="button"
+            class="vault-wikilink ${isEmbed ? "embed" : ""}"
+            data-wikilink-target="${escapeHtml(target)}"
+            title="Open ${escapeHtml(target)} in Vault Workspace"
+          >${isEmbed ? "Embed: " : ""}${escapeHtml(label)}</button>
+        `;
+        cursor = wikilinkPattern.lastIndex;
+      }
+      html += escapeHtml(source.slice(cursor));
+      return html;
+    }
+
+    async function openWikilinkTarget(target) {
+      const statusHosts = [
+        document.getElementById("campaign-overview-status"),
+        document.getElementById("session-overview-status"),
+        document.getElementById("vault-sync-status"),
+      ].filter(Boolean);
+      statusHosts.forEach((host) => {
+        host.innerHTML = `<span>Resolving wikilink ${escapeHtml(target)}…</span>`;
+      });
+      try {
+        const resolved = await fetchJson(
+          `${endpoints.vaultResolveLink}?target=${encodeURIComponent(target)}`,
+        );
+        await openVaultNote(resolved.path);
+        document.getElementById("vault-search").value = resolved.title || "";
+        await loadVaultNotes(resolved.title || "");
+        const vaultPanel = document.querySelector('[data-module-id="vault-workspace"]');
+        if (vaultPanel) {
+          vaultPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        statusHosts.forEach((host) => {
+          host.innerHTML = `<span>Opened ${escapeHtml(resolved.path)} in Vault Workspace.</span>`;
+        });
+      } catch (error) {
+        statusHosts.forEach((host) => {
+          host.innerHTML = `<span class="error">Could not resolve ${escapeHtml(target)}: ${escapeHtml(error.message)}</span>`;
+        });
+      }
+    }
+
+    async function runVaultSync(kind) {
+      const host = document.getElementById("vault-sync-status");
+      if (!vaultPath) {
+        host.innerHTML = '<span class="error">Load the vault note list before syncing.</span>';
+        return;
+      }
+      const isExport = kind === "export";
+      host.innerHTML = `<span>${isExport ? "Exporting DMA state to vault" : "Syncing vault edits into DMA"}…</span>`;
+      try {
+        const payload = await fetchJson(isExport ? endpoints.exportVault : endpoints.importVault, {
+          method: "POST",
+          body: JSON.stringify({ vault_path: vaultPath }),
+        });
+        const counts = payload.counts
+          ? Object.entries(payload.counts).map(([key, value]) => `${key}: ${value}`).join(", ")
+          : "";
+        host.innerHTML = `
+          <span>${isExport ? "Export complete." : "Sync complete."}</span>
+          ${counts ? `<div class="subtle" style="margin-top: 8px;">${escapeHtml(counts)}</div>` : ""}
+        `;
+        await loadVaultNotes(document.getElementById("vault-search").value.trim());
+      } catch (error) {
+        host.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function markdownToHtml(markdown) {
+      const lines = String(markdown || "").split(/\r?\n/);
+      const html = [];
+      let listOpen = false;
+      let paragraph = [];
+      const flushParagraph = () => {
+        if (paragraph.length) {
+          html.push(`<p>${renderInlineMarkdown(paragraph.join(" "))}</p>`);
+          paragraph = [];
+        }
+      };
+      const closeList = () => {
+        if (listOpen) {
+          html.push("</ul>");
+          listOpen = false;
+        }
+      };
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          flushParagraph();
+          closeList();
+          return;
+        }
+        const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+          flushParagraph();
+          closeList();
+          const level = heading[1].length;
+          html.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+          return;
+        }
+        const bullet = trimmed.match(/^[-*]\s+(.+)$/);
+        if (bullet) {
+          flushParagraph();
+          if (!listOpen) {
+            html.push("<ul>");
+            listOpen = true;
+          }
+          html.push(`<li>${renderInlineMarkdown(bullet[1])}</li>`);
+          return;
+        }
+        paragraph.push(trimmed);
+      });
+      flushParagraph();
+      closeList();
+      return html.join("");
+    }
+
+    function setCommandNoteMode(prefix, isEditing) {
+      document.getElementById(`${prefix}-view`).hidden = isEditing;
+      document.getElementById(`${prefix}-editor`).hidden = !isEditing;
+      document.getElementById(`${prefix}-save`).hidden = !isEditing;
+      document.getElementById(`${prefix}-cancel`).hidden = !isEditing;
+      document.getElementById(`${prefix}-edit`).hidden = isEditing;
+    }
+
+    function renderCampaignOverviewTabs() {
+      const host = document.getElementById("campaign-overview-tabs");
+      host.innerHTML = Object.entries(campaignOverviewTabs).map(([key, tab]) => `
+        <button type="button" class="session-tab ${activeCampaignOverviewTab === key ? "active" : ""}" data-campaign-tab="${escapeHtml(key)}">
+          ${escapeHtml(tab.label)}
+        </button>
+      `).join("");
+    }
+
+    function renderCampaignOverview() {
+      const note = campaignOverviewNote;
+      renderCampaignOverviewTabs();
+      if (!note) {
+        return;
+      }
+      document.getElementById("campaign-overview-view").innerHTML = markdownToHtml(note.content);
+      document.getElementById("campaign-overview-editor").value = note.content || "";
+      document.getElementById("campaign-overview-meta").innerHTML = `
+        ${safetyBadgeForNote(note)}
+        <span class="stat-badge">${escapeHtml(note.title)}</span>
+        <span class="stat-badge">${escapeHtml(note.path)}</span>
+      `;
+      setCommandNoteMode("campaign-overview", false);
+    }
+
+    async function loadVaultNotePayload(path) {
+      return fetchJson(`${endpoints.vaultNote}?path=${encodeURIComponent(path)}`);
+    }
+
+    async function loadCampaignOverview() {
+      const status = document.getElementById("campaign-overview-status");
+      const tab = campaignOverviewTabs[activeCampaignOverviewTab] || campaignOverviewTabs.overview;
+      status.innerHTML = `<span>Loading ${escapeHtml(tab.label.toLowerCase())}…</span>`;
+      try {
+        campaignOverviewNote = tab.path
+          ? await loadVaultNotePayload(tab.path)
+          : await fetchJson(tab.endpoint);
+        renderCampaignOverview();
+        status.innerHTML = `<span>${escapeHtml(tab.label)} loaded.</span>`;
+      } catch (error) {
+        status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function openCampaignOverviewTab(tabKey) {
+      if (!campaignOverviewTabs[tabKey]) {
+        return;
+      }
+      activeCampaignOverviewTab = tabKey;
+      setCommandNoteMode("campaign-overview", false);
+      await loadCampaignOverview();
+    }
+
+    async function saveCampaignOverview() {
+      const status = document.getElementById("campaign-overview-status");
+      const tab = campaignOverviewTabs[activeCampaignOverviewTab] || campaignOverviewTabs.overview;
+      status.innerHTML = `<span>Saving ${escapeHtml(tab.label.toLowerCase())}…</span>`;
+      try {
+        const url = tab.path
+          ? `${endpoints.vaultNote}?path=${encodeURIComponent(tab.path)}`
+          : tab.saveEndpoint;
+        campaignOverviewNote = await fetchJson(url, {
+          method: "PATCH",
+          body: JSON.stringify({
+            content: document.getElementById("campaign-overview-editor").value,
+          }),
+        });
+        renderCampaignOverview();
+        status.innerHTML = `<span>${escapeHtml(tab.label)} saved to the Obsidian vault.</span>`;
+      } catch (error) {
+        status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function renderSessionTabs() {
+      const host = document.getElementById("session-overview-tabs");
+      if (!sessionOverviews.length) {
+        host.innerHTML = '<span class="empty">No session overview notes found.</span>';
+        return;
+      }
+      host.innerHTML = sessionOverviews.map((item) => `
+        <button type="button" class="session-tab ${activeSessionOverview?.path === item.path ? "active" : ""}" data-session-path="${escapeHtml(item.path)}">
+          ${escapeHtml(item.title)}
+        </button>
+      `).join("");
+    }
+
+    function renderSessionOverview() {
+      const note = activeSessionOverview;
+      renderSessionTabs();
+      if (!note) {
+        return;
+      }
+      document.getElementById("session-overview-view").innerHTML = markdownToHtml(note.content);
+      document.getElementById("session-overview-editor").value = note.content || "";
+      document.getElementById("session-overview-meta").innerHTML = `
+        ${safetyBadgeForNote(note)}
+        <span class="stat-badge">${escapeHtml(note.title)}</span>
+        <span class="stat-badge">${escapeHtml(note.path)}</span>
+      `;
+      setCommandNoteMode("session-overview", false);
+    }
+
+    async function openSessionOverview(path) {
+      const status = document.getElementById("session-overview-status");
+      status.innerHTML = "<span>Loading session overview…</span>";
+      try {
+        activeSessionOverview = await fetchJson(
+          `${endpoints.sessionOverview}?path=${encodeURIComponent(path)}`,
+        );
+        renderSessionOverview();
+        status.innerHTML = "<span>Session overview loaded.</span>";
+      } catch (error) {
+        status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function loadSessionOverviews() {
+      const status = document.getElementById("session-overview-status");
+      status.innerHTML = "<span>Loading session tabs…</span>";
+      try {
+        const payload = await fetchJson(endpoints.sessionOverviews);
+        sessionOverviews = payload.items || [];
+        const preferred = sessionOverviews.find((item) => item.title === "Next Session") || sessionOverviews[0];
+        renderSessionTabs();
+        if (preferred) {
+          await openSessionOverview(preferred.path);
+        } else {
+          status.innerHTML = '<span class="empty">No session overview notes found.</span>';
+        }
+      } catch (error) {
+        status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function saveSessionOverview() {
+      const status = document.getElementById("session-overview-status");
+      if (!activeSessionOverview) {
+        status.innerHTML = '<span class="error">No session overview is open.</span>';
+        return;
+      }
+      status.innerHTML = "<span>Saving session overview…</span>";
+      try {
+        activeSessionOverview = await fetchJson(
+          `${endpoints.sessionOverview}?path=${encodeURIComponent(activeSessionOverview.path)}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              content: document.getElementById("session-overview-editor").value,
+            }),
+          },
+        );
+        renderSessionOverview();
+        status.innerHTML = "<span>Session overview saved to the Obsidian vault.</span>";
+      } catch (error) {
+        status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function setLaunchStatus(message, isError = false) {
+      document.getElementById("launch-status").innerHTML =
+        `<span class="${isError ? "error" : ""}">${escapeHtml(message)}</span>`;
+    }
+
+    function findLevelThreeMapId() {
+      const candidates = ["level3", "level-3", "level-03", "level03"];
+      return (
+        dungeonMaps.find((item) => candidates.includes(item.map_id)) ||
+        dungeonMaps.find((item) => /level\s*3|level3|floor\s*3/i.test(`${item.title} ${item.path || ""}`)) ||
+        dungeonMaps.find((item) => /c[0-9]|cult|canker/i.test(`${item.title} ${item.path || ""}`))
+      )?.map_id || "";
+    }
+
+    function focusModule(moduleId) {
+      const panel = document.querySelector(`[data-module-id="${moduleId}"]`);
+      if (!panel) {
+        return;
+      }
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function openVaultPathInWorkspace(path, label) {
+      await loadVaultNotes("");
+      await openVaultNote(path);
+      setLaunchStatus(`${label} opened in Vault Workspace.`);
+      focusModule("vault-workspace");
+    }
+
+    async function launchCurrentSession() {
+      setLaunchStatus("Launching the C7 session cockpit…");
+      try {
+        await Promise.all([
+          loadCampaignOverview(),
+          loadSessionOverviews(),
+          loadDungeonMaps(),
+          loadPcSheets(),
+          loadNpcSheets(),
+          loadPanel(),
+        ]);
+        await openSessionOverview(launchSessionPath);
+        document.getElementById("session-track-room").value = "C7";
+        document.getElementById("session-track-explored").value = "C7";
+        document.getElementById("session-track-next").value = "Choose first route from C7";
+
+        const levelThreeMapId = findLevelThreeMapId();
+        if (levelThreeMapId) {
+          document.getElementById("map-room-select").value = levelThreeMapId;
+          document.getElementById("map-room-filter").value = "c7";
+          await loadMapRoom(levelThreeMapId);
+        }
+
+        setLaunchStatus("Session Launch Mode ready: Session 04, C7 map context, party overview, NPC dossier, and campaign overview are loaded.");
+        focusModule("session-overview");
+      } catch (error) {
+        setLaunchStatus(error.message || "Could not launch current session.", true);
+      }
+    }
+
+    function trackerMarkdownBlock() {
+      const rows = [
+        ["Current room / area", document.getElementById("session-track-room").value],
+        ["Explored rooms", document.getElementById("session-track-explored").value],
+        ["Active NPCs", document.getElementById("session-track-npcs").value],
+        ["Unresolved clues", document.getElementById("session-track-clues").value],
+        ["Party status / resources", document.getElementById("session-track-party").value],
+        ["Next likely beat", document.getElementById("session-track-next").value],
+      ];
+      const notes = document.getElementById("session-track-notes").value.trim();
+      const lines = [
+        "## Live Session Tracker",
+        "",
+        `Last updated from DMA: ${new Date().toLocaleString()}`,
+        "",
+        ...rows.map(([label, value]) => `- ${label}: ${value.trim() || "Not recorded."}`),
+        "",
+        "### Live Notes / Recap Draft",
+        "",
+        notes || "No live notes recorded yet.",
+        "",
+      ];
+      return lines.join("\n");
+    }
+
+    function replaceSection(content, heading, replacement) {
+      const source = String(content || "").trimEnd();
+      const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(`(^## ${escapedHeading}\\n[\\s\\S]*?)(?=^##\\s|$)`, "m");
+      if (pattern.test(source)) {
+        return source.replace(pattern, replacement.trimEnd() + "\n\n");
+      }
+      return `${source}\n\n${replacement.trimEnd()}\n`;
+    }
+
+    async function saveSessionTrackerToNote() {
+      const status = document.getElementById("session-overview-status");
+      if (!activeSessionOverview) {
+        status.innerHTML = '<span class="error">Open a session note before writing tracker state.</span>';
+        return;
+      }
+      status.innerHTML = "<span>Writing live tracker to the active session note…</span>";
+      try {
+        const nextContent = replaceSection(
+          activeSessionOverview.content || "",
+          "Live Session Tracker",
+          trackerMarkdownBlock(),
+        );
+        activeSessionOverview = await fetchJson(
+          `${endpoints.sessionOverview}?path=${encodeURIComponent(activeSessionOverview.path)}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ content: nextContent }),
+          },
+        );
+        renderSessionOverview();
+        status.innerHTML = "<span>Live tracker saved into the active Obsidian session note.</span>";
+      } catch (error) {
+        status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function clearSessionTracker() {
+      [
+        "session-track-room",
+        "session-track-party",
+        "session-track-explored",
+        "session-track-npcs",
+        "session-track-clues",
+        "session-track-next",
+        "session-track-notes",
+      ].forEach((id) => {
+        document.getElementById(id).value = "";
+      });
+    }
+
+    async function exportPlayerRecapPdf() {
+      setLaunchStatus("Exporting the player-safe recap as a styled PDF…");
+      try {
+        const payload = await fetchJson(endpoints.playerHandoutExport, {
+          method: "POST",
+          body: JSON.stringify({
+            path: playerRecapPath,
+            basename: "player-summary-through-level-3-c7",
+          }),
+        });
+        setLaunchStatus(`Player recap PDF exported: ${payload.pdf_path || payload.html_path}`);
+        if (payload.pdf_url) {
+          window.open(payload.pdf_url, "_blank", "noopener");
+        }
+      } catch (error) {
+        setLaunchStatus(error.message || "Could not export player recap PDF.", true);
+      }
+    }
+
+    function renderPdfSelect() {
+      const select = document.getElementById("pdf-select");
+      if (!referencePdfs.length) {
+        select.innerHTML = '<option value="">No reference PDFs found</option>';
+        return;
+      }
+      select.innerHTML = referencePdfs.map((item) => `
+        <option value="${escapeHtml(item.path)}">${escapeHtml(item.title)}</option>
+      `).join("");
+    }
+
+    function renderPdfTabs() {
+      const tabs = document.getElementById("pdf-tabs");
+      if (!pdfTabs.length) {
+        tabs.innerHTML = '<span class="empty">Open a PDF to create a reference tab.</span>';
+        document.getElementById("pdf-frame").removeAttribute("src");
+        return;
+      }
+      tabs.innerHTML = pdfTabs.map((tab) => `
+        <button type="button" class="pdf-tab ${tab.path === activePdfPath ? "active" : ""}" data-pdf-tab="${escapeHtml(tab.path)}">
+          ${escapeHtml(tab.title)}
+        </button>
+      `).join("");
+      const active = pdfTabs.find((tab) => tab.path === activePdfPath) || pdfTabs[0];
+      activePdfPath = active.path;
+      document.getElementById("pdf-frame").src = active.url;
+    }
+
+    async function loadReferencePdfs(query = "") {
+      const select = document.getElementById("pdf-select");
+      select.innerHTML = '<option value="">Loading references…</option>';
+      try {
+        const payload = await fetchJson(
+          `${endpoints.referencePdfs}?q=${encodeURIComponent(query)}`,
+        );
+        referencePdfs = payload.items || [];
+        renderPdfSelect();
+      } catch (error) {
+        select.innerHTML = `<option value="">${escapeHtml(error.message)}</option>`;
+      }
+    }
+
+    function openPdfTab(path) {
+      const item = referencePdfs.find((pdf) => pdf.path === path);
+      if (!item) {
+        return;
+      }
+      if (!pdfTabs.some((tab) => tab.path === item.path)) {
+        pdfTabs.push(item);
+      }
+      activePdfPath = item.path;
+      renderPdfTabs();
+    }
+
+    function renderMapSelect() {
+      const select = document.getElementById("map-room-select");
+      if (!dungeonMaps.length) {
+        select.innerHTML = '<option value="">No dungeon maps found</option>';
+        return;
+      }
+      select.innerHTML = dungeonMaps.map((item) => `
+        <option value="${escapeHtml(item.map_id)}">${escapeHtml(item.title)}${item.folder ? ` — ${escapeHtml(item.folder)}` : ""}</option>
+      `).join("");
+      const preferred = dungeonMaps.find((item) => item.map_id === "level1")
+        || dungeonMaps.find((item) => /level ?1/i.test(item.title))
+        || dungeonMaps[0];
+      if (preferred) {
+        select.value = preferred.map_id;
+      }
+    }
+
+    async function loadDungeonMaps(query = "") {
+      const select = document.getElementById("map-room-select");
+      select.innerHTML = '<option value="">Loading maps…</option>';
+      try {
+        const payload = await fetchJson(
+          `${endpoints.dungeonMaps}?q=${encodeURIComponent(query)}`,
+        );
+        dungeonMaps = payload.items || [];
+        renderMapSelect();
+      } catch (error) {
+        select.innerHTML = `<option value="">${escapeHtml(error.message)}</option>`;
+      }
+    }
+
+    function listValues(values) {
+      if (!values || !values.length) {
+        return '<span class="empty">None listed.</span>';
+      }
+      return `<ul>${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul>`;
+    }
+
+    function roomSearchText(room) {
+      return [
+        room.room_id,
+        room.title,
+        room.player_visible_description,
+        room.gm_description,
+        room.visibility_notes,
+        room.detection_notes,
+        ...(room.monsters || []),
+        ...(room.npcs || []),
+        ...(room.traps || []),
+        ...(room.haunts || []),
+        ...(room.hazards || []),
+        ...(room.loot || []),
+        ...(room.secret_doors || []),
+        ...(room.dependencies || []),
+      ].join(" ").toLowerCase();
+    }
+
+    function roomTags(room) {
+      const tags = [];
+      if ((room.monsters || []).length) tags.push("Monsters");
+      if ((room.npcs || []).length) tags.push("NPC");
+      if ((room.traps || []).length) tags.push("Trap");
+      if ((room.haunts || []).length) tags.push("Haunt");
+      if ((room.loot || []).length) tags.push("Loot");
+      if ((room.secret_doors || []).length) tags.push("Secret");
+      return tags;
+    }
+
+    function renderRoomKey() {
+      const list = document.getElementById("map-room-list");
+      const meta = document.getElementById("map-room-meta");
+      if (!activeRoomKey) {
+        meta.innerHTML = '<span class="stat-badge">No room key loaded</span>';
+        list.innerHTML = '<div class="empty">Room notes will appear here.</div>';
+        return;
+      }
+
+      const query = document.getElementById("map-room-filter").value.trim().toLowerCase();
+      const rooms = (activeRoomKey.rooms || []).filter((room) => (
+        !query || roomSearchText(room).includes(query)
+      ));
+      meta.innerHTML = `
+        <span class="stat-badge">${escapeHtml(activeRoomKey.title || activeRoomKey.map_id || "Dungeon map")}</span>
+        <span class="stat-badge">${rooms.length} room${rooms.length === 1 ? "" : "s"}</span>
+      `;
+
+      if (!rooms.length) {
+        list.innerHTML = '<div class="empty">No rooms match that filter.</div>';
+        return;
+      }
+
+      list.innerHTML = rooms.map((room) => {
+        const tags = roomTags(room);
+        const exactRoomMatch = query && room.room_id && room.room_id.toLowerCase() === query;
+        return `
+          <details class="room-card" ${exactRoomMatch ? "open" : ""}>
+            <summary>${escapeHtml(room.room_id)} ${escapeHtml(room.title || "")}</summary>
+            <div class="room-card-body">
+              ${tags.length ? `<div class="room-tags">${tags.map((tag) => `<span class="room-tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
+              <div class="room-card-section">
+                <strong>What PCs see first</strong>
+                <div>${escapeHtml(room.player_visible_description || "No player-visible description listed.")}</div>
+              </div>
+              <div class="room-card-section">
+                <strong>GM-only room note</strong>
+                <div>${escapeHtml(room.gm_description || "No GM-only note listed.")}</div>
+              </div>
+              <div class="room-card-section"><strong>Monsters</strong>${listValues(room.monsters)}</div>
+              <div class="room-card-section"><strong>NPCs</strong>${listValues(room.npcs)}</div>
+              <div class="room-card-section"><strong>Traps, haunts, and hazards</strong>${listValues([...(room.traps || []), ...(room.haunts || []), ...(room.hazards || [])])}</div>
+              <div class="room-card-section"><strong>Loot</strong>${listValues(room.loot)}</div>
+              <div class="room-card-section"><strong>Secret doors and hidden features</strong>${listValues(room.secret_doors)}</div>
+              <div class="room-card-section">
+                <strong>Visibility and detection</strong>
+                <div>${escapeHtml(room.visibility_notes || "No visibility note listed.")}</div>
+                <div class="subtle" style="margin-top: 4px;">${escapeHtml(room.detection_notes || "No detection note listed.")}</div>
+              </div>
+              <div class="room-card-section"><strong>Dependencies</strong>${listValues(room.dependencies)}</div>
+              <div class="room-card-section"><strong>Source</strong><div class="subtle">${escapeHtml(room.source || "No source listed.")}</div></div>
+            </div>
+          </details>
+        `;
+      }).join("");
+    }
+
+    async function loadMapRoom(mapId = null) {
+      const selectedMapId = mapId || document.getElementById("map-room-select").value;
+      const viewer = document.getElementById("map-room-viewer");
+      const list = document.getElementById("map-room-list");
+      if (!selectedMapId) {
+        viewer.innerHTML = '<div class="empty" style="padding: 16px;">Choose a dungeon map to load it here.</div>';
+        list.innerHTML = '<div class="empty">Room notes will appear here.</div>';
+        return;
+      }
+      const map = dungeonMaps.find((item) => item.map_id === selectedMapId);
+      if (!map) {
+        return;
+      }
+      viewer.innerHTML = `<img src="${escapeHtml(map.url)}" alt="${escapeHtml(map.title)}" />`;
+      list.innerHTML = '<div class="empty">Loading room key…</div>';
+      activeRoomKey = null;
+      try {
+        activeRoomKey = await fetchJson(
+          `${endpoints.dungeonRoomKey}?map_id=${encodeURIComponent(selectedMapId)}`,
+        );
+        renderRoomKey();
+      } catch (error) {
+        document.getElementById("map-room-meta").innerHTML = `
+          <span class="stat-badge">${escapeHtml(map.title)}</span>
+          <span class="stat-badge">No room key found</span>
+        `;
+        list.innerHTML = `<div class="empty">Map loaded, but no room-key JSON matched <code>${escapeHtml(selectedMapId)}</code>.</div>`;
+      }
+    }
+
+    function formatValue(value) {
+      if (value === null || typeof value === "undefined" || value === "") {
+        return "—";
+      }
+      if (Array.isArray(value)) {
+        return value.length ? value.map(formatValue).join(", ") : "—";
+      }
+      if (typeof value === "object") {
+        if (value.name) return value.name;
+        if (value.display) return value.display;
+        return JSON.stringify(value);
+      }
+      return String(value);
+    }
+
+    function renderPortrait(ref, label) {
+      if (!ref) {
+        return `<div class="portrait-frame">Portrait<br />placeholder</div>`;
+      }
+      if (/^https?:\/\//.test(ref) || ref.startsWith("/")) {
+        return `<div class="portrait-frame"><img src="${escapeHtml(ref)}" alt="${escapeHtml(label || "Portrait")}" /></div>`;
+      }
+      return `<div class="portrait-frame">${escapeHtml(ref)}</div>`;
+    }
+
+    function renderSheetStats(stats) {
+      return `<div class="sheet-stat-grid">${stats.map((stat) => `
+        <div class="sheet-stat">
+          <span>${escapeHtml(stat.label)}</span>
+          <strong>${escapeHtml(formatValue(stat.value))}</strong>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function renderSheetSection(title, body, open = false) {
+      return `
+        <details class="sheet-section" ${open ? "open" : ""}>
+          <summary>${escapeHtml(title)}</summary>
+          <div class="sheet-section-body">${body}</div>
+        </details>
+      `;
+    }
+
+    function renderSimpleList(values) {
+      if (!values || !values.length) {
+        return '<span class="empty">None listed.</span>';
+      }
+      return `<ul>${values.map((value) => `<li>${escapeHtml(formatValue(value))}</li>`).join("")}</ul>`;
+    }
+
+    function renderKeyValueTable(rows) {
+      const filtered = rows.filter((row) => formatValue(row.value) !== "—");
+      if (!filtered.length) {
+        return '<span class="empty">None listed.</span>';
+      }
+      return `
+        <table class="mini-table">
+          <tbody>
+            ${filtered.map((row) => `
+              <tr>
+                <th>${escapeHtml(row.label)}</th>
+                <td>${escapeHtml(formatValue(row.value))}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function textareaValue(value) {
+      if (!value) {
+        return "";
+      }
+      if (Array.isArray(value)) {
+        return value.join("\n");
+      }
+      return String(value);
+    }
+
+    function renderNpcEditForm(dossier) {
+      return `
+        <form id="npc-dossier-edit-form" data-npc-id="${escapeHtml(dossier.id)}">
+          <div class="grid-two">
+            <label>
+              Party Relationship
+              <select id="npc-pc-relationship-status">
+                ${["unknown", "hostile", "wary", "neutral", "friendly", "ally", "patron", "enemy"].map((value) => `
+                  <option value="${value}" ${dossier.pc_relationship_status === value ? "selected" : ""}>${value}</option>
+                `).join("")}
+              </select>
+            </label>
+            <label>
+              Status
+              <input id="npc-status" value="${escapeHtml(dossier.status || "")}" placeholder="active, missing, dead, patron, suspicious…" />
+            </label>
+          </div>
+          <div class="inline-toggle">
+            <input id="npc-pc-encountered" type="checkbox" ${dossier.pc_encountered ? "checked" : ""} />
+            <label for="npc-pc-encountered" style="margin: 0;">PCs have encountered this NPC</label>
+          </div>
+          <label style="margin-top: 10px;">
+            What PCs See / Appearance
+            <textarea id="npc-appearance-description" placeholder="Read-aloud-safe visual description.">${escapeHtml(dossier.appearance_description || "")}</textarea>
+          </label>
+          <label style="margin-top: 10px;">
+            Detailed GM Summary
+            <textarea id="npc-gm-summary" placeholder="Motives, context, secrets, and how to use this NPC.">${escapeHtml(dossier.gm_summary || "")}</textarea>
+          </label>
+          <label style="margin-top: 10px;">
+            Status Detail
+            <textarea id="npc-status-detail" placeholder="Richer status note, current agenda, condition, or campaign state.">${escapeHtml(dossier.status_detail || "")}</textarea>
+          </label>
+          <label style="margin-top: 10px;">
+            Campaign Encounter Points
+            <textarea id="npc-campaign-encounters" placeholder="One place/session/scene per line.">${escapeHtml(textareaValue(dossier.campaign_encounters))}</textarea>
+          </label>
+          <label style="margin-top: 10px;">
+            DM Notes
+            <textarea id="npc-dm-notes" placeholder="Private DM notes for this NPC.">${escapeHtml(dossier.dm_notes || "")}</textarea>
+          </label>
+          <label style="margin-top: 10px;">
+            Player-Facing Summary
+            <textarea id="npc-player-summary" placeholder="Safe summary for players or public notes.">${escapeHtml(dossier.player_facing || "")}</textarea>
+          </label>
+          <div class="actions">
+            <button type="submit">Save NPC Notes</button>
+          </div>
+          <div class="result-box" id="npc-dossier-save-status"><span class="empty">No NPC edits saved yet.</span></div>
+        </form>
+      `;
+    }
+
+    function renderAbilityTable(abilities) {
+      if (!abilities || !abilities.length) {
+        return '<span class="empty">No ability scores imported.</span>';
+      }
+      return `
+        <table class="mini-table">
+          <thead><tr><th>Ability</th><th>Score</th><th>Mod</th></tr></thead>
+          <tbody>
+            ${abilities.map((ability) => `
+              <tr>
+                <td>${escapeHtml(ability.name)}</td>
+                <td>${escapeHtml(formatValue(ability.score))}</td>
+                <td>${escapeHtml(ability.modifier === null || typeof ability.modifier === "undefined" ? "—" : `${ability.modifier >= 0 ? "+" : ""}${ability.modifier}`)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderSkillTable(skills) {
+      if (!skills || !skills.length) {
+        return '<span class="empty">No trained skills imported.</span>';
+      }
+      return `
+        <table class="mini-table">
+          <thead><tr><th>Skill</th><th>Ability</th><th>Prof.</th><th>Total</th></tr></thead>
+          <tbody>
+            ${skills.map((skill) => `
+              <tr>
+                <td>${escapeHtml(skill.name)}</td>
+                <td>${escapeHtml(skill.ability || "")}</td>
+                <td>${escapeHtml(skill.proficiency || "")}</td>
+                <td>${escapeHtml(formatValue(skill.total))}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderAttackTable(attacks) {
+      if (!attacks || !attacks.length) {
+        return '<span class="empty">No attacks imported.</span>';
+      }
+      return `
+        <table class="mini-table">
+          <thead><tr><th>Name</th><th>Attack</th><th>Damage</th><th>Type</th></tr></thead>
+          <tbody>
+            ${attacks.map((attack) => `
+              <tr>
+                <td>${escapeHtml(formatValue(attack.display || attack.name))}</td>
+                <td>${escapeHtml(formatValue(attack.attack))}</td>
+                <td>${escapeHtml([attack.die, attack.damageBonus ? `+${attack.damageBonus}` : ""].filter(Boolean).join(" "))}</td>
+                <td>${escapeHtml(formatValue(attack.damageType))}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function overviewLine(label, value) {
+      const formatted = formatValue(value);
+      return `<span><strong>${escapeHtml(label)}:</strong> ${escapeHtml(formatted)}</span>`;
+    }
+
+    function skillTotal(skills, key) {
+      const skill = (skills || []).find((item) => item.key === key);
+      return skill ? skill.total : null;
+    }
+
+    function topSkills(skills, limit = 5) {
+      return [...(skills || [])]
+        .filter((skill) => typeof skill.total === "number")
+        .sort((a, b) => b.total - a.total)
+        .slice(0, limit)
+        .map((skill) => `${skill.name} ${skill.total >= 0 ? "+" : ""}${skill.total}`);
+    }
+
+    function compactList(values, limit = 4) {
+      const list = (values || []).map(formatValue).filter((value) => value !== "—");
+      if (!list.length) {
+        return "—";
+      }
+      const shown = list.slice(0, limit);
+      return list.length > limit ? `${shown.join(", ")} +${list.length - limit} more` : shown.join(", ");
+    }
+
+    function renderPcOverview() {
+      const host = document.getElementById("pc-sheet-overview");
+      if (!pcSheets.length) {
+        host.innerHTML = '<span class="empty">No PC sheets found for this search.</span>';
+        return;
+      }
+      host.innerHTML = renderSheetSection("Party Overview", `
+          <p class="subtle">Use this table for fast GM checks: initiative, perception, defenses, trap skills, social skills, senses, languages, and combat readiness. Open a row for the full sheet.</p>
+          <div class="sheet-overview-table">
+            <table class="mini-table">
+              <thead>
+                <tr>
+                  <th>PC</th>
+                  <th>Combat</th>
+                  <th>Saves</th>
+                  <th>Awareness</th>
+                  <th>Traps / Dungeon</th>
+                  <th>Social</th>
+                  <th>Abilities</th>
+                  <th>Languages / Senses</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pcSheets.map((sheet) => {
+                  const combat = sheet.combat || {};
+                  const identity = sheet.identity || {};
+                  const abilityMap = Object.fromEntries((sheet.abilities || []).map((ability) => [ability.key, ability.score]));
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${escapeHtml(sheet.character_name || "Unnamed PC")}</strong>
+                        <div class="subtle">${escapeHtml(sheet.player_name || "Unknown player")}</div>
+                        <div class="subtle">${escapeHtml([identity.class_name, identity.level ? `level ${identity.level}` : ""].filter(Boolean).join(", ") || "No class/level")}</div>
+                      </td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("AC", combat.ac)}
+                        ${overviewLine("HP", combat.hp)}
+                        ${overviewLine("Speed", combat.speed)}
+                        ${overviewLine("Class DC", combat.class_dc)}
+                      </div></td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("Fort", combat.fortitude)}
+                        ${overviewLine("Ref", combat.reflex)}
+                        ${overviewLine("Will", combat.will)}
+                      </div></td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("Init", combat.initiative)}
+                        ${overviewLine("Perc", combat.perception)}
+                        ${overviewLine("Survival", skillTotal(sheet.skills, "survival"))}
+                        ${overviewLine("Nature", skillTotal(sheet.skills, "nature"))}
+                      </div></td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("Stealth", skillTotal(sheet.skills, "stealth"))}
+                        ${overviewLine("Thievery", skillTotal(sheet.skills, "thievery"))}
+                        ${overviewLine("Athletics", skillTotal(sheet.skills, "athletics"))}
+                        ${overviewLine("Acrobatics", skillTotal(sheet.skills, "acrobatics"))}
+                      </div></td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("Diplomacy", skillTotal(sheet.skills, "diplomacy"))}
+                        ${overviewLine("Deception", skillTotal(sheet.skills, "deception"))}
+                        ${overviewLine("Intimidation", skillTotal(sheet.skills, "intimidation"))}
+                        ${overviewLine("Top", topSkills(sheet.skills, 3))}
+                      </div></td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("STR", abilityMap.str)}
+                        ${overviewLine("DEX", abilityMap.dex)}
+                        ${overviewLine("CON", abilityMap.con)}
+                        ${overviewLine("INT", abilityMap.int)}
+                        ${overviewLine("WIS", abilityMap.wis)}
+                        ${overviewLine("CHA", abilityMap.cha)}
+                      </div></td>
+                      <td><div class="overview-note">
+                        <strong>Languages:</strong> ${escapeHtml(formatValue(identity.languages))}
+                        <br /><strong>Senses / Specials:</strong> ${escapeHtml(compactList([...(sheet.specials || []), ...(sheet.resistances || [])], 5))}
+                      </div></td>
+                      <td><button type="button" class="ghost" data-sheet-id="${escapeHtml(sheet.id)}">Open</button></td>
+                    </tr>
+                  `;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        `, true);
+    }
+
+    function renderNpcOverview() {
+      const host = document.getElementById("npc-sheet-overview");
+      if (!npcSheets.length) {
+        host.innerHTML = '<span class="empty">No NPC dossiers found for this search.</span>';
+        return;
+      }
+      host.innerHTML = renderSheetSection("NPC Overview", `
+          <p class="subtle">Use this table to track who the party knows, current disposition, where an NPC appears, what they look like, and what the GM should remember before roleplay or combat.</p>
+          <div class="sheet-overview-table">
+            <table class="mini-table">
+              <thead>
+                <tr>
+                  <th>NPC</th>
+                  <th>Status</th>
+                  <th>Party Relation</th>
+                  <th>Location / Encounters</th>
+                  <th>What PCs See</th>
+                  <th>GM Summary</th>
+                  <th>Hooks / Secrets</th>
+                  <th>Combat</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${npcSheets.map((npc) => {
+                  const combat = npc.combat || {};
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${escapeHtml(npc.name || "Unnamed NPC")}</strong>
+                        <div class="subtle">${escapeHtml(npc.role || "No role listed")}</div>
+                      </td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("Status", npc.status)}
+                        ${overviewLine("Detail", npc.status_detail)}
+                      </div></td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("Met", npc.pc_encountered ? "yes" : "no")}
+                        ${overviewLine("Relation", npc.pc_relationship_status)}
+                      </div></td>
+                      <td><div class="overview-note">
+                        <strong>Now:</strong> ${escapeHtml(formatValue(npc.current_location?.name))}
+                        <br /><strong>Appears:</strong> ${escapeHtml(formatValue(npc.campaign_encounters))}
+                      </div></td>
+                      <td><div class="overview-note">${escapeHtml(npc.appearance_description || npc.player_facing || "No player-safe description listed yet.")}</div></td>
+                      <td><div class="overview-note">${escapeHtml(npc.gm_summary || npc.summary || "No GM summary listed yet.")}</div></td>
+                      <td><div class="overview-cell-list">
+                        ${overviewLine("Goals", compactList(npc.goals, 2))}
+                        ${overviewLine("Secrets", compactList(npc.secrets, 2))}
+                        ${overviewLine("Clues", compactList(npc.clues, 2))}
+                      </div></td>
+                      <td><div class="overview-note">${escapeHtml(Object.keys(combat).length ? formatValue(combat) : "No statblock")}</div></td>
+                      <td><button type="button" class="ghost" data-sheet-id="${escapeHtml(npc.id)}">Open</button></td>
+                    </tr>
+                  `;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        `, true);
+    }
+
+    function renderSheetList(items, hostId, itemLabel) {
+      const host = document.getElementById(hostId);
+      if (!items.length) {
+        host.innerHTML = `<div class="empty">No ${itemLabel} found.</div>`;
+        return;
+      }
+      host.innerHTML = items.map((item) => {
+        const title = item.character_name || item.name || "Unnamed";
+        const subtitle = item.player_name
+          ? `${item.player_name} — ${item.summary || "No summary"}`
+          : (item.summary || item.role || "No summary");
+        return `
+          <button type="button" class="note-button" data-sheet-id="${item.id}">
+            <strong>${escapeHtml(title)}</strong>
+            <span class="history-meta">${escapeHtml(subtitle)}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    async function hydratePcSheetOverviews() {
+      if (!pcSheets.length) {
+        renderPcOverview();
+        return;
+      }
+      document.getElementById("pc-sheet-overview").innerHTML =
+        '<span class="empty">Loading full PC stats for overview…</span>';
+      const hydrated = await Promise.all(pcSheets.map(async (sheet) => {
+        try {
+          const fullSheet = await fetchJson(`${endpoints.pcSheet}?id=${encodeURIComponent(sheet.id)}`);
+          return { ...sheet, ...fullSheet };
+        } catch {
+          return sheet;
+        }
+      }));
+      pcSheets = hydrated;
+      renderPcOverview();
+    }
+
+    async function hydrateNpcDossierOverviews() {
+      if (!npcSheets.length) {
+        renderNpcOverview();
+        return;
+      }
+      document.getElementById("npc-sheet-overview").innerHTML =
+        '<span class="empty">Loading full NPC dossiers for overview…</span>';
+      const hydrated = await Promise.all(npcSheets.map(async (dossier) => {
+        try {
+          const fullDossier = await fetchJson(`${endpoints.npcSheet}?id=${encodeURIComponent(dossier.id)}`);
+          return { ...dossier, ...fullDossier };
+        } catch {
+          return dossier;
+        }
+      }));
+      npcSheets = hydrated;
+      renderNpcOverview();
+    }
+
+    async function loadPcSheets(query = "") {
+      const host = document.getElementById("pc-sheet-list");
+      host.innerHTML = '<div class="empty">Loading PC sheets…</div>';
+      try {
+        const payload = await fetchJson(`${endpoints.pcSheets}?q=${encodeURIComponent(query)}`);
+        pcSheets = payload.items || [];
+        renderSheetList(pcSheets, "pc-sheet-list", "PC sheets");
+        await hydratePcSheetOverviews();
+      } catch (error) {
+        host.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+        document.getElementById("pc-sheet-overview").innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function openPcSheet(id) {
+      const viewer = document.getElementById("pc-sheet-detail");
+      viewer.innerHTML = '<span class="empty">Opening PC sheet…</span>';
+      try {
+        const sheet = await fetchJson(`${endpoints.pcSheet}?id=${encodeURIComponent(id)}`);
+        const identity = sheet.identity || {};
+        const combat = sheet.combat || {};
+        viewer.innerHTML = `
+          <div class="sheet-hero">
+            ${renderPortrait(sheet.portrait, sheet.character_name)}
+            <div>
+              <h3 style="margin-top: 0;">${escapeHtml(sheet.character_name || "Unnamed PC")}</h3>
+              <div class="subtle">${escapeHtml(sheet.player_name ? `Player: ${sheet.player_name}` : "Player name not linked yet")}</div>
+              <div class="subtle">${escapeHtml(sheet.summary || "No summary imported.")}</div>
+              ${renderSheetStats([
+                { label: "Level", value: identity.level },
+                { label: "Class", value: identity.class_name },
+                { label: "AC", value: combat.ac },
+                { label: "HP", value: combat.hp },
+                { label: "Perception", value: combat.perception },
+                { label: "Initiative", value: combat.initiative },
+              ])}
+            </div>
+          </div>
+          ${sheet.has_imported_sheet ? "" : '<div class="result-box"><span class="empty">No imported character sheet payload is available yet.</span></div>'}
+          ${renderSheetSection("Identity", renderKeyValueTable([
+            { label: "Ancestry", value: identity.ancestry },
+            { label: "Heritage", value: identity.heritage },
+            { label: "Background", value: identity.background },
+            { label: "Alignment", value: identity.alignment },
+            { label: "Size", value: identity.size },
+            { label: "Key Ability", value: identity.keyability },
+            { label: "Languages", value: identity.languages },
+            { label: "Source", value: sheet.source_name },
+          ]), true)}
+          ${renderSheetSection("Combat", renderKeyValueTable([
+            { label: "AC", value: combat.ac },
+            { label: "Shield Bonus", value: combat.shield_bonus },
+            { label: "HP", value: combat.hp },
+            { label: "Speed", value: combat.speed },
+            { label: "Class DC", value: combat.class_dc },
+            { label: "Fortitude", value: combat.fortitude },
+            { label: "Reflex", value: combat.reflex },
+            { label: "Will", value: combat.will },
+          ]), true)}
+          ${renderSheetSection("Ability Scores", renderAbilityTable(sheet.abilities), true)}
+          ${renderSheetSection("Skills", renderSkillTable(sheet.skills), true)}
+          ${renderSheetSection("Attacks", renderAttackTable(sheet.attacks))}
+          ${renderSheetSection("Armor", renderSimpleList(sheet.armor))}
+          ${renderSheetSection("Feats", renderSimpleList(sheet.feats))}
+          ${renderSheetSection("Specials, Senses, Resistances", renderSimpleList([...(sheet.specials || []), ...(sheet.resistances || [])]))}
+          ${renderSheetSection("Items And Money", `${renderSimpleList(sheet.items)}${renderKeyValueTable(Object.entries(sheet.money || {}).map(([label, value]) => ({ label, value })))}`)}
+          ${renderSheetSection("Spells And Focus", renderKeyValueTable([
+            { label: "Focus Points", value: sheet.focus_points },
+            { label: "Spellcasters", value: sheet.spellcasters },
+          ]))}
+        `;
+      } catch (error) {
+        viewer.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function loadNpcSheets(query = "") {
+      const host = document.getElementById("npc-sheet-list");
+      host.innerHTML = '<div class="empty">Loading NPC dossiers…</div>';
+      try {
+        const payload = await fetchJson(`${endpoints.npcSheets}?q=${encodeURIComponent(query)}`);
+        npcSheets = payload.items || [];
+        renderSheetList(npcSheets, "npc-sheet-list", "NPC dossiers");
+        await hydrateNpcDossierOverviews();
+      } catch (error) {
+        host.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+        document.getElementById("npc-sheet-overview").innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function openNpcSheet(id) {
+      const viewer = document.getElementById("npc-sheet-detail");
+      viewer.innerHTML = '<span class="empty">Opening NPC dossier…</span>';
+      try {
+        const dossier = await fetchJson(`${endpoints.npcSheet}?id=${encodeURIComponent(id)}`);
+        activeNpcDossierId = dossier.id;
+        const relationships = dossier.relationships || [];
+        const details = dossier.details || {};
+        viewer.innerHTML = `
+          <div class="sheet-hero">
+            ${renderPortrait(dossier.portrait, dossier.name)}
+            <div>
+              <h3 style="margin-top: 0;">${escapeHtml(dossier.name || "Unnamed NPC")}</h3>
+              <div class="subtle">${escapeHtml(dossier.role || dossier.status || "No role/status listed.")}</div>
+              <div class="subtle">${escapeHtml(dossier.summary || "No summary imported.")}</div>
+              ${renderSheetStats([
+                { label: "Location", value: dossier.current_location?.name },
+                { label: "Role", value: dossier.role },
+                { label: "Status", value: dossier.status },
+                { label: "Disposition", value: dossier.pc_relationship_status },
+                { label: "Encountered", value: dossier.pc_encountered ? "yes" : "no" },
+                { label: "Relations", value: relationships.length },
+              ])}
+            </div>
+          </div>
+          ${renderSheetSection("What PCs See / Appearance", `<p>${escapeHtml(dossier.appearance_description || "No appearance description listed yet.")}</p>`, true)}
+          ${renderSheetSection("GM Summary", `<p>${escapeHtml(dossier.gm_summary || dossier.description || dossier.summary || "No GM summary listed.")}</p>`, true)}
+          ${renderSheetSection("Party Relationship And Status", renderKeyValueTable([
+            { label: "PCs Encountered", value: dossier.pc_encountered ? "yes" : "no" },
+            { label: "Relationship", value: dossier.pc_relationship_status },
+            { label: "Status", value: dossier.status },
+            { label: "Status Detail", value: dossier.status_detail },
+            { label: "Campaign Encounters", value: dossier.campaign_encounters },
+          ]), true)}
+          ${renderSheetSection("Player-Facing Description", `<p>${escapeHtml(dossier.player_facing || "No separate player-facing description listed yet.")}</p>`)}
+          ${renderSheetSection("Goals, Secrets, And Clues", `
+            <strong>Goals</strong>${renderSimpleList(dossier.goals)}
+            <strong style="display:block;margin-top:8px;">Secrets</strong>${renderSimpleList(dossier.secrets)}
+            <strong style="display:block;margin-top:8px;">Clues</strong>${renderSimpleList(dossier.clues)}
+          `)}
+          ${renderSheetSection("Relationships", relationships.length ? `
+            <table class="mini-table">
+              <thead><tr><th>Type</th><th>Related</th><th>Notes</th></tr></thead>
+              <tbody>
+                ${relationships.map((relationship) => `
+                  <tr>
+                    <td>${escapeHtml(relationship.relationship_type || "related")}</td>
+                    <td>${escapeHtml(relationship.related_entity?.name || "")}</td>
+                    <td>${escapeHtml(relationship.notes || "")}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          ` : '<span class="empty">No relationships listed.</span>', true)}
+          ${renderSheetSection("Details", renderKeyValueTable(Object.entries(details).map(([label, value]) => ({ label, value }))))}
+          ${renderSheetSection("Combat Or Statblock", Object.keys(dossier.combat || {}).length ? renderKeyValueTable(Object.entries(dossier.combat).map(([label, value]) => ({ label, value }))) : '<span class="empty">No combat/statblock data listed.</span>')}
+          ${renderSheetSection("Edit NPC Notes And Details", renderNpcEditForm(dossier))}
+          ${renderSheetSection("Tags", renderSimpleList(dossier.tags))}
+        `;
+      } catch (error) {
+        viewer.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function saveNpcDossier(event) {
+      event.preventDefault();
+      const form = event.target;
+      const npcId = form.dataset.npcId || activeNpcDossierId;
+      const statusHost = document.getElementById("npc-dossier-save-status");
+      statusHost.innerHTML = "<span>Saving NPC notes…</span>";
+      const encounters = document.getElementById("npc-campaign-encounters").value
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      try {
+        const dossier = await fetchJson(`${endpoints.npcSheet}?id=${encodeURIComponent(npcId)}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            appearance_description: document.getElementById("npc-appearance-description").value,
+            gm_summary: document.getElementById("npc-gm-summary").value,
+            pc_encountered: document.getElementById("npc-pc-encountered").checked,
+            pc_relationship_status: document.getElementById("npc-pc-relationship-status").value,
+            status: document.getElementById("npc-status").value,
+            status_detail: document.getElementById("npc-status-detail").value,
+            campaign_encounters: encounters,
+            vault_dm_notes: document.getElementById("npc-dm-notes").value,
+            vault_player_summary: document.getElementById("npc-player-summary").value,
+          }),
+        });
+        statusHost.innerHTML = "<span>NPC notes saved.</span>";
+        await loadNpcSheets(document.getElementById("npc-sheet-search").value.trim());
+        await openNpcSheet(dossier.id);
+      } catch (error) {
+        statusHost.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function renderSummary(snapshot) {
+      const state = snapshot.state || {};
+      const currentDate = snapshot.current_date || {};
+      const maptool = snapshot.maptool || {};
+      const mapSummary = maptool.name
+        || state.maptool_map_id
+        || "No map";
+      const currentDateText = currentDate.label
+        || [currentDate.year, currentDate.month, currentDate.day].filter(Boolean).join(" ")
+        || currentDate.calendar_name
+        || "Not set";
+      document.getElementById("summary-row").innerHTML = [
+        summaryCard("Scene", state.scene_title || "No active scene"),
+        summaryCard("Focus", state.focus || "No live focus"),
+        summaryCard("Location", snapshot.current_location?.name || "No location"),
+        summaryCard("Current Date", currentDateText),
+        summaryCard("Active PCs", String((snapshot.active_pcs || []).length)),
+        summaryCard("Active NPCs", String((snapshot.active_npcs || []).length)),
+        summaryCard("Map", mapSummary),
+      ].join("");
+    }
+
+    function renderCheckGrid(elementId, items, selectedIds) {
+      const selected = new Set(selectedIds || []);
+      const host = document.getElementById(elementId);
+      if (!items.length) {
+        host.innerHTML = '<div class="empty">No options available yet.</div>';
+        return;
+      }
+      host.innerHTML = items.map((item) => `
+        <label class="check-card">
+          <input type="checkbox" value="${item.id}" ${selected.has(item.id) ? "checked" : ""} />
+          <span>
+            <strong>${escapeHtml(item.name)}</strong>
+            <span class="subtle">${escapeHtml(item.entity_type || "")}</span>
+          </span>
+        </label>
+      `).join("");
+    }
+
+    function populateStateForm(snapshot) {
+      const state = snapshot.state || {};
+      document.getElementById("scene-title").value = state.scene_title || "";
+      document.getElementById("scene-focus").value = state.focus || "";
+      document.getElementById("scene-notes").value = state.notes || "";
+      document.getElementById("maptool-map-id").value = state.maptool_map_id || "";
+      document.getElementById("frugal-mode").checked = Boolean(state.frugal_mode);
+
+      const locationSelect = document.getElementById("current-location");
+      const currentLocationId = state.current_location_id == null ? "" : String(state.current_location_id);
+      const locationOptions = ['<option value="">No location selected</option>']
+        .concat((snapshot.available?.locations || []).map((location) => `
+          <option value="${location.id}" ${String(location.id) === currentLocationId ? "selected" : ""}>
+            ${escapeHtml(location.name)} (${escapeHtml(location.entity_type)})
+          </option>
+        `));
+      locationSelect.innerHTML = locationOptions.join("");
+
+      renderCheckGrid("active-pcs", snapshot.available?.pcs || [], state.active_pc_ids || []);
+      renderCheckGrid("active-npcs", snapshot.available?.npcs || [], state.active_npc_ids || []);
+
+      document.getElementById("prep-focus").value = state.focus || "";
+    }
+
+    function renderMapTool(snapshot) {
+      const messageHost = document.getElementById("maptool-message");
+      const mechanicsHost = document.getElementById("maptool-mechanics");
+      const maptool = snapshot.maptool;
+      if (!maptool) {
+        messageHost.innerHTML = '<span class="empty">No map synced yet.</span>';
+        mechanicsHost.innerHTML = '<div class="empty">Initiative, HP, and conditions will appear here after sync.</div>';
+        return;
+      }
+
+      const summary = maptool.mechanics?.summary || {};
+      const initiative = (maptool.mechanics?.initiative_order || []).slice(0, 8);
+      const flagged = (maptool.mechanics?.conditioned_tokens || []).slice(0, 8);
+
+      messageHost.innerHTML = `
+        <span class="pill">${escapeHtml(maptool.name || maptool.map_id || "Map")}</span>
+        <span class="pill">Tokens ${escapeHtml(summary.token_count || 0)}</span>
+        <span class="pill">Initiative ${escapeHtml(summary.initiative_count || 0)}</span>
+        <span class="pill">Conditions ${escapeHtml(summary.condition_count || 0)}</span>
+        <span class="pill">Low HP ${escapeHtml(summary.low_hp_count || 0)}</span>
+        <div style="margin-top: 10px;" class="subtle">Last synced ${escapeHtml(maptool.synced_at || "")}</div>
+      `;
+
+      const initiativeHtml = initiative.length
+        ? initiative.map((item) => `
+            <div class="list-item">
+              <strong>${escapeHtml(item.label)}</strong>
+              <div class="subtle">Initiative ${escapeHtml(item.initiative)}${item.hp_current != null && item.hp_max != null ? ` · HP ${escapeHtml(item.hp_current)}/${escapeHtml(item.hp_max)}` : ""}</div>
+            </div>
+          `).join("")
+        : '<div class="empty">No initiative values were present on the synced map.</div>';
+
+      const flaggedHtml = flagged.length
+        ? flagged.map((item) => `
+            <div class="list-item">
+              <strong>${escapeHtml(item.label)}</strong>
+              <div class="subtle">
+                ${(item.conditions || []).length ? `Conditions: ${escapeHtml(item.conditions.join(", "))}` : "No listed conditions"}
+                ${item.low_hp ? " · Low HP" : ""}
+              </div>
+            </div>
+          `).join("")
+        : '<div class="empty">No low-HP or conditioned tokens surfaced from the synced map.</div>';
+
+      mechanicsHost.innerHTML = `
+        <h3>Initiative Order</h3>
+        <div class="list">${initiativeHtml}</div>
+        <h3>Flagged Combatants</h3>
+        <div class="list">${flaggedHtml}</div>
+      `;
+    }
+
+    function renderSessionContext(snapshot) {
+      const host = document.getElementById("session-context");
+      const sessions = snapshot.recent_sessions || [];
+      const prep = snapshot.latest_prep;
+      const sessionHtml = sessions.length
+        ? sessions.slice(0, 3).map((item) => `
+        <div class="list-item">
+          <strong>${escapeHtml(item.title)}</strong>
+          <div class="subtle">${escapeHtml(item.summary || "No summary available.")}</div>
+        </div>
+      `).join("")
+        : '<div class="empty">No recent sessions yet.</div>';
+      const prepHtml = prep
+        ? `
+        <div class="list-item">
+          <strong>${escapeHtml(prep.title)}</strong>
+          <div class="subtle">${escapeHtml(prep.summary || "No summary available.")}</div>
+          <div style="margin-top: 10px;">
+            <span class="pill">Updated ${escapeHtml(prep.updated_at || "")}</span>
+          </div>
+        </div>
+      `
+        : '<div class="empty">No prep document stored yet.</div>';
+      host.innerHTML = `
+        <h3>Recent Sessions</h3>
+        ${sessionHtml}
+        <h3>Latest Prep</h3>
+        ${prepHtml}
+      `;
+    }
+
+    function parseDiceExpression(expression) {
+      const compact = String(expression || "").replace(/\s+/g, "");
+      if (!compact) {
+        throw new Error("Enter a dice expression like 1d20+7.");
+      }
+      const terms = compact.match(/[+-]?[^+-]+/g);
+      if (!terms || !terms.length) {
+        throw new Error("Could not parse that dice expression.");
+      }
+      return terms.map((rawTerm) => {
+        const sign = rawTerm.startsWith("-") ? -1 : 1;
+        const body = rawTerm.replace(/^[+-]/, "");
+        const diceMatch = body.match(/^(\d*)d(\d+)(k([hl])(\d+))?$/i);
+        if (diceMatch) {
+          const count = Number.parseInt(diceMatch[1] || "1", 10);
+          const sides = Number.parseInt(diceMatch[2], 10);
+          const keepMode = diceMatch[4] || null;
+          const keepCount = diceMatch[5] ? Number.parseInt(diceMatch[5], 10) : null;
+          if (!count || count < 1 || count > 100) {
+            throw new Error("Dice count must be between 1 and 100.");
+          }
+          if (!sides || sides < 2 || sides > 1000) {
+            throw new Error("Dice sides must be between 2 and 1000.");
+          }
+          if (keepCount != null && (keepCount < 1 || keepCount > count)) {
+            throw new Error("Keep count must be between 1 and the number of dice rolled.");
+          }
+          return {
+            kind: "dice",
+            sign,
+            count,
+            sides,
+            keepMode,
+            keepCount,
+            label: `${sign < 0 ? "-" : "+"}${count}d${sides}${keepMode ? `k${keepMode}${keepCount}` : ""}`,
+          };
+        }
+        if (!/^\d+$/.test(body)) {
+          throw new Error(`Unsupported term: ${body}`);
+        }
+        return {
+          kind: "flat",
+          sign,
+          value: Number.parseInt(body, 10),
+          label: `${sign < 0 ? "-" : "+"}${body}`,
+        };
+      });
+    }
+
+    function rollDiceExpression(expression) {
+      const parsed = parseDiceExpression(expression);
+      let total = 0;
+      const parts = parsed.map((term) => {
+        if (term.kind === "flat") {
+          const subtotal = term.sign * term.value;
+          total += subtotal;
+          return {
+            label: term.label,
+            subtotal,
+            detail: `${term.sign < 0 ? "-" : "+"}${term.value}`,
+          };
+        }
+
+        const rolls = Array.from({ length: term.count }, () => 1 + Math.floor(Math.random() * term.sides));
+        let kept = [...rolls];
+        if (term.keepMode === "h") {
+          kept = [...rolls].sort((left, right) => right - left).slice(0, term.keepCount);
+        } else if (term.keepMode === "l") {
+          kept = [...rolls].sort((left, right) => left - right).slice(0, term.keepCount);
+        }
+        const subtotal = term.sign * kept.reduce((sum, value) => sum + value, 0);
+        total += subtotal;
+        const detail = `${term.label.replace(/^[+]/, "")}: [${rolls.join(", ")}]` +
+          (term.keepMode ? ` -> kept [${kept.join(", ")}]` : "");
+        return { label: term.label, subtotal, detail };
+      });
+
+      return {
+        expression,
+        total,
+        parts,
+        rolledAt: nowLabel(),
+      };
+    }
+
+    function renderDiceHistory() {
+      const host = document.getElementById("dice-history");
+      if (!diceHistory.length) {
+        host.innerHTML = '<div class="empty">Recent rolls will appear here.</div>';
+        return;
+      }
+      host.innerHTML = diceHistory.map((entry) => `
+        <div class="history-item">
+          <strong>${escapeHtml(entry.expression)}</strong>
+          <span>Total ${escapeHtml(entry.total)}</span>
+          <span class="history-meta">${escapeHtml(entry.parts.map((part) => `${part.detail} = ${part.subtotal}`).join(" · "))}</span>
+          <span class="history-meta">Rolled at ${escapeHtml(entry.rolledAt)}</span>
+        </div>
+      `).join("");
+    }
+
+    function handleDiceRoll(event) {
+      event.preventDefault();
+      const resultHost = document.getElementById("dice-result");
+      try {
+        const roll = rollDiceExpression(document.getElementById("dice-expression").value);
+        diceHistory = [roll, ...diceHistory].slice(0, 8);
+        renderDiceHistory();
+        resultHost.innerHTML = `
+          <div class="stat-line">
+            <span class="stat-badge">Total ${escapeHtml(roll.total)}</span>
+            <span class="stat-badge">${escapeHtml(roll.expression)}</span>
+          </div>
+          <pre>${escapeHtml(roll.parts.map((part) => `${part.detail} = ${part.subtotal}`).join("\n"))}</pre>
+        `;
+      } catch (error) {
+        resultHost.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function appendDiceFragment(fragment) {
+      const input = document.getElementById("dice-expression");
+      const current = input.value.trim();
+      if (!current) {
+        input.value = fragment.startsWith("d") ? `1${fragment}` : fragment;
+        return;
+      }
+      if (fragment.startsWith("d") && /(^|[+\-])\d*$/.test(current)) {
+        input.value = `${current}${fragment}`;
+        return;
+      }
+      input.value = `${current}${fragment}`;
+    }
+
+    function ensureAudioContext() {
+      if (!audioContext) {
+        const Context = window.AudioContext || window.webkitAudioContext;
+        if (!Context) {
+          throw new Error("This browser does not support the Web Audio API.");
+        }
+        audioContext = new Context();
+      }
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+      return audioContext;
+    }
+
+    function registerAudioNodes(nodes) {
+      activeAudioNodes.push(...nodes.filter(Boolean));
+    }
+
+    function pruneAudioNodes() {
+      activeAudioNodes = activeAudioNodes.filter((node) => !node._stopped);
+    }
+
+    function stopNode(node) {
+      if (!node || node._stopped) {
+        return;
+      }
+      try {
+        node.stop?.();
+      } catch (_error) {
+        // Ignore nodes that already ended.
+      }
+      try {
+        node.disconnect?.();
+      } catch (_error) {
+        // Ignore disconnect failures.
+      }
+      node._stopped = true;
+    }
+
+    function stopAllAudio() {
+      activeAudioNodes.forEach(stopNode);
+      activeAudioNodes = [];
+      document.getElementById("soundboard-status").innerHTML =
+        "<span>All DMA panel audio stopped.</span>";
+    }
+
+    function createNoiseBuffer(ctx, durationSeconds = 1.8) {
+      const sampleCount = Math.max(1, Math.floor(ctx.sampleRate * durationSeconds));
+      const buffer = ctx.createBuffer(1, sampleCount, ctx.sampleRate);
+      const channel = buffer.getChannelData(0);
+      for (let index = 0; index < sampleCount; index += 1) {
+        channel[index] = (Math.random() * 2 - 1) * 0.5;
+      }
+      return buffer;
+    }
+
+    function playOneShot(definitionKey) {
+      const ctx = ensureAudioContext();
+      const now = ctx.currentTime;
+      if (definitionKey === "battleClash") {
+        const oscillator = ctx.createOscillator();
+        const oscillatorTwo = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = "sawtooth";
+        oscillatorTwo.type = "square";
+        oscillator.frequency.setValueAtTime(310, now);
+        oscillatorTwo.frequency.setValueAtTime(466, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.24, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        oscillator.connect(gain);
+        oscillatorTwo.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(now);
+        oscillatorTwo.start(now);
+        oscillator.stop(now + 0.42);
+        oscillatorTwo.stop(now + 0.42);
+        registerAudioNodes([oscillator, oscillatorTwo, gain]);
+      } else if (definitionKey === "heartbeat") {
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.connect(ctx.destination);
+        const pulses = [0, 0.24];
+        const oscillators = pulses.map((offset) => {
+          const oscillator = ctx.createOscillator();
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(88, now + offset);
+          oscillator.connect(gain);
+          gain.gain.setValueAtTime(0.0001, now + offset);
+          gain.gain.exponentialRampToValueAtTime(0.3, now + offset + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.16);
+          oscillator.start(now + offset);
+          oscillator.stop(now + offset + 0.18);
+          return oscillator;
+        });
+        registerAudioNodes([...oscillators, gain]);
+      } else if (definitionKey === "arcaneChime") {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(660, now);
+        oscillator.frequency.exponentialRampToValueAtTime(990, now + 0.5);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(now);
+        oscillator.stop(now + 1.42);
+        registerAudioNodes([oscillator, gain]);
+      } else if (definitionKey === "doorKnock") {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = "square";
+        oscillator.frequency.setValueAtTime(165, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.26, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(now);
+        oscillator.stop(now + 0.2);
+        registerAudioNodes([oscillator, gain]);
+      } else if (definitionKey === "thunderRoll") {
+        const source = ctx.createBufferSource();
+        source.buffer = createNoiseBuffer(ctx, 2.5);
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(180, now);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.25, now + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        source.start(now);
+        source.stop(now + 2.25);
+        registerAudioNodes([source, filter, gain]);
+      }
+      pruneAudioNodes();
+    }
+
+    function startLoop(definitionKey) {
+      stopAllAudio();
+      const ctx = ensureAudioContext();
+      const now = ctx.currentTime;
+      const source = ctx.createBufferSource();
+      source.buffer = createNoiseBuffer(ctx, 2.5);
+      source.loop = true;
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+
+      if (definitionKey === "windAmbience") {
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(420, now);
+        gain.gain.setValueAtTime(0.09, now);
+      } else if (definitionKey === "dripAmbience") {
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(260, now);
+        gain.gain.setValueAtTime(0.07, now);
+      } else {
+        filter.type = "highpass";
+        filter.frequency.setValueAtTime(900, now);
+        gain.gain.setValueAtTime(0.05, now);
+      }
+
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      source.start(now);
+      registerAudioNodes([source, filter, gain]);
+      pruneAudioNodes();
+    }
+
+    function deriveSoundRecommendations(snapshot) {
+      const currentText = [
+        snapshot.state?.scene_title,
+        snapshot.state?.focus,
+        snapshot.current_location?.name,
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      const tags = [];
+      const recommendations = [];
+      const pushUnique = (value) => {
+        if (!recommendations.includes(value)) {
+          recommendations.push(value);
+        }
+      };
+      const pushTag = (value) => {
+        if (!tags.includes(value)) {
+          tags.push(value);
+        }
+      };
+
+      if (/(combat|battle|fight|attack|ambush|danger)/.test(currentText)) {
+        pushTag("Combat pressure");
+        pushUnique("battleClash");
+        pushUnique("heartbeat");
+        pushUnique("thunderRoll");
+      }
+      if (/(ruin|vault|gauntlight|dungeon|crypt|cave|underground|haunt)/.test(currentText)) {
+        pushTag("Dungeon tension");
+        pushUnique("dripAmbience");
+        pushUnique("windAmbience");
+        pushUnique("arcaneChime");
+      }
+      if (/(town|otari|market|inn|street|tavern|social|meeting|negotiation)/.test(currentText)) {
+        pushTag("Social scene");
+        pushUnique("crowdMurmur");
+        pushUnique("doorKnock");
+        pushUnique("arcaneChime");
+      }
+      if (/(storm|rain|lightning|night|cliff|coast|sea)/.test(currentText)) {
+        pushTag("Weather pressure");
+        pushUnique("thunderRoll");
+        pushUnique("windAmbience");
+      }
+
+      if (!recommendations.length) {
+        pushTag("General session tools");
+        recommendations.push("doorKnock", "arcaneChime", "crowdMurmur");
+      }
+
+      return { recommendations, tags };
+    }
+
+    function renderSoundboard(snapshot) {
+      const { recommendations, tags } = deriveSoundRecommendations(snapshot);
+      const tagsHost = document.getElementById("soundboard-tags");
+      const listHost = document.getElementById("soundboard-list");
+
+      tagsHost.innerHTML = tags.map((tag) => `<span class="stat-badge">${escapeHtml(tag)}</span>`).join("");
+      listHost.innerHTML = recommendations.map((key) => {
+        const item = soundDefinitions[key];
+        return `
+          <div class="sound-card">
+            <strong>${escapeHtml(item.title)}</strong>
+            <div class="subtle">${escapeHtml(item.description)}</div>
+            <div class="small-actions">
+              <span class="pill">${escapeHtml(item.tags.join(" · "))}</span>
+              <span class="pill">${item.loop ? "Looping ambience" : "One-shot cue"}</span>
+            </div>
+            <div class="sound-actions">
+              <button type="button" class="${item.loop ? "secondary" : ""}" data-sound-key="${escapeHtml(key)}">
+                ${item.loop ? "Start Ambience" : "Play Cue"}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function setSoundboardStatus(message, isError = false) {
+      document.getElementById("soundboard-status").innerHTML = isError
+        ? `<span class="error">${escapeHtml(message)}</span>`
+        : `<span>${escapeHtml(message)}</span>`;
+    }
+
+    function loadVoices() {
+      if (!("speechSynthesis" in window)) {
+        document.getElementById("tts-voice").innerHTML =
+          '<option value="">Speech synthesis is not available in this browser</option>';
+        document.getElementById("tts-status-copy").textContent =
+          "Browser speech synthesis is unavailable here.";
+        return;
+      }
+      availableVoices = window.speechSynthesis.getVoices()
+        .sort((left, right) => left.name.localeCompare(right.name));
+      const select = document.getElementById("tts-voice");
+      if (!availableVoices.length) {
+        select.innerHTML = '<option value="">Browser voices are still loading…</option>';
+        return;
+      }
+      select.innerHTML = availableVoices.map((voice, index) => `
+        <option value="${index}">
+          ${escapeHtml(voice.name)}${voice.lang ? ` (${escapeHtml(voice.lang)})` : ""}
+        </option>
+      `).join("");
+    }
+
+    function applyTtsPreset() {
+      const preset = ttsPresets[document.getElementById("tts-preset").value] || ttsPresets.moderator;
+      document.getElementById("tts-rate").value = String(preset.rate);
+      document.getElementById("tts-pitch").value = String(preset.pitch);
+      document.getElementById("tts-status-copy").textContent =
+        `Preset loaded: ${document.getElementById("tts-preset").selectedOptions[0]?.textContent || "Moderator"}.`;
+    }
+
+    function speakText(event) {
+      event.preventDefault();
+      const host = document.getElementById("tts-result");
+      const text = document.getElementById("tts-text").value.trim();
+      if (!text) {
+        host.innerHTML = '<span class="error">Enter or load some text to read aloud.</span>';
+        return;
+      }
+      if (!("speechSynthesis" in window)) {
+        host.innerHTML = '<span class="error">Speech synthesis is not supported in this browser.</span>';
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const selectedIndex = document.getElementById("tts-voice").value;
+      const selectedVoice = selectedIndex !== "" ? availableVoices[Number.parseInt(selectedIndex, 10)] : null;
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang || utterance.lang;
+      }
+      utterance.rate = clamp(Number.parseFloat(document.getElementById("tts-rate").value) || 1, 0.6, 1.4);
+      utterance.pitch = clamp(Number.parseFloat(document.getElementById("tts-pitch").value) || 1, 0.6, 1.5);
+      utterance.onstart = () => {
+        host.innerHTML = `<span>Speaking with ${escapeHtml(selectedVoice?.name || "default browser voice")}.</span>`;
+      };
+      utterance.onend = () => {
+        host.innerHTML = "<span>Finished speaking.</span>";
+      };
+      utterance.onerror = (error) => {
+        host.innerHTML = `<span class="error">${escapeHtml(error.error || "Voice playback failed.")}</span>`;
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function stateIdsFromGrid(elementId) {
+      return Array.from(document.querySelectorAll(`#${elementId} input[type="checkbox"]:checked`))
+        .map((checkbox) => Number.parseInt(checkbox.value, 10))
+        .filter((value) => Number.isInteger(value));
+    }
+
+    async function loadPanel() {
+      try {
+        panelSnapshot = await fetchJson(endpoints.state);
+        renderSummary(panelSnapshot);
+        populateStateForm(panelSnapshot);
+        renderMapTool(panelSnapshot);
+        renderSoundboard(panelSnapshot);
+        renderSessionContext(panelSnapshot);
+      } catch (error) {
+        document.getElementById("state-message").innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function saveLiveState(event) {
+      event.preventDefault();
+      const payload = {
+        scene_title: document.getElementById("scene-title").value || null,
+        focus: document.getElementById("scene-focus").value || null,
+        current_location_id: document.getElementById("current-location").value
+          ? Number.parseInt(document.getElementById("current-location").value, 10)
+          : null,
+        active_pc_ids: stateIdsFromGrid("active-pcs"),
+        active_npc_ids: stateIdsFromGrid("active-npcs"),
+        maptool_map_id: document.getElementById("maptool-map-id").value || null,
+        notes: document.getElementById("scene-notes").value || null,
+        frugal_mode: document.getElementById("frugal-mode").checked,
+      };
+
+      try {
+        panelSnapshot = await fetchJson(endpoints.state, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+        renderSummary(panelSnapshot);
+        renderMapTool(panelSnapshot);
+        renderSoundboard(panelSnapshot);
+        renderSessionContext(panelSnapshot);
+        document.getElementById("state-message").innerHTML =
+          '<span>Live session state saved.</span>';
+      } catch (error) {
+        document.getElementById("state-message").innerHTML =
+          `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function resetLiveState() {
+      try {
+        panelSnapshot = await fetchJson(endpoints.state, { method: "DELETE" });
+        renderSummary(panelSnapshot);
+        populateStateForm(panelSnapshot);
+        renderMapTool(panelSnapshot);
+        renderSoundboard(panelSnapshot);
+        renderSessionContext(panelSnapshot);
+        document.getElementById("state-message").innerHTML =
+          "<span>Live session state reset.</span>";
+      } catch (error) {
+        document.getElementById("state-message").innerHTML =
+          `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function askRules(event) {
+      event.preventDefault();
+      const result = document.getElementById("rules-result");
+      result.innerHTML = "<span>Checking rules…</span>";
+      try {
+        const payload = await fetchJson(endpoints.rules, {
+          method: "POST",
+          body: JSON.stringify({
+            query: document.getElementById("rules-query").value,
+            strict: document.getElementById("rules-strict").checked,
+            top_k: Number.parseInt(document.getElementById("rules-top-k").value, 10),
+          }),
+        });
+        const citations = (payload.citations || []).map((citation) =>
+          `<li>${escapeHtml(citation.title || `Document ${citation.document_id}`)}: ${escapeHtml(citation.excerpt || "")}</li>`
+        ).join("");
+        result.innerHTML = `
+          <div><strong>${escapeHtml(payload.answer || "No answer.")}</strong></div>
+          ${citations ? `<h3>Citations</h3><ul>${citations}</ul>` : ""}
+        `;
+      } catch (error) {
+        result.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function syncMapTool(event) {
+      event.preventDefault();
+      const messageHost = document.getElementById("maptool-message");
+      messageHost.innerHTML = "<span>Syncing map…</span>";
+      const authToken = document.getElementById("maptool-auth").value.trim();
+      const retryValue = document.getElementById("maptool-retries").value;
+      try {
+        panelSnapshot = await fetchJson(endpoints.maptoolSync, {
+          method: "POST",
+          headers: authToken ? { Authorization: authToken } : {},
+          body: JSON.stringify({
+            map_id: document.getElementById("maptool-map-id").value || null,
+            retries: retryValue ? Number.parseInt(retryValue, 10) : null,
+            remember_map_id: true,
+          }),
+        });
+        renderSummary(panelSnapshot);
+        populateStateForm(panelSnapshot);
+        renderMapTool(panelSnapshot);
+        renderSoundboard(panelSnapshot);
+      } catch (error) {
+        messageHost.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function searchEntities(event) {
+      event.preventDefault();
+      const host = document.getElementById("entity-results");
+      host.innerHTML = "<div>Searching…</div>";
+      const query = document.getElementById("entity-search").value.trim();
+      if (!query) {
+        host.innerHTML = '<div class="empty">Enter a name, faction, item, or location.</div>';
+        return;
+      }
+      try {
+        const payload = await fetchJson(`${endpoints.entities}?q=${encodeURIComponent(query)}&page_size=8`);
+        const items = payload.items || [];
+        if (!items.length) {
+          host.innerHTML = '<div class="empty">No campaign entities matched that search.</div>';
+          return;
+        }
+        host.innerHTML = items.map((item) => `
+          <div class="list-item">
+            <strong>${escapeHtml(item.name)}</strong>
+            <div class="subtle">${escapeHtml(item.entity_type)}${item.summary ? " · " + escapeHtml(item.summary) : ""}</div>
+          </div>
+        `).join("");
+      } catch (error) {
+        host.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function generatePrep(event) {
+      event.preventDefault();
+      const result = document.getElementById("prep-result");
+      result.innerHTML = "<span>Generating brief…</span>";
+      const locationValue = document.getElementById("current-location").value;
+      try {
+        const payload = await fetchJson(endpoints.prep, {
+          method: "POST",
+          body: JSON.stringify({
+            title: document.getElementById("prep-title").value || null,
+            focus: document.getElementById("prep-focus").value || null,
+            current_location_id: locationValue ? Number.parseInt(locationValue, 10) : null,
+            session_count: Number.parseInt(document.getElementById("prep-session-count").value, 10),
+            store_document: document.getElementById("prep-store").checked,
+            source_name: "DMA DM Panel",
+          }),
+        });
+        result.innerHTML = `<pre>${escapeHtml(payload.markdown || "No markdown returned.")}</pre>`;
+        await loadPanel();
+      } catch (error) {
+        result.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    document.getElementById("state-form").addEventListener("submit", saveLiveState);
+    document.getElementById("chat-form").addEventListener("submit", sendChatMessage);
+    document.getElementById("dice-form").addEventListener("submit", handleDiceRoll);
+    document.getElementById("maptool-form").addEventListener("submit", syncMapTool);
+    document.getElementById("rules-form").addEventListener("submit", askRules);
+    document.getElementById("entity-search-form").addEventListener("submit", searchEntities);
+    document.getElementById("prep-form").addEventListener("submit", generatePrep);
+    document.getElementById("map-room-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadMapRoom();
+    });
+    document.getElementById("map-room-refresh").addEventListener("click", async () => {
+      await loadDungeonMaps();
+      await loadMapRoom();
+    });
+    document.getElementById("map-room-filter").addEventListener("input", renderRoomKey);
+    document.getElementById("campaign-overview-refresh").addEventListener("click", loadCampaignOverview);
+    document.getElementById("campaign-overview-edit").addEventListener("click", () => {
+      setCommandNoteMode("campaign-overview", true);
+    });
+    document.getElementById("campaign-overview-save").addEventListener("click", saveCampaignOverview);
+    document.getElementById("campaign-overview-cancel").addEventListener("click", renderCampaignOverview);
+    document.getElementById("campaign-overview-tabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-campaign-tab]");
+      if (button) {
+        openCampaignOverviewTab(button.dataset.campaignTab);
+      }
+    });
+    document.getElementById("session-overview-refresh").addEventListener("click", loadSessionOverviews);
+    document.getElementById("session-overview-edit").addEventListener("click", () => {
+      setCommandNoteMode("session-overview", true);
+    });
+    document.getElementById("session-overview-save").addEventListener("click", saveSessionOverview);
+    document.getElementById("session-overview-cancel").addEventListener("click", renderSessionOverview);
+    document.getElementById("session-overview-tabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-session-path]");
+      if (button) {
+        openSessionOverview(button.dataset.sessionPath);
+      }
+    });
+    document.getElementById("pc-sheet-search-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadPcSheets(document.getElementById("pc-sheet-search").value.trim());
+    });
+    document.getElementById("npc-sheet-search-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadNpcSheets(document.getElementById("npc-sheet-search").value.trim());
+    });
+    document.getElementById("pc-sheet-refresh").addEventListener("click", () => {
+      loadPcSheets(document.getElementById("pc-sheet-search").value.trim());
+    });
+    document.getElementById("npc-sheet-refresh").addEventListener("click", () => {
+      loadNpcSheets(document.getElementById("npc-sheet-search").value.trim());
+    });
+    document.getElementById("vault-search-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadVaultNotes(document.getElementById("vault-search").value.trim());
+    });
+    document.getElementById("pdf-search-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      openPdfTab(document.getElementById("pdf-select").value);
+    });
+    document.getElementById("tts-form").addEventListener("submit", speakText);
+    document.getElementById("launch-session-button").addEventListener("click", launchCurrentSession);
+    document.getElementById("open-player-recap-button").addEventListener("click", () => {
+      openVaultPathInWorkspace(playerRecapPath, "Player-safe recap");
+    });
+    document.getElementById("open-gm-recap-button").addEventListener("click", () => {
+      openVaultPathInWorkspace(gmRecapPath, "GM-only recap");
+    });
+    document.getElementById("export-player-recap-button").addEventListener("click", exportPlayerRecapPdf);
+    document.getElementById("session-track-save").addEventListener("click", saveSessionTrackerToNote);
+    document.getElementById("session-track-clear").addEventListener("click", clearSessionTracker);
+    document.getElementById("refresh-button").addEventListener("click", loadPanel);
+    document.getElementById("reset-button").addEventListener("click", resetLiveState);
+    document.getElementById("vault-refresh").addEventListener("click", () => {
+      loadVaultNotes(document.getElementById("vault-search").value.trim());
+    });
+    document.getElementById("vault-export").addEventListener("click", () => {
+      runVaultSync("export");
+    });
+    document.getElementById("vault-import").addEventListener("click", () => {
+      runVaultSync("import");
+    });
+    document.getElementById("pdf-refresh").addEventListener("click", () => {
+      loadReferencePdfs(document.getElementById("pdf-search").value.trim());
+    });
+    document.getElementById("pdf-search").addEventListener("change", () => {
+      loadReferencePdfs(document.getElementById("pdf-search").value.trim());
+    });
+    document.getElementById("stop-all-audio").addEventListener("click", stopAllAudio);
+    document.getElementById("chat-clear").addEventListener("click", () => {
+      chatHistory = [];
+      renderChatLog();
+    });
+    document.querySelectorAll("[data-chat-template]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("chat-message").value = button.dataset.chatTemplate;
+        if (button.dataset.chatMode) {
+          document.getElementById("chat-mode").value = button.dataset.chatMode;
+        }
+        document.getElementById("chat-message").focus();
+      });
+    });
+    document.getElementById("vault-note-list").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-vault-path]");
+      if (button) {
+        openVaultNote(button.dataset.vaultPath);
+      }
+    });
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-wikilink-target]");
+      if (button) {
+        openWikilinkTarget(button.dataset.wikilinkTarget);
+      }
+    });
+    document.getElementById("pc-sheet-list").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sheet-id]");
+      if (button) {
+        openPcSheet(button.dataset.sheetId);
+      }
+    });
+    document.getElementById("pc-sheet-viewer").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sheet-id]");
+      if (button) {
+        openPcSheet(button.dataset.sheetId);
+      }
+    });
+    document.getElementById("npc-sheet-list").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sheet-id]");
+      if (button) {
+        openNpcSheet(button.dataset.sheetId);
+      }
+    });
+    document.getElementById("npc-sheet-viewer").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sheet-id]");
+      if (button) {
+        openNpcSheet(button.dataset.sheetId);
+      }
+    });
+    document.getElementById("npc-sheet-viewer").addEventListener("submit", (event) => {
+      if (event.target.matches("#npc-dossier-edit-form")) {
+        saveNpcDossier(event);
+      }
+    });
+    document.getElementById("pdf-tabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-pdf-tab]");
+      if (!button) {
+        return;
+      }
+      activePdfPath = button.dataset.pdfTab;
+      renderPdfTabs();
+    });
+    document.getElementById("tts-stop").addEventListener("click", () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      document.getElementById("tts-result").innerHTML = "<span>Voice playback stopped.</span>";
+    });
+    document.getElementById("tts-preset").addEventListener("change", applyTtsPreset);
+    document.getElementById("tts-use-assistant").addEventListener("click", () => {
+      document.getElementById("tts-text").value = lastAssistantAnswer || "";
+      document.getElementById("tts-status-copy").textContent =
+        lastAssistantAnswer ? "Loaded the latest assistant reply." : "No assistant reply has been generated yet.";
+    });
+    document.getElementById("tts-use-scene-notes").addEventListener("click", () => {
+      document.getElementById("tts-text").value = document.getElementById("scene-notes").value || "";
+      document.getElementById("tts-status-copy").textContent =
+        document.getElementById("tts-text").value ? "Loaded current scene notes." : "Current scene notes are empty.";
+    });
+    document.querySelectorAll("[data-dice-fragment]").forEach((button) => {
+      button.addEventListener("click", () => appendDiceFragment(button.dataset.diceFragment));
+    });
+    document.querySelectorAll("[data-dice-template]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById("dice-expression").value = button.dataset.diceTemplate;
+      });
+    });
+    document.getElementById("dice-clear-history").addEventListener("click", () => {
+      diceHistory = [];
+      renderDiceHistory();
+      document.getElementById("dice-result").innerHTML =
+        '<span class="empty">Dice results will appear here.</span>';
+    });
+    document.getElementById("soundboard-list").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sound-key]");
+      if (!button) {
+        return;
+      }
+      const soundKey = button.dataset.soundKey;
+      const definition = soundDefinitions[soundKey];
+      if (!definition) {
+        return;
+      }
+      try {
+        if (definition.loop) {
+          startLoop(soundKey);
+          setSoundboardStatus(`${definition.title} started as looping ambience.`);
+        } else {
+          playOneShot(soundKey);
+          setSoundboardStatus(`${definition.title} played.`);
+        }
+      } catch (error) {
+        setSoundboardStatus(error.message || "Could not play that sound.", true);
+      }
+    });
+
+    initializeModuleLayout();
+    setupCollapsiblePanels();
+    setupDraggablePanels();
+    renderChatLog();
+    renderDiceHistory();
+    loadVoices();
+    applyTtsPreset();
+    if ("speechSynthesis" in window && typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    loadVaultNotes();
+    loadCampaignOverview();
+    loadSessionOverviews();
+    loadReferencePdfs();
+    loadDungeonMaps().then(() => loadMapRoom());
+    loadPcSheets();
+    loadNpcSheets();
+    loadPanel();
+  </script>
+</body>
+</html>

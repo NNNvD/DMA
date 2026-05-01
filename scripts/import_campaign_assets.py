@@ -27,7 +27,12 @@ def _build_parser() -> argparse.ArgumentParser:
         "--root",
         dest="root_path",
         default=None,
-        help="Optional root folder containing pathbuilder/, session-logs/, and campaign-notes/ subfolders.",
+        help=(
+            "Optional root folder containing pathbuilder/, session-logs/, "
+            "campaign-notes/, misc/pf2e-reference/raw/ guide files, "
+            "misc/aon-rules/raw/ rule payloads, and misc/private-local/reference/raw/ "
+            "local reference files."
+        ),
     )
     parser.add_argument(
         "--category",

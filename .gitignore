@@ -37,6 +37,18 @@ node_modules/
 *.db
 logs/
 
+# Copyrighted/private campaign material
+# Keep purchased PDFs, official maps, extracted PDF images, tokens, and local overlays off public GitHub.
+obsidian-abomination-vaults-vault/
+assets/imports/campaign-notes/abomination-vaults/
+assets/imports/pathbuilder/abomination-vaults/
+assets/imports/manifests/
+assets/imports/metadata/
+assets/imports/reports/
+assets/imports/misc/private-local/
+assets/archive/
+local-private-overlay/
+
 # Editors/IDE
 .vscode/
 .idea/

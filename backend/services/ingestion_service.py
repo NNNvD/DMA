@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional, Sequence
+from enum import Enum
+from typing import Any, List, Optional, Sequence
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -95,7 +96,21 @@ class IngestionService:
         source_name: Optional[str] = None,
         url: Optional[str] = None,
         dedupe_on_url: bool = False,
+        source_class: str = "private_local",
+        privacy_scope: str = "private_local",
+        review_status: str = "approved",
+        visibility_scope: str = "gm_only",
+        rag_eligible: bool = True,
+        train_eligible: bool = False,
     ) -> Document:
+        governance_fields = {
+            "source_class": source_class,
+            "privacy_scope": privacy_scope,
+            "review_status": review_status,
+            "visibility_scope": visibility_scope,
+            "rag_eligible": rag_eligible,
+            "train_eligible": train_eligible,
+        }
         if dedupe_on_url and url:
             existing = await self._get_document_by_url(db, kind=kind, url=url)
             if existing is not None:
@@ -106,6 +121,7 @@ class IngestionService:
                 existing.summary = summary
                 existing.source_name = source_name
                 existing.url = url
+                self._apply_governance_fields(existing, governance_fields)
                 return await self.refresh_document(
                     db, existing, rechunk=content_changed
                 )
@@ -117,6 +133,7 @@ class IngestionService:
             summary=summary,
             source_name=source_name,
             url=url,
+            **governance_fields,
         )
         db.add(document)
         await db.flush()
@@ -127,6 +144,14 @@ class IngestionService:
         await db.commit()
         await db.refresh(document)
         return document
+
+    def _apply_governance_fields(
+        self, document: Document, governance_fields: dict[str, Any]
+    ) -> None:
+        for field, value in governance_fields.items():
+            if isinstance(value, Enum):
+                value = value.value
+            setattr(document, field, value)
 
     async def _get_document_by_url(
         self, db: AsyncSession, *, kind: str, url: str

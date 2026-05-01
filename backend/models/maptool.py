@@ -15,11 +15,17 @@ class MapToolToken(BaseModel):
     layer: Optional[str] = None
     light_radius: Optional[float] = None
     vision_enabled: bool = True
+    hp_current: Optional[int] = None
+    hp_max: Optional[int] = None
+    initiative: Optional[float] = None
+    conditions: List[str] = Field(default_factory=list)
 
 
 class MapToolLightUpdate(BaseModel):
     mode: str = Field(default="dim")
-    intensity: Optional[float] = Field(default=None, description="Light intensity or radius")
+    intensity: Optional[float] = Field(
+        default=None, description="Light intensity or radius"
+    )
 
 
 class MapToolFogUpdate(BaseModel):
@@ -44,9 +50,13 @@ class MapToolTokenUpdate(BaseModel):
     y: Optional[float] = None
     note: Optional[str] = None
     gm_note: Optional[str] = None
+    hp_current: Optional[int] = None
+    hp_max: Optional[int] = None
+    initiative: Optional[float] = None
+    conditions: Optional[List[str]] = None
 
     def to_payload(self) -> dict:
-        payload = {}
+        payload: dict[str, object] = {}
         if self.x is not None:
             payload["x"] = self.x
         if self.y is not None:
@@ -55,6 +65,14 @@ class MapToolTokenUpdate(BaseModel):
             payload["notes"] = self.note
         if self.gm_note is not None:
             payload["gm_notes"] = self.gm_note
+        if self.hp_current is not None:
+            payload["hp_current"] = self.hp_current
+        if self.hp_max is not None:
+            payload["hp_max"] = self.hp_max
+        if self.initiative is not None:
+            payload["initiative"] = self.initiative
+        if self.conditions is not None:
+            payload["conditions"] = self.conditions
         return payload
 
 
@@ -66,6 +84,10 @@ class CampaignToken(BaseModel):
     note: Optional[str] = None
     gm_note: Optional[str] = None
     layer: Optional[str] = None
+    hp_current: Optional[int] = None
+    hp_max: Optional[int] = None
+    initiative: Optional[float] = None
+    conditions: List[str] = Field(default_factory=list)
 
 
 class CampaignMapState(BaseModel):
@@ -85,6 +107,10 @@ def maptool_token_to_campaign(token: MapToolToken) -> CampaignToken:
         note=token.notes,
         gm_note=token.gm_notes,
         layer=token.layer,
+        hp_current=token.hp_current,
+        hp_max=token.hp_max,
+        initiative=token.initiative,
+        conditions=list(token.conditions or []),
     )
 
 

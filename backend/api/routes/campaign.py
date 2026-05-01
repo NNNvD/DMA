@@ -11,6 +11,8 @@ from backend.models.base import get_db
 from backend.services.campaign_asset_import_service import campaign_asset_import_service
 from backend.services.campaign_note_import_service import campaign_note_import_service
 from backend.services.campaign_service import campaign_service
+from backend.services.obsidian_vault_service import obsidian_vault_service
+from backend.services.obsidian_vault_sync_service import obsidian_vault_sync_service
 from backend.services.pc_sheet_import_service import pc_sheet_import_service
 from backend.services.session_update_service import session_update_service
 
@@ -46,10 +48,26 @@ class CharacterDetails(BaseModel):
     role: Optional[str] = None
     pronouns: Optional[str] = None
     status: Optional[str] = None
+    status_detail: Optional[str] = None
+    portrait: Optional[str] = None
+    image_link: Optional[str] = None
+    public_summary: Optional[str] = None
+    appearance_description: Optional[str] = None
+    gm_summary: Optional[str] = None
+    pc_encountered: Optional[bool] = None
+    pc_relationship_status: Optional[str] = None
+    vault_dm_notes: Optional[str] = None
+    vault_player_summary: Optional[str] = None
     languages: list[str] = Field(default_factory=list)
     scripts: list[str] = Field(default_factory=list)
     goals: list[str] = Field(default_factory=list)
     hooks: list[str] = Field(default_factory=list)
+    secrets: list[str] = Field(default_factory=list)
+    clues: list[str] = Field(default_factory=list)
+    campaign_encounters: list[str] = Field(default_factory=list)
+    vault_session_changes: list[str] = Field(default_factory=list)
+    combat: dict[str, Any] = Field(default_factory=dict)
+    statblock: dict[str, Any] = Field(default_factory=dict)
 
 
 class ArtifactDetails(BaseModel):
@@ -191,6 +209,29 @@ class BatchImportRequest(BaseModel):
     stop_on_error: bool = False
 
 
+class ObsidianVaultExportRequest(BaseModel):
+    vault_path: str = Field(min_length=1)
+    include_inactive: bool = True
+    include_campaign_notes: bool = True
+    include_pc_sheets: bool = True
+    include_session_logs: bool = True
+    include_session_prep: bool = True
+    include_indexes: bool = True
+    include_command_center: bool = True
+    campaign_note_limit: int = Field(default=100, ge=1, le=500)
+    pc_sheet_limit: int = Field(default=50, ge=1, le=500)
+    session_limit: int = Field(default=50, ge=1, le=500)
+    prep_limit: int = Field(default=50, ge=1, le=500)
+
+
+class ObsidianVaultImportRequest(BaseModel):
+    vault_path: str = Field(min_length=1)
+    include_campaign_entities: bool = True
+    include_campaign_notes: bool = True
+    include_pc_sheets: bool = True
+    include_session_logs: bool = True
+
+
 def _validate_details(entity_type: str, details: dict[str, Any]) -> dict[str, Any]:
     detail_model = DETAIL_MODEL_BY_ENTITY_TYPE.get(entity_type.strip().lower())
     if detail_model is None:
@@ -313,6 +354,30 @@ async def import_dropzone_assets(
         raise _bad_request(str(exc)) from exc
 
 
+@router.post("/export/obsidian-vault")
+async def export_obsidian_vault(
+    payload: ObsidianVaultExportRequest, db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await obsidian_vault_service.export_vault(
+            db,
+            vault_path=payload.vault_path,
+            include_inactive=payload.include_inactive,
+            include_campaign_notes=payload.include_campaign_notes,
+            include_pc_sheets=payload.include_pc_sheets,
+            include_session_logs=payload.include_session_logs,
+            include_session_prep=payload.include_session_prep,
+            include_indexes=payload.include_indexes,
+            include_command_center=payload.include_command_center,
+            campaign_note_limit=payload.campaign_note_limit,
+            pc_sheet_limit=payload.pc_sheet_limit,
+            session_limit=payload.session_limit,
+            prep_limit=payload.prep_limit,
+        )
+    except OSError as exc:
+        raise _bad_request(str(exc)) from exc
+
+
 @router.get("/entities", response_model=PaginatedResponse)
 async def list_campaign_entities(
     entity_type: Optional[str] = Query(default=None),
@@ -340,6 +405,23 @@ async def list_campaign_entities(
             is_active=is_active,
             page=page,
             page_size=page_size,
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+
+
+@router.post("/import/obsidian-vault")
+async def import_obsidian_vault(
+    payload: ObsidianVaultImportRequest, db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await obsidian_vault_sync_service.import_vault(
+            db,
+            vault_path=payload.vault_path,
+            include_campaign_entities=payload.include_campaign_entities,
+            include_campaign_notes=payload.include_campaign_notes,
+            include_pc_sheets=payload.include_pc_sheets,
+            include_session_logs=payload.include_session_logs,
         )
     except ValueError as exc:
         raise _bad_request(str(exc)) from exc

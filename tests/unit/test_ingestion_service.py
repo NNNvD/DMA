@@ -75,6 +75,12 @@ def test_ingest_document_can_refresh_existing_document_by_url():
                 source_name="session-logs/session-12.md",
                 url="/tmp/session-12.md",
                 dedupe_on_url=True,
+                source_class="trainable_open",
+                privacy_scope="private_local",
+                review_status="approved",
+                visibility_scope="gm_only",
+                rag_eligible=True,
+                train_eligible=False,
             )
             second = await service.ingest_document(
                 session,
@@ -85,6 +91,12 @@ def test_ingest_document_can_refresh_existing_document_by_url():
                 source_name="session-logs/session-12.md",
                 url="/tmp/session-12.md",
                 dedupe_on_url=True,
+                source_class="trainable_with_review",
+                privacy_scope="public",
+                review_status="pending",
+                visibility_scope="player_safe",
+                rag_eligible=False,
+                train_eligible=False,
             )
             result = await session.execute(
                 select(Document).options(selectinload(Document.chunks))
@@ -99,5 +111,10 @@ def test_ingest_document_can_refresh_existing_document_by_url():
         assert documents[0].title == "Session 12 Harbor Fire"
         assert documents[0].summary == "Refreshed"
         assert len(documents[0].chunks) >= 1
+        assert documents[0].source_class == "trainable_with_review"
+        assert documents[0].privacy_scope == "public"
+        assert documents[0].review_status == "pending"
+        assert documents[0].visibility_scope == "player_safe"
+        assert documents[0].rag_eligible is False
     finally:
         asyncio.run(engine.dispose())
