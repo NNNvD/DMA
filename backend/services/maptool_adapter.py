@@ -5,6 +5,7 @@ import logging
 from typing import Any, List, Optional
 
 import httpx
+from httpx import AsyncBaseTransport
 
 from backend.config.settings import settings
 from backend.models.maptool import (
