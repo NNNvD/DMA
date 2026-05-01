@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "sqlite+aiosqlite:///./dma.db"
+    obsidian_vault_path: str = "./obsidian-abomination-vaults-vault"
+    reference_pdf_root: str = "./assets/imports/misc/private-local/reference/raw"
+    dungeon_map_root: str = "./assets/imports/misc/private-local/media"
+    dungeon_room_key_root: str = "./assets/imports/misc/private-local/room-keys"
 
     # App & logging
     app_env: str = "development"

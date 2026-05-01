@@ -27,6 +27,10 @@ def test_pull_map_state_uses_authorization_header():
                         "y": 4,
                         "notes": "Ready",
                         "layer": "objects",
+                        "hp_current": 22,
+                        "hp_max": 30,
+                        "initiative": 18,
+                        "conditions": ["hidden"],
                     }
                 ],
                 "fog_state": "clear",
@@ -45,7 +49,40 @@ def test_pull_map_state_uses_authorization_header():
     assert calls["authorization"] == "Bearer session-token"
     assert result.map_id == "cavern"
     assert result.tokens[0].label == "Rogue"
+    assert result.tokens[0].hp_current == 22
+    assert result.tokens[0].initiative == 18
+    assert result.tokens[0].conditions == ["hidden"]
     assert result.fog_state == "clear"
+
+
+def test_pull_map_state_allows_unauthenticated_bridge_mode():
+    calls: Dict[str, str | None] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["authorization"] = request.headers.get("Authorization")
+        if request.url.path == "/maps/harbor-docks":
+            return httpx.Response(
+                200,
+                json={
+                    "id": "harbor-docks",
+                    "name": "Greyhaven Docks",
+                    "tokens": [],
+                    "fog_state": "partial",
+                    "light_state": "dim",
+                },
+            )
+        raise AssertionError(f"Unexpected path {request.url.path}")
+
+    adapter = MapToolAdapter(
+        base_url="http://bridge.example", transport=httpx.MockTransport(handler)
+    )
+
+    result = asyncio.run(adapter.pull_map_state("harbor-docks"))
+
+    assert calls["authorization"] is None
+    assert result.map_id == "harbor-docks"
+    assert result.fog_state == "partial"
+    assert result.light_state == "dim"
 
 
 def test_push_token_updates_retries_on_failure():
@@ -66,6 +103,10 @@ def test_push_token_updates_retries_on_failure():
                 "notes": "Moved",
                 "gm_notes": None,
                 "layer": "objects",
+                "hp_current": 28,
+                "hp_max": 40,
+                "initiative": 14,
+                "conditions": ["shield raised"],
             }
             return httpx.Response(200, json=payload)
         raise AssertionError(f"Unexpected path {request.url.path}")
@@ -78,12 +119,25 @@ def test_push_token_updates_retries_on_failure():
         backoff_factor=0,
     )
 
-    updates = [MapToolTokenUpdate(token_id="fighter", x=9, y=12, note="Moved")]
+    updates = [
+        MapToolTokenUpdate(
+            token_id="fighter",
+            x=9,
+            y=12,
+            note="Moved",
+            hp_current=28,
+            hp_max=40,
+            initiative=14,
+            conditions=["shield raised"],
+        )
+    ]
     results = asyncio.run(adapter.push_token_updates("dungeon", updates))
 
     assert attempts["count"] == 2
     assert results[0].x == 9
     assert results[0].notes == "Moved"
+    assert results[0].hp_current == 28
+    assert results[0].initiative == 14
 
 
 def test_maptool_routes_wire_adapter(monkeypatch):

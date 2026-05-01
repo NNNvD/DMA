@@ -1,0 +1,52 @@
+[h: bridgeUrl = "http://127.0.0.1:5005/bridge/map-state"]
+[h: mapId = "harbor-docks"]
+[h: mapName = "Greyhaven Docks"]
+[h: tokenConditions = json.set("{}", "layer", json.append("[]", "TOKEN", "OBJECT"))]
+[h: tokenIds = getTokens("json", tokenConditions)]
+[h: payload = json.set("{}", "id", mapId, "name", mapName, "tokens", "[]", "fog_state", "unknown", "light_state", "unknown")]
+
+[h, foreach(tokenId, tokenIds), code:
+{
+  [h: tokenName = getName(tokenId)]
+
+  <!--
+    Replace the placeholder helpers below with the exact functions or framework macros your
+    campaign uses for coordinates, notes, layer, initiative, and token states.
+
+    Suggested mapping:
+    - hpCurrent: getProperty("HP", tokenId)
+    - hpMax: getProperty("HPMax", tokenId)
+    - initiative: getProperty("Initiative", tokenId)
+    - conditions: custom state scan or framework macro
+  -->
+
+  [h: tokenX = getProperty("x", tokenId)]
+  [h: tokenY = getProperty("y", tokenId)]
+  [h: notes = ""]
+  [h: gmNotes = ""]
+  [h: layer = "objects"]
+  [h: hpCurrent = getProperty("HP", tokenId)]
+  [h: hpMax = getProperty("HPMax", tokenId)]
+  [h: initiative = getProperty("Initiative", tokenId)]
+  [h: conditions = "[]"]
+
+  [h: tokenPayload = json.set(
+    "{}",
+    "id", tokenId,
+    "name", tokenName,
+    "x", number(tokenX),
+    "y", number(tokenY),
+    "notes", notes,
+    "gm_notes", gmNotes,
+    "layer", layer,
+    "hp_current", if(hpCurrent == "", json.null, number(hpCurrent)),
+    "hp_max", if(hpMax == "", json.null, number(hpMax)),
+    "initiative", if(initiative == "", json.null, number(initiative)),
+    "conditions", conditions
+  )]
+
+  [h: payload = json.set(payload, "tokens", json.append(json.get(payload, "tokens"), tokenPayload))]
+}]
+
+[h: response = REST.post(bridgeUrl, payload, "application/json; charset=UTF-8", 1)]
+[r: response]

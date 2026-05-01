@@ -8,8 +8,14 @@ from backend.models.base import init_db
 from backend.services.scheduler import scheduler
 from backend.api.routes.documents import router as documents_router
 from backend.api.routes.admin import router as admin_router
+from backend.api.routes.campaign import router as campaign_router
+from backend.api.routes.prep import router as prep_router
 from backend.api.routes.context import router as context_router
 from backend.api.routes.maptool import router as maptool_router
+from backend.api.routes.live import (
+    router as live_router,
+    page_router as live_page_router,
+)
 from backend.api.errors import install_exception_handlers
 
 
@@ -58,7 +64,7 @@ async def rate_limit_headers(request, call_next):
 
 @app.get("/")
 async def root():
-    return {"message": "DMA API", "docs": "/docs"}
+    return {"message": "DMA API", "docs": "/docs", "dm_panel": "/dm-panel"}
 
 
 @app.get("/health")
@@ -69,5 +75,9 @@ async def health():
 # Routers
 app.include_router(documents_router, prefix="/api/documents", tags=["documents"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
+app.include_router(campaign_router, prefix="/api/campaign", tags=["campaign"])
+app.include_router(prep_router, prefix="/api/prep", tags=["prep"])
 app.include_router(context_router, prefix="/api/context", tags=["context"])
 app.include_router(maptool_router, prefix="/api/maptool", tags=["maptool"])
+app.include_router(live_router, prefix="/api/live", tags=["live"])
+app.include_router(live_page_router)

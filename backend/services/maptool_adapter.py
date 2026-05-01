@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import httpx
 from httpx import AsyncBaseTransport
@@ -30,7 +30,7 @@ class MapToolAdapter:
         timeout: Optional[float] = None,
         max_retries: Optional[int] = None,
         backoff_factor: float = 0.2,
-        transport: Optional[AsyncBaseTransport] = None,
+        transport: Optional[httpx.AsyncBaseTransport] = None,
     ) -> None:
         self.base_url = (base_url or settings.maptool_base_url).rstrip("/")
         self.username = username or settings.maptool_username
@@ -146,9 +146,9 @@ class MapToolAdapter:
         auth_header: Optional[str] = None,
         retries: Optional[int] = None,
     ) -> CampaignMapState:
-        await self.ensure_auth(auth_header)
+        resolved_auth = await self.ensure_auth(auth_header)
         map_payload = await self.fetch_map(
-            map_id, auth_header=self.session_token, attempts=retries
+            map_id, auth_header=resolved_auth, attempts=retries
         )
         return maptool_map_to_campaign(map_payload)
 
@@ -159,25 +159,27 @@ class MapToolAdapter:
         auth_header: Optional[str] = None,
         retries: Optional[int] = None,
     ) -> List[MapToolToken]:
-        await self.ensure_auth(auth_header)
+        resolved_auth = await self.ensure_auth(auth_header)
         results: List[MapToolToken] = []
         for update in updates:
             response = await self._request_with_retries(
                 "PATCH",
                 f"/maps/{map_id}/tokens/{update.token_id}",
                 json=update.to_payload(),
-                headers=self._auth_headers(self.session_token),
+                headers=self._auth_headers(resolved_auth),
                 attempts=retries,
             )
             results.append(MapToolToken.model_validate(response.json()))
         return results
 
-    async def ensure_auth(self, auth_header: Optional[str]) -> str:
+    async def ensure_auth(self, auth_header: Optional[str]) -> Optional[str]:
         if auth_header:
             self.session_token = auth_header
             return auth_header
         if self.session_token:
             return self.session_token
+        if not self.username or not self.password:
+            return None
         return await self.authenticate()
 
     async def _request_with_retries(
@@ -185,8 +187,8 @@ class MapToolAdapter:
         method: str,
         path: str,
         *,
-        json: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        json: Optional[dict[str, Any]] = None,
+        headers: Optional[dict[str, str]] = None,
         attempts: Optional[int] = None,
     ) -> httpx.Response:
         total_attempts = attempts or self.max_retries

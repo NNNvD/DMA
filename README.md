@@ -34,6 +34,11 @@ For a detailed description of goals and functionality, see:
 - [`docs/04-risks-and-mitigations.md`](docs/04-risks-and-mitigations.md)
 - [`docs/05-roadmap-and-milestones.md`](docs/05-roadmap-and-milestones.md)
 - [`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md)
+- [`docs/08-ingestion-governance.md`](docs/08-ingestion-governance.md)
+- [`docs/09-obsidian-vault.md`](docs/09-obsidian-vault.md)
+- [`docs/10-promo-overview.md`](docs/10-promo-overview.md)
+- [`docs/11-new-campaign-setup.md`](docs/11-new-campaign-setup.md)
+- [`docs/12-operations-manual.md`](docs/12-operations-manual.md)
 
 ## ✨ High-Level Features
 
@@ -95,7 +100,17 @@ make format
 make format-check
 make typecheck
 make ci
+make phase2-check
+make phase3-check
+make phase4-check
 make phase1-benchmark
+make preview-assets
+make import-assets
+make export-ingestion-metadata
+make export-obsidian-vault VAULT=/path/to/vault
+make sync-obsidian-vault VAULT=/path/to/vault
+make maptool-bridge
+make push-maptool-fixture
 ```
 
 Phase 1 sign-off:
@@ -104,18 +119,179 @@ Phase 1 sign-off:
 make phase1-check
 ```
 
+Phase 2 sign-off:
+
+```bash
+make phase2-check
+```
+
+Phase 3 sign-off:
+
+```bash
+make phase3-check
+```
+
+Phase 4 sign-off:
+
+```bash
+make phase4-check
+```
+
 Phase 1 benchmarking:
 
 ```bash
 make phase1-benchmark
 ```
 
-### Phase 1 API surface
+### Phase 1-2 API surface
 
 - `POST /api/documents`: ingest a document through the chunking pipeline.
 - `GET /api/documents/search?q=...`: search ingested documents.
 - `POST /api/documents/rules/query`: query rule documents with citations and optional strict mode.
 - `GET /api/admin/metrics`: inspect Phase 1 latency/token-cost summaries.
+- `POST /api/campaign/entities`: create structured campaign entities such as locations, factions, PCs, NPCs, artifacts, calendars, holidays, shops, and events.
+- `GET /api/campaign/entities`: query campaign entities by name, relationship, language, location, owner, and active status.
+- `POST /api/campaign/import/notes`: import structured campaign notes, optionally store the raw note as a `campaign_note` document, and upsert entities plus relationships.
+- `POST /api/campaign/import/pc-sheet`: import either a raw text sheet or a Pathbuilder 2 JSON export into a versioned PC record, resolve faction/location links, and optionally create notable-item artifact records.
+- `POST /api/campaign/import/session-update`: import a structured session log, update campaign state, advance calendar state, and persist the raw log as a `session_log` document.
+- `GET /api/campaign/import/dropzone`: preview the files currently sitting in `assets/imports/*` or another import root, including parse summaries and unresolved-reference warnings.
+- `POST /api/campaign/import/batch`: batch import drop-zone files with optional `dry_run` preview mode and repeat-safe document refresh.
+- `POST /api/campaign/relationships`: link entities together for faction ties, contacts, enemies, mentors, and other campaign relationships.
+- `POST /api/campaign/entities/{id}/sheet-versions`: store versioned PC sheet updates and sync high-signal campaign details like languages, goals, and notable items.
+- `GET /api/campaign/overview`: inspect the current structured Phase 2 world/party state grouped by entity type.
+- `GET /api/campaign/pcs/{id}/dossier`: inspect a PC dossier with sheet history, owned artifacts, faction ties, and grouped relationships.
+- `GET /api/campaign/session-history`: inspect imported session logs and matching event entities as a prep-friendly history feed.
+- `POST /api/campaign/export/obsidian-vault`: sync campaign entities plus session logs/prep docs into an Obsidian vault with YAML frontmatter, tags, and wikilinks.
+- `POST /api/campaign/import/obsidian-vault`: pull supported edited Obsidian vault notes back into DMA using stable metadata plus managed/editable section markers.
+- `POST /api/prep/session-brief`: generate a deterministic Phase 3 prep brief from campaign state, recent session history, hooks, continuity checks, and calendar state, with optional `session_prep` document storage.
+- `GET /api/live/session-state`: inspect the current live session state plus hydrated active PCs/NPCs, location, current date, recent sessions, and latest prep.
+- `PUT /api/live/session-state`: update the current live session state for the DM panel.
+- `DELETE /api/live/session-state`: reset the saved live session state.
+- `POST /api/live/maptool-sync`: pull a MapTool map into the live session snapshot and surface initiative, HP pressure, and conditions in the DM panel.
+- `POST /api/live/respond`: run a compact live assistant command such as `/scene`, `/rules frightened`, `/npc suspicious dock clerk`, `/search Captain Mira`, `/recap`, or `/prep`.
+- `GET /dm-panel`: open the lightweight browser DM panel for live state, collapsible modules with inline instructions, DMA chat, Map Room, vault-backed campaign/session overviews, Obsidian vault browsing, reference PDF tabs, live commands, a built-in dice roller, a session-aware soundboard, browser voice read-aloud, session mechanics, quick rules, continuity search, and quick prep.
+- `GET /api/live/vault/notes` and `GET /api/live/vault/note`: browse configured Obsidian vault notes from the live panel.
+- `GET`/`PATCH /api/live/campaign-overview`: read or update the vault-backed campaign overview at `Command Center/Campaign Overview.md`.
+- `GET /api/live/session-overviews` plus `GET`/`PATCH /api/live/session-overview`: list, read, and update vault-backed session overview tabs.
+- `GET /api/live/reference-pdfs` and `GET /api/live/reference-pdf`: list and open configured source PDFs in the live panel.
+- `GET /api/live/dungeon-maps` and `GET /api/live/dungeon-map`: list and open configured local dungeon map images in the live panel.
+- `GET /api/live/dungeon-room-key`: load a structured room key for a selected dungeon map.
+- `GET /api/live/pc-sheets` and `GET /api/live/pc-sheet`: list and inspect PC character sheets in the live panel.
+- `GET /api/live/npc-sheets` and `GET /api/live/npc-sheet`: list and inspect NPC dossiers in the live panel.
+- `PATCH /api/live/npc-sheet`: update live NPC dossier details such as appearance, GM notes, status, party relationship, and encounter points.
+
+### Drop-zone batch import
+
+Put source material into:
+
+- `assets/imports/pathbuilder/`
+- `assets/imports/session-logs/`
+- `assets/imports/campaign-notes/`
+- `assets/imports/misc/aon-rules/raw/` for Archives of Nethys rule payloads imported as `kind: "rule"`
+- `assets/imports/misc/pf2e-reference/raw/` for community reference guides imported as `kind: "guide"`
+- `assets/imports/misc/private-local/reference/raw/` for private local notes, tables, and primers imported as `kind: "reference"`
+- `assets/imports/misc/private-local/media/` for private campaign maps, handouts, and other binary assets tracked for provenance but kept outside text retrieval
+- `assets/imports/misc/private-local/room-keys/` for structured dungeon room-key JSON used by the DM panel Map Room
+
+To fetch AoN rules into the rules drop-zone:
+
+```bash
+make fetch-aon-rules
+```
+
+Or call the script directly for narrower syncs:
+
+```bash
+python3 -m scripts.fetch_aon_rules --limit 25
+python3 -m scripts.fetch_aon_rules --id 97 --id 98
+```
+
+Then preview or import everything in one pass:
+
+```bash
+make preview-assets
+make import-assets
+```
+
+Until real campaign files are available, `make phase2-check` and `make phase3-check`
+exercise the import and prep flows against deterministic fixtures.
+
+The underlying script also accepts `--root`, repeated `--category`, `--dry-run`, `--no-store-documents`, and `--stop-on-error`.
+Supported categories include `pathbuilder`, `session-logs`, `campaign-notes`, `rules`, `reference-guides`, and `local-reference`:
+
+```bash
+python3 -m scripts.import_campaign_assets --dry-run
+```
+
+To generate provenance sidecars plus corpus/RAG/train manifests for everything currently under
+`assets/imports/`:
+
+```bash
+python3 -m scripts.export_ingestion_metadata
+```
+
+### Obsidian vault export
+
+DMA can also sync the current campaign state into an Obsidian vault. The exporter writes:
+
+- `Campaign/` entity notes grouped by type
+- `Notes/` imported campaign-note documents
+- `Sheets/` imported PC sheet documents
+- `Sessions/` imported session logs
+- `Prep/` generated prep notes
+- `Command Center/` generated dashboards for session prep, timeline, NPCs, locations, encounters, and treasure
+- `Index.md` notes with Obsidian wikilinks and embedded Bases views
+- companion `.base` files for dynamic tables in each exported section
+
+Each generated note includes YAML frontmatter plus Obsidian-friendly wikilinks across related
+campaign entities, and the campaign/session/PC-sheet importers can now tolerate exported
+frontmatter and `[[wikilinks]]`.
+
+```bash
+make export-obsidian-vault VAULT=/path/to/vault
+python3 -m scripts.export_obsidian_vault --vault /path/to/vault
+make sync-obsidian-vault VAULT=/path/to/vault
+python3 -m scripts.sync_obsidian_vault --vault /path/to/vault
+```
+
+Generated notes use `dma:managed` sections for content DMA can rewrite and `dma:editable`
+sections for GM-authored content that can sync back into DMA.
+
+### Player prep PDF export
+
+DMA can turn a player-safe session prep Markdown note into a readable one-page A4 handout PDF with
+a light fantasy style. Use this for short session-openers, recap sheets, arrival handouts, or other
+player-facing prep that should be shared outside Obsidian.
+
+```bash
+make export-player-prep-pdf INPUT=/path/to/player-prep.md
+python3 -m scripts.export_player_prep_pdf --input /path/to/player-prep.md
+```
+
+By default, the exporter writes the styled `.html` source and `.pdf` to
+`obsidian-abomination-vaults-vault/Exports/Handouts/`. It uses local Chrome/Chromium for PDF
+rendering and does not require network access.
+
+### MapTool bridge demo
+
+The current repo ships an experimental local bridge prototype for Phase 4 live mechanics work.
+This is not a stock MapTool HTTP API; it is a small helper service that DMA can talk to while we
+work out the real MapTool integration path.
+
+Quick demo:
+
+```bash
+make maptool-bridge
+make push-maptool-fixture
+MAPTOOL_BASE_URL=http://127.0.0.1:5005 make dev
+curl -X POST http://127.0.0.1:8000/api/live/maptool-sync \
+  -H 'Content-Type: application/json' \
+  -d '{"map_id":"harbor-docks"}'
+```
+
+Then open `http://127.0.0.1:8000/dm-panel`.
+
+For details and current caveats, see [`docs/maptool-sync.md`](docs/maptool-sync.md).
 
 ### Migration workflow
 
@@ -145,4 +321,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## 🔌 MapTool integration
 
-The backend includes an adapter for syncing map state with MapTool. Configure the base URL and credentials via environment variables (`MAPTOOL_BASE_URL`, `MAPTOOL_USERNAME`, `MAPTOOL_PASSWORD`, `MAPTOOL_TIMEOUT_SECONDS`, `MAPTOOL_MAX_RETRIES`) and use the `/api/maptool` routes to pull map state or push token updates. See [`docs/maptool-sync.md`](docs/maptool-sync.md) for details.
+The repository currently includes an experimental MapTool adapter plus `/api/maptool` and `/api/live/maptool-sync` routes. Recent local validation showed that a normal MapTool server started from `File -> Start Server...` exposes an `rptools-maptool+tcp://...` connection URI, not the HTTP REST surface the current adapter assumes. Treat the adapter as a placeholder until a real HTTP bridge, plugin, or sidecar is defined. See [`docs/maptool-sync.md`](docs/maptool-sync.md) for the current status and recommended next steps.

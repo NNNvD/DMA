@@ -1,0 +1,28 @@
+{
+  "bridge_url": "http://127.0.0.1:5005/bridge/map-state",
+  "map_id_mode": "manual",
+  "map_id": "harbor-docks",
+  "map_name_mode": "manual",
+  "map_name": "Greyhaven Docks",
+  "token_filter": {
+    "layer": ["TOKEN", "OBJECT"],
+    "visible_only": false,
+    "selected_only": false
+  },
+  "token_fields": {
+    "id": "token-id",
+    "name": "token-name",
+    "x": "token-x",
+    "y": "token-y",
+    "notes": "notes",
+    "gm_notes": "gm-notes",
+    "layer": "layer",
+    "hp_current_property": "HP",
+    "hp_max_property": "HPMax",
+    "initiative_property": "Initiative",
+    "conditions_mode": "states",
+    "conditions_source": ["Frightened", "Off-Guard", "Grabbed", "Hidden"]
+  },
+  "fog_state": "unknown",
+  "light_state": "unknown"
+}
