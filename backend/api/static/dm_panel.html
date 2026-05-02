@@ -831,6 +831,74 @@
       font-size: 0.78rem;
     }
 
+    .room-card-toggle {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .room-card-toggle button {
+      padding: 7px 10px;
+      min-height: 34px;
+    }
+
+    .room-literal-text {
+      white-space: pre-wrap;
+    }
+
+    .room-literal-block {
+      border-radius: 10px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      padding: 10px;
+    }
+
+    .room-literal-readaloud {
+      background: rgba(138, 47, 29, 0.08);
+      border-color: rgba(138, 47, 29, 0.26);
+      color: #6f271a;
+      font-size: 0.98rem;
+      line-height: 1.55;
+    }
+
+    .room-literal-general {
+      background: rgba(255, 252, 246, 0.78);
+    }
+
+    .room-literal-encounter {
+      background: rgba(39, 30, 24, 0.05);
+      border-left: 4px solid var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .room-literal-text b {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .room-ref {
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+      padding: 0 1px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .room-ref:hover {
+      color: #6f271a;
+    }
+
+    .room-dc {
+      font-weight: 800;
+      color: #5f4b2f;
+    }
+
     .sheet-module-stack {
       display: grid;
       gap: 14px;
@@ -1114,6 +1182,7 @@
             <div class="actions">
               <button type="submit">Load Map</button>
               <button type="button" class="ghost" id="map-room-refresh">Refresh Maps</button>
+              <button type="button" class="ghost" id="map-room-back" disabled>Back</button>
             </div>
           </form>
           <div class="stat-line" id="map-room-meta">
@@ -1638,6 +1707,7 @@
     let activePdfPath = "";
     let dungeonMaps = [];
     let activeRoomKey = null;
+    let roomNavigationStack = [];
     let pcSheets = [];
     let npcSheets = [];
     let campaignOverviewNote = null;
@@ -2711,12 +2781,254 @@
       return `<ul>${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul>`;
     }
 
+    function firstPresent(...values) {
+      for (const value of values) {
+        if (typeof value === "string" && value.trim()) {
+          return value;
+        }
+      }
+      return "";
+    }
+
+    function roomLiteralParts(room) {
+      const literal = room.literal_text || room.source_text || room.raw_text || room.pdf_text || {};
+      return {
+        player: firstPresent(
+          literal.player,
+          literal.player_visible,
+          literal.read_aloud,
+          literal.read_to_players,
+          room.literal_player_visible_description,
+          room.literal_player_description,
+          room.source_player_visible_description,
+          room.player_read_aloud,
+          room.read_aloud,
+          room.read_to_players,
+        ),
+        additional: firstPresent(
+          literal.general,
+          literal.general_text,
+          literal.additional,
+          literal.additional_text,
+          literal.middle,
+          literal.context,
+          literal.exploration,
+          room.literal_additional_text,
+          room.source_additional_text,
+        ),
+        gm: firstPresent(
+          literal.encounter,
+          literal.encounter_text,
+          literal.gm,
+          literal.gm_info,
+          literal.info,
+          literal.room_information,
+          literal.details,
+          room.literal_gm_description,
+          room.literal_room_information,
+          room.source_gm_description,
+          room.gm_source_text,
+          room.info_text,
+        ),
+      };
+    }
+
+    function renderSummaryRoomSections(room) {
+      return `
+        <div class="room-card-section">
+          <strong>What PCs see first</strong>
+          <div>${escapeHtml(room.player_visible_description || "No player-visible description listed.")}</div>
+        </div>
+        <div class="room-card-section">
+          <strong>GM-only room note</strong>
+          <div>${escapeHtml(room.gm_description || "No GM-only note listed.")}</div>
+        </div>
+        <div class="room-card-section"><strong>Monsters</strong>${listValues(room.monsters)}</div>
+        <div class="room-card-section"><strong>NPCs</strong>${listValues(room.npcs)}</div>
+        <div class="room-card-section"><strong>Traps, haunts, and hazards</strong>${listValues([...(room.traps || []), ...(room.haunts || []), ...(room.hazards || [])])}</div>
+        <div class="room-card-section"><strong>Loot</strong>${listValues(room.loot)}</div>
+        <div class="room-card-section"><strong>Secret doors and hidden features</strong>${listValues(room.secret_doors)}</div>
+        <div class="room-card-section">
+          <strong>Visibility and detection</strong>
+          <div>${escapeHtml(room.visibility_notes || "No visibility note listed.")}</div>
+          <div class="subtle" style="margin-top: 4px;">${escapeHtml(room.detection_notes || "No detection note listed.")}</div>
+        </div>
+        <div class="room-card-section"><strong>Dependencies</strong>${listValues(room.dependencies)}</div>
+      `;
+    }
+
+    function renderLiteralRoomSections(room) {
+      const literal = roomLiteralParts(room);
+      if (!literal.player && !literal.gm) {
+        return `
+          <div class="room-card-section">
+            <strong>Literal PDF text</strong>
+            <div class="empty">No literal PDF text is stored for this room yet.</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="room-card-section">
+          <strong>Read-aloud text</strong>
+          <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player || "No read-aloud text stored for this room.", "readaloud")}</div>
+        </div>
+        ${literal.additional ? `
+          <div class="room-card-section">
+            <strong>General room text</strong>
+            <div class="room-literal-text room-literal-block room-literal-general">${formatLiteralText(literal.additional, "general")}</div>
+          </div>
+        ` : ""}
+        <div class="room-card-section">
+          <strong>Encounter text</strong>
+          <div class="room-literal-text room-literal-block room-literal-encounter">${formatLiteralText(literal.gm || "No encounter text stored for this room.", "encounter")}</div>
+        </div>
+      `;
+    }
+
+    function roomExists(roomId) {
+      const normalized = String(roomId || "").toLowerCase();
+      return Boolean((activeRoomKey?.rooms || []).some((room) => (
+        String(room.room_id || "").toLowerCase() === normalized
+      )));
+    }
+
+    function roomReferenceMarkup(roomId) {
+      const label = escapeHtml(roomId);
+      if (!roomExists(roomId)) {
+        return `<span class="room-ref">${label}</span>`;
+      }
+      return `<button type="button" class="room-ref" data-room-link="${label}">${label}</button>`;
+    }
+
+    function formatLiteralText(value, mode) {
+      let html = escapeHtml(value || "");
+      html = html.replace(
+        /\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|Rewards?|Secret Doors?|Side Quest|Environmental Cues):/g,
+        "<b>$1:</b>",
+      );
+      html = html.replace(/\b(DC\s+\d+)\b/g, '<span class="room-dc">$1</span>');
+      if (mode === "encounter") {
+        html = html.replace(
+          /^([A-Z][A-Z0-9'’(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+[–−-]?\d+)/gm,
+          "<b>$1</b>",
+        );
+        html = html.replace(
+          /\b(Pathfinder Bestiary\s+\d+|Initiative|Perception|AC|Fort|Ref|Will|HP|Speed|Melee|Ranged|Damage)\b/g,
+          "<b>$1</b>",
+        );
+      }
+      html = html.split(/(<[^>]+>)/g).map((part) => {
+        if (part.startsWith("<")) {
+          return part;
+        }
+        return part.replace(/\b([A-Z]\d+[A-Za-z]?)\b(?=\s|\.|,|;|:|\))/g, (_, roomId) => (
+          roomReferenceMarkup(roomId)
+        ));
+      }).join("");
+      return html;
+    }
+
+    function renderRoomTextToggle() {
+      return `
+        <div class="room-card-toggle">
+          <button type="button" class="ghost" data-room-mode-toggle>Show Literal PDF Text</button>
+        </div>
+      `;
+    }
+
+    function updateRoomBackButton() {
+      const button = document.getElementById("map-room-back");
+      if (!button) {
+        return;
+      }
+      button.disabled = roomNavigationStack.length === 0;
+    }
+
+    function currentOpenRoomId() {
+      const openCard = document.querySelector("#map-room-list .room-card[open]");
+      return openCard?.dataset.roomId || "";
+    }
+
+    function currentOpenRoomMode() {
+      const openCard = document.querySelector("#map-room-list .room-card[open]");
+      return openCard?.dataset.roomTextMode || "summary";
+    }
+
+    function roomCardFor(roomId) {
+      const normalized = String(roomId || "").toLowerCase();
+      return Array.from(document.querySelectorAll("#map-room-list .room-card")).find((card) => (
+        String(card.dataset.roomId || "").toLowerCase() === normalized
+      ));
+    }
+
+    function setRoomCardMode(card, mode) {
+      const nextMode = mode === "literal" ? "literal" : "summary";
+      const button = card.querySelector("[data-room-mode-toggle]");
+      card.dataset.roomTextMode = nextMode;
+      card.querySelector('[data-room-mode-panel="summary"]').hidden = nextMode !== "summary";
+      card.querySelector('[data-room-mode-panel="literal"]').hidden = nextMode !== "literal";
+      if (button) {
+        button.textContent = nextMode === "literal" ? "Show Summary" : "Show Literal PDF Text";
+      }
+    }
+
+    function openRoomCard(roomId, { pushHistory = true, mode = null } = {}) {
+      const targetRoomId = String(roomId || "").trim();
+      if (!targetRoomId || !activeRoomKey) {
+        return false;
+      }
+      if (!roomCardFor(targetRoomId)) {
+        const filter = document.getElementById("map-room-filter");
+        if (filter.value) {
+          filter.value = "";
+          renderRoomKey();
+        }
+      }
+      const target = roomCardFor(targetRoomId);
+      if (!target) {
+        return false;
+      }
+      const previousRoomId = currentOpenRoomId();
+      if (pushHistory && previousRoomId && previousRoomId.toLowerCase() !== targetRoomId.toLowerCase()) {
+        roomNavigationStack.push({
+          roomId: previousRoomId,
+          mode: currentOpenRoomMode(),
+        });
+      }
+      document.querySelectorAll("#map-room-list .room-card").forEach((card) => {
+        card.open = false;
+      });
+      target.open = true;
+      if (mode) {
+        setRoomCardMode(target, mode);
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      updateRoomBackButton();
+      return true;
+    }
+
+    function navigateBackRoom() {
+      const previous = roomNavigationStack.pop();
+      if (!previous) {
+        updateRoomBackButton();
+        return;
+      }
+      openRoomCard(previous.roomId || previous, {
+        pushHistory: false,
+        mode: previous.mode || null,
+      });
+    }
+
     function roomSearchText(room) {
+      const literal = roomLiteralParts(room);
       return [
         room.room_id,
         room.title,
         room.player_visible_description,
         room.gm_description,
+        literal.player,
+        literal.additional,
+        literal.gm,
         room.visibility_notes,
         room.detection_notes,
         ...(room.monsters || []),
@@ -2747,6 +3059,7 @@
       if (!activeRoomKey) {
         meta.innerHTML = '<span class="stat-badge">No room key loaded</span>';
         list.innerHTML = '<div class="empty">Room notes will appear here.</div>';
+        updateRoomBackButton();
         return;
       }
 
@@ -2761,6 +3074,7 @@
 
       if (!rooms.length) {
         list.innerHTML = '<div class="empty">No rooms match that filter.</div>';
+        updateRoomBackButton();
         return;
       }
 
@@ -2768,34 +3082,23 @@
         const tags = roomTags(room);
         const exactRoomMatch = query && room.room_id && room.room_id.toLowerCase() === query;
         return `
-          <details class="room-card" ${exactRoomMatch ? "open" : ""}>
+          <details class="room-card" data-room-id="${escapeHtml(room.room_id || "")}" data-room-text-mode="summary" ${exactRoomMatch ? "open" : ""}>
             <summary>${escapeHtml(room.room_id)} ${escapeHtml(room.title || "")}</summary>
             <div class="room-card-body">
               ${tags.length ? `<div class="room-tags">${tags.map((tag) => `<span class="room-tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
-              <div class="room-card-section">
-                <strong>What PCs see first</strong>
-                <div>${escapeHtml(room.player_visible_description || "No player-visible description listed.")}</div>
+              ${renderRoomTextToggle()}
+              <div data-room-mode-panel="summary">
+                ${renderSummaryRoomSections(room)}
               </div>
-              <div class="room-card-section">
-                <strong>GM-only room note</strong>
-                <div>${escapeHtml(room.gm_description || "No GM-only note listed.")}</div>
+              <div data-room-mode-panel="literal" hidden>
+                ${renderLiteralRoomSections(room)}
               </div>
-              <div class="room-card-section"><strong>Monsters</strong>${listValues(room.monsters)}</div>
-              <div class="room-card-section"><strong>NPCs</strong>${listValues(room.npcs)}</div>
-              <div class="room-card-section"><strong>Traps, haunts, and hazards</strong>${listValues([...(room.traps || []), ...(room.haunts || []), ...(room.hazards || [])])}</div>
-              <div class="room-card-section"><strong>Loot</strong>${listValues(room.loot)}</div>
-              <div class="room-card-section"><strong>Secret doors and hidden features</strong>${listValues(room.secret_doors)}</div>
-              <div class="room-card-section">
-                <strong>Visibility and detection</strong>
-                <div>${escapeHtml(room.visibility_notes || "No visibility note listed.")}</div>
-                <div class="subtle" style="margin-top: 4px;">${escapeHtml(room.detection_notes || "No detection note listed.")}</div>
-              </div>
-              <div class="room-card-section"><strong>Dependencies</strong>${listValues(room.dependencies)}</div>
               <div class="room-card-section"><strong>Source</strong><div class="subtle">${escapeHtml(room.source || "No source listed.")}</div></div>
             </div>
           </details>
         `;
       }).join("");
+      updateRoomBackButton();
     }
 
     async function loadMapRoom(mapId = null) {
@@ -2805,6 +3108,8 @@
       if (!selectedMapId) {
         viewer.innerHTML = '<div class="empty" style="padding: 16px;">Choose a dungeon map to load it here.</div>';
         list.innerHTML = '<div class="empty">Room notes will appear here.</div>';
+        roomNavigationStack = [];
+        updateRoomBackButton();
         return;
       }
       const map = dungeonMaps.find((item) => item.map_id === selectedMapId);
@@ -2814,6 +3119,8 @@
       viewer.innerHTML = `<img src="${escapeHtml(map.url)}" alt="${escapeHtml(map.title)}" />`;
       list.innerHTML = '<div class="empty">Loading room key…</div>';
       activeRoomKey = null;
+      roomNavigationStack = [];
+      updateRoomBackButton();
       try {
         activeRoomKey = await fetchJson(
           `${endpoints.dungeonRoomKey}?map_id=${encodeURIComponent(selectedMapId)}`,
@@ -2825,6 +3132,7 @@
           <span class="stat-badge">No room key found</span>
         `;
         list.innerHTML = `<div class="empty">Map loaded, but no room-key JSON matched <code>${escapeHtml(selectedMapId)}</code>.</div>`;
+        updateRoomBackButton();
       }
     }
 
@@ -4230,7 +4538,29 @@
       await loadDungeonMaps();
       await loadMapRoom();
     });
+    document.getElementById("map-room-back").addEventListener("click", navigateBackRoom);
     document.getElementById("map-room-filter").addEventListener("input", renderRoomKey);
+    document.getElementById("map-room-list").addEventListener("click", (event) => {
+      const roomLink = event.target.closest("[data-room-link]");
+      if (roomLink) {
+        event.preventDefault();
+        const currentCard = roomLink.closest(".room-card");
+        const currentMode = currentCard?.dataset.roomTextMode || "literal";
+        openRoomCard(roomLink.dataset.roomLink, { mode: currentMode });
+        return;
+      }
+      const button = event.target.closest("[data-room-mode-toggle]");
+      if (!button) {
+        return;
+      }
+      event.preventDefault();
+      const card = button.closest(".room-card");
+      if (!card) {
+        return;
+      }
+      const nextMode = card.dataset.roomTextMode === "literal" ? "summary" : "literal";
+      setRoomCardMode(card, nextMode);
+    });
     document.getElementById("campaign-overview-refresh").addEventListener("click", loadCampaignOverview);
     document.getElementById("campaign-overview-edit").addEventListener("click", () => {
       setCommandNoteMode("campaign-overview", true);

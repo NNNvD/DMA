@@ -128,6 +128,31 @@ def test_live_dungeon_map_and_room_key_routes(monkeypatch, tmp_path):
     room_key_root = tmp_path / "room-keys"
     room_key_folder = room_key_root / "abomination-vaults"
     room_key_folder.mkdir(parents=True)
+    vault_root = tmp_path / "vault"
+    references_folder = vault_root / "Library" / "References"
+    references_folder.mkdir(parents=True)
+    (references_folder / "Abomination Vaults 1 Ruins Of Gauntlight.md").write_text(
+        """
+A1. DAMP ENTRANCE LOW 1
+Wet      Right column note.
+stone and original
+boxed text near [[Campaign/Locations/Gauntlight Keep|Gauntlight Keep]].
+
+Middle explanatory
+text stays included.
+
+Creatures: Three mitflits
+wait above the webs.
+
+MITFLITS (3) CREATURE -1
+Pathfinder Bestiary 192
+Initiative Stealth +5
+
+A2. DECREPIT DRAWBRIDGE
+Rotten planks cross the water.
+""".strip(),
+        encoding="utf-8",
+    )
     (room_key_folder / "level-1.json").write_text(
         json.dumps(
             {
@@ -138,6 +163,7 @@ def test_live_dungeon_map_and_room_key_routes(monkeypatch, tmp_path):
                         "room_id": "A1",
                         "title": "Damp Entrance",
                         "player_visible_description": "Wet stone and webs.",
+                        "source": "Abomination Vaults 1 - Ruins of Gauntlight.pdf, p. 6",
                     }
                 ],
             }
@@ -147,6 +173,7 @@ def test_live_dungeon_map_and_room_key_routes(monkeypatch, tmp_path):
 
     monkeypatch.setattr(settings, "dungeon_map_root", str(map_root))
     monkeypatch.setattr(settings, "dungeon_room_key_root", str(room_key_root))
+    monkeypatch.setattr(settings, "obsidian_vault_path", str(vault_root))
 
     app, engine, _ = create_documents_test_app()
     client = TestClient(app)
@@ -175,6 +202,18 @@ def test_live_dungeon_map_and_room_key_routes(monkeypatch, tmp_path):
         room_payload = room_key.json()
         assert room_payload["title"] == "Level 1"
         assert room_payload["rooms"][0]["room_id"] == "A1"
+        assert (
+            room_payload["rooms"][0]["literal_text"]["read_aloud"]
+            == "Wet stone and original boxed text near Gauntlight Keep."
+        )
+        assert (
+            room_payload["rooms"][0]["literal_text"]["general_text"]
+            == "Middle explanatory text stays included.\n\nCreatures: Three mitflits wait above the webs."
+        )
+        assert (
+            room_payload["rooms"][0]["literal_text"]["encounter_text"]
+            == "MITFLITS (3) CREATURE -1 Pathfinder Bestiary 192\nInitiative Stealth +5"
+        )
     finally:
         asyncio.run(engine.dispose())
 
