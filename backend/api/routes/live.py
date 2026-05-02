@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from time import perf_counter
 from typing import Literal, Optional
@@ -285,6 +286,10 @@ def _room_key_root() -> Path:
     return _configured_path(settings.dungeon_room_key_root)
 
 
+def _vault_root() -> Path:
+    return _configured_path(settings.obsidian_vault_path)
+
+
 def _map_id_from_path(path: Path) -> str:
     return path.stem.strip().casefold().replace(" ", "-")
 
@@ -300,6 +305,401 @@ def _path_stem(value: str | None) -> str | None:
     if not value:
         return None
     return Path(value).stem or value
+
+
+def _normalize_source_name(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.casefold())
+
+
+def _literal_source_reference(room: dict) -> str | None:
+    candidates = [room.get("source"), *(room.get("source_references") or [])]
+    for candidate in candidates:
+        if not isinstance(candidate, str):
+            continue
+        match = re.search(r"([^,]+?\.pdf)", candidate, flags=re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return None
+
+
+def _reference_markdown_for_source(source_pdf: str | None) -> Path | None:
+    if not source_pdf:
+        return None
+    references_root = _vault_root() / "Library" / "References"
+    if not references_root.exists():
+        return None
+    normalized_source = _normalize_source_name(Path(source_pdf).stem)
+    for path in sorted(references_root.rglob("*.md")):
+        if _normalize_source_name(path.stem) == normalized_source:
+            return path
+    for path in sorted(references_root.rglob("*.md")):
+        normalized_path = _normalize_source_name(path.stem)
+        if normalized_source in normalized_path or normalized_path in normalized_source:
+            return path
+    return None
+
+
+def _room_heading_pattern(room_id: str, title: str | None = None) -> re.Pattern[str]:
+    title_pattern = ""
+    if title:
+        words = [re.escape(part) for part in re.findall(r"[A-Za-z0-9']+", title)]
+        if words:
+            title_pattern = r"\s+" + r"[\s\W_]+".join(words[:6])
+    return re.compile(
+        rf"\b{re.escape(room_id)}\.\s*{title_pattern}",
+        flags=re.IGNORECASE,
+    )
+
+
+def _find_room_heading(text: str, room_id: str, title: str | None = None) -> re.Match[str] | None:
+    if title:
+        match = _room_heading_pattern(room_id, title).search(text)
+        if match:
+            return match
+    return _room_heading_pattern(room_id).search(text)
+
+
+def _strip_reference_markup(text: str) -> str:
+    text = re.sub(r"\[\[[^\]|]+\|([^\]]+)\]\]", r"\1", text)
+    text = re.sub(
+        r"\[\[([^\]]+)\]\]",
+        lambda match: match.group(1).split("/")[-1],
+        text,
+    )
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    return text
+
+
+def _linearize_pdf_columns(text: str) -> str:
+    left_lines: list[str] = []
+    right_lines: list[str] = []
+    for line in text.splitlines():
+        if not line.strip():
+            left_lines.append("")
+            if right_lines and right_lines[-1]:
+                right_lines.append("")
+            continue
+        if re.match(r"^\s{40,}\S", line):
+            right_lines.append(line.strip())
+            continue
+        match = re.search(r"(?<=\S)\s{4,}(?=\S)", line)
+        if not match:
+            left_lines.append(line)
+            continue
+        left = line[: match.start()].rstrip()
+        right = line[match.end() :].strip()
+        if left:
+            left_lines.append(left)
+        if right:
+            right_lines.append(right)
+    if not right_lines:
+        return text
+    return "\n".join(left_lines).rstrip() + "\n\n" + "\n".join(right_lines).strip()
+
+
+def _linearize_pdf_pages(text: str) -> str:
+    pages: list[list[str]] = [[]]
+    for line in text.splitlines():
+        if re.match(r"^\s*\d+\s*$", line) and pages[-1]:
+            pages.append([line])
+            continue
+        pages[-1].append(line)
+    return "\n\n".join(_linearize_pdf_columns("\n".join(page)) for page in pages)
+
+
+def _drop_room_heading(text: str, room_id: str, title: str | None = None) -> str:
+    match = _find_room_heading(text, room_id, title)
+    if not match or match.start() > 10:
+        return text
+    line_end = text.find("\n", match.start())
+    if line_end == -1:
+        return ""
+    return text[line_end + 1 :]
+
+
+def _clean_literal_room_text(text: str) -> str:
+    text = _strip_reference_markup(text)
+    paragraphs: list[list[str]] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        stripped = re.sub(r"\s+", " ", line).strip()
+        if not stripped:
+            if current:
+                paragraphs.append(current)
+                current = []
+            continue
+        if stripped.casefold() in {"chapter 1:", "ruins", "gauntlight"}:
+            continue
+        if re.fullmatch(r"\d{1,4}", stripped):
+            continue
+        current.append(stripped)
+    if current:
+        paragraphs.append(current)
+
+    cleaned_paragraphs = []
+    for paragraph in paragraphs:
+        text = " ".join(paragraph)
+        text = re.sub(
+            r"\b(?:TRIVIAL|LOW|MODERATE|SEVERE|EXTREME)\s+\d+\s+",
+            "",
+            text,
+        )
+        text = re.sub(r"(\w)-\s+(\w)", r"\1\2", text)
+        text = re.sub(r"\s+([,.;:!?])", r"\1", text)
+        text = re.sub(r"\s{2,}", " ", text).strip()
+        if text:
+            cleaned_paragraphs.append(text)
+    return "\n\n".join(cleaned_paragraphs)
+
+
+def _split_intro_room_text(text: str) -> tuple[str, str]:
+    parts = [part.strip() for part in text.split("\n\n") if part.strip()]
+    if not parts:
+        return "", ""
+    if len(parts) > 1:
+        if not re.search(r"[.!?][\"”')\]]?$", parts[0]):
+            parts[0] = f"{parts[0]} {parts.pop(1)}"
+        if len(parts) > 1:
+            return parts[0], "\n\n".join(parts[1:])
+
+    single = parts[0]
+    for starter in (
+        "Once ",
+        "The opaque ",
+        "The room ",
+        "This room ",
+        "A successful ",
+        "Any hero ",
+        "Characters ",
+        "Heroes ",
+    ):
+        marker = f". {starter}"
+        index = single.find(marker)
+        if index > -1:
+            split_at = index + 1
+            return single[:split_at].strip(), single[split_at:].strip()
+    return single, ""
+
+
+def _format_encounter_text(text: str) -> str:
+    text = re.sub(
+        r"\s+\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|"
+        r"Rewards?|Secret Doors?|Side Quest|Environmental Cues):",
+        r"\n\n\1:",
+        text,
+    )
+    text = re.sub(
+        r"\s+(\b[A-Z][A-Z0-9'’(), -]{2,}\s+CREATURE\s+[–−-]?\d+)",
+        r"\n\n\1",
+        text,
+    )
+    text = re.sub(
+        r"\s+\b(AC|Fort|Ref|Will|HP|Speed|Melee|Ranged|Damage|Initiative)\b",
+        r"\n\1",
+        text,
+    )
+    return text.strip()
+
+
+STAT_BLOCK_RE = re.compile(
+    r"\b[A-Z][A-Z0-9'’(), -]{2,}\s+"
+    r"(?:CREATURE|HAZARD|TRAP)\s+[–−-]?\d+",
+)
+
+SECTION_LABEL_RE = re.compile(
+    r"\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|"
+    r"Rewards?|Secret Doors?|Side Quest|Environmental Cues):"
+)
+
+
+def _extract_stat_blocks(text: str) -> tuple[str, str]:
+    stat_blocks: list[str] = []
+    general_parts: list[str] = []
+    cursor = 0
+    while True:
+        match = STAT_BLOCK_RE.search(text, cursor)
+        if not match:
+            general_parts.append(text[cursor:])
+            break
+        general_parts.append(text[cursor : match.start()])
+        next_label = SECTION_LABEL_RE.search(text, match.end())
+        next_stat = STAT_BLOCK_RE.search(text, match.end())
+        end_candidates = [len(text)]
+        if next_label:
+            end_candidates.append(next_label.start())
+        if next_stat:
+            end_candidates.append(next_stat.start())
+        end = min(end_candidates)
+        stat_blocks.append(text[match.start() : end].strip())
+        cursor = end
+    general = "".join(general_parts).strip()
+    general = re.sub(r"[ \t]{2,}", " ", general)
+    general = re.sub(r"\n{3,}", "\n\n", general).strip()
+    encounter = "\n\n".join(_format_encounter_text(block) for block in stat_blocks if block)
+    return general, encounter
+
+
+def _split_literal_room_text(
+    block: str,
+    *,
+    room_id: str | None = None,
+    title: str | None = None,
+) -> dict[str, str]:
+    if room_id:
+        block = _drop_room_heading(block, room_id, title)
+    cleaned = _clean_literal_room_text(block)
+    if not cleaned:
+        return {}
+    marker = re.search(
+        r"\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|"
+        r"Rewards?|Secret Doors?|Side Quest|Environmental Cues):"
+        r"|\b[A-Z][A-Z0-9'’(), -]{2,}\s+CREATURE\s+[–−-]?\d+",
+        cleaned,
+    )
+    if not marker:
+        read_aloud, general = _split_intro_room_text(cleaned)
+        literal: dict[str, str] = {}
+        if read_aloud:
+            literal["read_aloud"] = read_aloud
+        if general:
+            literal["general_text"] = general
+        elif not read_aloud:
+            literal["general_text"] = cleaned
+        return literal
+    player = cleaned[: marker.start()].strip()
+    gm = cleaned[marker.start() :].strip()
+    literal: dict[str, str] = {}
+    if player:
+        read_aloud, general = _split_intro_room_text(player)
+        if read_aloud:
+            literal["read_aloud"] = read_aloud
+        if general:
+            literal["general_text"] = general
+        player = ""
+    if player:
+        player_parts = [part.strip() for part in player.split("\n\n") if part.strip()]
+        if len(player_parts) > 1 and not re.search(r"[.!?][\"”')\]]?$", player_parts[0]):
+            player_parts[0] = f"{player_parts[0]} {player_parts.pop(1)}"
+        literal["read_aloud"] = player_parts[0]
+        if len(player_parts) > 1:
+            literal["additional_text"] = "\n\n".join(player_parts[1:])
+    if gm:
+        literal["room_information"] = gm
+        literal["encounter_text"] = _format_encounter_text(literal.pop("room_information"))
+    return literal
+
+
+def _split_literal_room_text(
+    block: str,
+    *,
+    room_id: str | None = None,
+    title: str | None = None,
+) -> dict[str, str]:
+    if room_id:
+        block = _drop_room_heading(block, room_id, title)
+    cleaned = _clean_literal_room_text(block)
+    if not cleaned:
+        return {}
+
+    general_source, encounter = _extract_stat_blocks(cleaned)
+    marker = SECTION_LABEL_RE.search(general_source)
+    literal: dict[str, str] = {}
+
+    if not marker:
+        read_aloud, general = _split_intro_room_text(general_source)
+        if read_aloud:
+            literal["read_aloud"] = read_aloud
+        if general:
+            literal["general_text"] = general
+        elif not read_aloud and general_source:
+            literal["general_text"] = general_source
+        if encounter:
+            literal["encounter_text"] = encounter
+        return literal
+
+    intro = general_source[: marker.start()].strip()
+    general_after_intro = general_source[marker.start() :].strip()
+    if intro:
+        read_aloud, general = _split_intro_room_text(intro)
+        if read_aloud:
+            literal["read_aloud"] = read_aloud
+        if general:
+            literal["general_text"] = general
+    if general_after_intro:
+        literal["general_text"] = (
+            f"{literal.get('general_text', '')}\n\n{general_after_intro}".strip()
+        )
+    if encounter:
+        literal["encounter_text"] = encounter
+    return literal
+
+
+def _literal_room_texts_from_reference(payload: dict) -> dict[str, dict[str, str]]:
+    rooms = payload.get("rooms")
+    if not isinstance(rooms, list) or not rooms:
+        return {}
+    source_path = None
+    for room in rooms:
+        if isinstance(room, dict):
+            source_path = _reference_markdown_for_source(_literal_source_reference(room))
+            if source_path:
+                break
+    if not source_path:
+        return {}
+    text = _linearize_pdf_pages(source_path.read_text(encoding="utf-8", errors="ignore"))
+    matches: list[tuple[int, dict]] = []
+    for room in rooms:
+        if not isinstance(room, dict):
+            continue
+        room_id = str(room.get("room_id") or "").strip()
+        if not room_id:
+            continue
+        match = _find_room_heading(text, room_id, str(room.get("title") or ""))
+        if match:
+            matches.append((match.start(), room))
+    matches.sort(key=lambda item: item[0])
+    literal_by_room: dict[str, dict[str, str]] = {}
+    for index, (start, room) in enumerate(matches):
+        room_id = str(room.get("room_id") or "").strip()
+        prefix_match = re.match(r"([A-Za-z]+)", room_id)
+        next_same_prefix = None
+        if prefix_match:
+            next_match = re.search(
+                rf"^\s*{re.escape(prefix_match.group(1))}\d+[A-Za-z]?\.\s+",
+                text[start + 1 :],
+                flags=re.IGNORECASE | re.MULTILINE,
+            )
+            if next_match:
+                next_same_prefix = start + 1 + next_match.start()
+        candidate_ends = [min(len(text), start + 8000)]
+        if index + 1 < len(matches):
+            candidate_ends.append(matches[index + 1][0])
+        if next_same_prefix:
+            candidate_ends.append(next_same_prefix)
+        end = min(candidate_ends)
+        block = text[start:end]
+        literal = _split_literal_room_text(
+            block,
+            room_id=room_id,
+            title=str(room.get("title") or ""),
+        )
+        if room_id and literal:
+            literal_by_room[room_id] = literal
+    return literal_by_room
+
+
+def _enrich_room_key_literal_text(payload: dict) -> dict:
+    literal_by_room = _literal_room_texts_from_reference(payload)
+    if not literal_by_room:
+        return payload
+    for room in payload.get("rooms") or []:
+        if not isinstance(room, dict) or room.get("literal_text"):
+            continue
+        room_id = str(room.get("room_id") or "").strip()
+        literal = literal_by_room.get(room_id)
+        if literal:
+            room["literal_text"] = literal
+    return payload
 
 
 def _modifier(score: int | None) -> int | None:
@@ -1189,7 +1589,7 @@ async def get_dungeon_room_key(map_id: str = Query(min_length=1)):
             continue
         if str(payload.get("map_id", "")).strip().casefold() == normalized_map_id:
             payload["path"] = path.relative_to(root).as_posix()
-            return payload
+            return _enrich_room_key_literal_text(payload)
     raise _not_found("Dungeon room key was not found")
 
 
