@@ -138,7 +138,7 @@ Wet      Right column note.
 stone and original
 boxed text near [[Campaign/Locations/Gauntlight Keep|Gauntlight Keep]].
 
-Middle explanatory
+Once the primary entrance
 text stays included.
 
 Creatures: Three mitflits
@@ -149,7 +149,17 @@ Pathfinder Bestiary 192
 Initiative Stealth +5
 
 A2. DECREPIT DRAWBRIDGE
-Rotten planks cross the water.
+Rotten planks cross the water. The chains look ready to fall apart,
+giving the drawbridge's structural integrity an extra layer of dubiousness.
+True to appearances, the drawbridge isn't safe to cross.
+
+A25. GAUNTLIGHT CUPOLA MODERATE 1
+Rows of black metal bars encase this circular chamber
+like a cage.
+
+CHAPTER 2:
+The Forgotten Dungeon
+This text belongs to the next chapter, not A25.
 """.strip(),
         encoding="utf-8",
     )
@@ -163,6 +173,18 @@ Rotten planks cross the water.
                         "room_id": "A1",
                         "title": "Damp Entrance",
                         "player_visible_description": "Wet stone and webs.",
+                        "source": "Abomination Vaults 1 - Ruins of Gauntlight.pdf, p. 6",
+                    },
+                    {
+                        "room_id": "A25",
+                        "title": "Gauntlight Cupola",
+                        "player_visible_description": "The cupola.",
+                        "source": "Abomination Vaults 1 - Ruins of Gauntlight.pdf, p. 17",
+                    },
+                    {
+                        "room_id": "A2",
+                        "title": "Decrepit Drawbridge",
+                        "player_visible_description": "The drawbridge.",
                         "source": "Abomination Vaults 1 - Ruins of Gauntlight.pdf, p. 6",
                     }
                 ],
@@ -208,11 +230,22 @@ Rotten planks cross the water.
         )
         assert (
             room_payload["rooms"][0]["literal_text"]["general_text"]
-            == "Middle explanatory text stays included.\n\nCreatures: Three mitflits wait above the webs."
+            == "Once the primary entrance text stays included.\n\nCreatures: Three mitflits wait above the webs."
         )
         assert (
             room_payload["rooms"][0]["literal_text"]["encounter_text"]
             == "MITFLITS (3) CREATURE -1 Pathfinder Bestiary 192\nInitiative Stealth +5"
+        )
+        a25 = room_payload["rooms"][1]["literal_text"]
+        assert a25["read_aloud"] == (
+            "Rows of black metal bars encase this circular chamber like a cage."
+        )
+        assert "The Forgotten Dungeon" not in json.dumps(a25)
+        assert "next chapter" not in json.dumps(a25)
+        a2 = room_payload["rooms"][2]["literal_text"]
+        assert a2["read_aloud"].endswith("dubiousness.")
+        assert a2["general_text"] == (
+            "True to appearances, the drawbridge isn't safe to cross."
         )
     finally:
         asyncio.run(engine.dispose())

@@ -899,6 +899,186 @@
       color: #5f4b2f;
     }
 
+    .combat-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .combat-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .combat-roster {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background: rgba(255, 252, 246, 0.92);
+    }
+
+    .combat-picker {
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) minmax(220px, 1.3fr) auto;
+      gap: 8px;
+      margin-top: 12px;
+      align-items: end;
+    }
+
+    .combat-picker input,
+    .combat-picker select {
+      width: 100%;
+    }
+
+    .combat-source-note {
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.4;
+      margin-top: 8px;
+    }
+
+    .combat-table {
+      width: 100%;
+      table-layout: fixed;
+      min-width: 1180px;
+      border-collapse: collapse;
+    }
+
+    .combat-table th,
+    .combat-table td {
+      border-bottom: 1px solid rgba(90, 71, 59, 0.12);
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .combat-table th {
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(138, 47, 29, 0.07);
+    }
+
+    .combat-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .combat-name {
+      color: var(--ink);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .combat-col-enemy {
+      width: 15%;
+    }
+
+    .combat-col-init {
+      width: 116px;
+    }
+
+    .combat-col-hp {
+      width: 178px;
+    }
+
+    .combat-col-speed {
+      width: 110px;
+    }
+
+    .combat-col-attacks {
+      width: 31%;
+    }
+
+    .combat-col-abilities {
+      width: auto;
+    }
+
+    .combat-hp-stack {
+      display: grid;
+      gap: 5px;
+    }
+
+    .combat-hp-line {
+      display: grid;
+      grid-template-columns: minmax(42px, 1fr) repeat(4, auto);
+      gap: 3px;
+      align-items: center;
+    }
+
+    .combat-hp-value {
+      font-weight: 800;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .combat-hp-btn {
+      min-height: 26px;
+      padding: 3px 5px;
+      border-radius: 7px;
+      font-size: 0.76rem;
+    }
+
+    .combat-defense-line {
+      border-top: 1px solid rgba(90, 71, 59, 0.12);
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      margin-top: 3px;
+      padding-top: 6px;
+      white-space: pre-line;
+    }
+
+    .combat-quickline {
+      color: var(--ink-soft);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .combat-init-cell {
+      display: grid;
+      gap: 5px;
+    }
+
+    .combat-init-roll {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .combat-init-input {
+      max-width: 72px;
+      min-height: 30px;
+      padding: 4px 6px;
+    }
+
+    .combat-action-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .combat-action-group {
+      display: grid;
+      gap: 3px;
+    }
+
+    .combat-action-heading {
+      color: var(--ink);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .combat-action-line {
+      color: var(--ink-soft);
+      font-size: 0.86rem;
+      line-height: 1.4;
+    }
+
     .sheet-module-stack {
       display: grid;
       gap: 14px;
@@ -1079,6 +1259,14 @@
         grid-template-columns: 1fr;
       }
 
+      .combat-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .combat-picker {
+        grid-template-columns: 1fr;
+      }
+
       .sheet-browser {
         grid-template-columns: 1fr;
       }
@@ -1194,6 +1382,46 @@
             </div>
             <div class="list scroll-list" id="map-room-list">
               <div class="empty">Room notes will appear here.</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel full-width module-current-combat" data-module-id="current-combat">
+          <h2>Current Combat</h2>
+          <div class="combat-layout">
+            <div>
+              <p class="subtle">
+                Build a quick combat roster from the currently opened Map Room card. This first pass keeps the full encounter text one click away.
+              </p>
+              <div class="combat-toolbar">
+                <button type="button" id="combat-start-open-room">Start From Open Room</button>
+                <button type="button" class="ghost" id="combat-add-open-room">Add Open Room</button>
+                <button type="button" class="ghost" id="combat-roll-all">Roll All Initiative</button>
+                <button type="button" class="ghost" id="combat-sort-initiative">Order By Initiative</button>
+                <button type="button" class="secondary" id="combat-clear">Clear Combat</button>
+              </div>
+              <div class="combat-picker">
+                <label>
+                  Find Monster
+                  <input id="combat-creature-search" placeholder="mitflit, fly, scorpion..." />
+                </label>
+                <label>
+                  AoN PF2e Monster
+                  <select id="combat-creature-select">
+                    <option value="">Loading PF2e creatures...</option>
+                  </select>
+                </label>
+                <button type="button" class="ghost" id="combat-add-creature">Add Monster</button>
+              </div>
+              <div class="combat-source-note" id="combat-creature-note">
+                Creature stats are pulled from Archives of Nethys PF2e pages; remastered Monster Core entries are preferred when available.
+              </div>
+              <div class="stat-line" id="combat-meta" style="margin-top: 12px;">
+                <span class="stat-badge">No combat loaded</span>
+              </div>
+            </div>
+            <div class="combat-roster" id="combat-roster">
+              <div class="empty">Open a room in Map Room, then start combat from it.</div>
             </div>
           </div>
         </article>
@@ -1690,6 +1918,8 @@
       referencePdfs: "/api/live/reference-pdfs",
       dungeonMaps: "/api/live/dungeon-maps",
       dungeonRoomKey: "/api/live/dungeon-room-key",
+      aonCreatures: "/api/live/aon-creatures",
+      aonCreature: "/api/live/aon-creature",
       pcSheets: "/api/live/pc-sheets",
       pcSheet: "/api/live/pc-sheet",
       npcSheets: "/api/live/npc-sheets",
@@ -1708,6 +1938,12 @@
     let dungeonMaps = [];
     let activeRoomKey = null;
     let roomNavigationStack = [];
+    let currentCombat = {
+      roomId: "",
+      roomTitle: "",
+      combatants: [],
+    };
+    let aonCreatures = [];
     let pcSheets = [];
     let npcSheets = [];
     let campaignOverviewNote = null;
@@ -1740,6 +1976,7 @@
     const moduleInstructions = {
       "Current Scene": "Use this first at the start of play and whenever the table moves to a new situation.\n\nScene Title is the short label for what is happening now. Focus tells DMA what kind of help to prioritize, such as scouting, social tension, combat, or rules friction. Current Location, Active PCs, and Active NPCs give chat, prep, sound recommendations, and continuity tools the right context. MapTool Map ID is used by Session Mechanics when you sync a map. DM Notes are for short reminders that matter right now, not full session notes. Save Live State after changing these fields.",
       "Map Room": "Use this during dungeon exploration when you want the map and room key on one screen.\n\nDungeon Map loads a local map image from the configured campaign media folder. Room Filter narrows the sidebar by room number, title, monster, haunt, trap, loot, secret, or any matching text in the room key. Each room card is collapsed by default. Expand the room the party is entering to see what the PCs notice first, then GM-only contents such as monsters, NPCs, traps, haunts, loot, secret doors, visibility notes, and detection notes. This first version does not place clickable hotspots on the map yet; use the printed room labels on the image and the sidebar together.",
+      "Current Combat": "Use this when initiative starts.\n\nOpen the relevant Map Room card, then press Start From Open Room. The roster pulls creatures and stat snippets from the room's encounter text and keeps a compact line visible for AC, saves, initiative, attacks, and notable abilities when those are available. Expand a creature card for the full extracted stat text. This first version is a GM reference and roster builder; HP editing, turn order, and conditions can come next.",
       "Campaign Overview": "Use this as the campaign-level compass.\n\nThis note is stored in the Obsidian vault at Command Center/Campaign Overview.md, so edits here remain available in Obsidian and vice versa. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, and DM notes. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
       "Session Overview": "Use this as the immediate session command center.\n\nEach tab opens a session note from the Obsidian vault. Next Session is the working prep tab; other Session tabs can hold runbooks, recaps, or future prep. Keep each session note organized around goal, starting situation, likely scenes, important NPCs, monsters/hazards/treasure, secrets, unexpected-player contingencies, live notes, and after-session recap. Use Edit Text during or after play to keep the DMA memory fresh.",
       "Quick Rules": "Use this when you want a direct rules answer with citations rather than a conversational answer.\n\nType the rules question in plain language. Strict rules mode keeps the answer close to approved rules documents and is best during live play. Top K controls how many source chunks DMA considers; use 3 for fast focused answers and 5 or 8 when the first answer needs more context. For looser questions, the /rules button in DMA Chat is often enough.",
@@ -1904,6 +2141,7 @@
     const moduleOrderKey = "dma.dmPanel.module.order";
     const defaultTopModuleIds = [
       "map-room",
+      "current-combat",
       "campaign-overview",
       "session-overview",
       "pc-sheet-viewer",
@@ -2792,7 +3030,7 @@
 
     function roomLiteralParts(room) {
       const literal = room.literal_text || room.source_text || room.raw_text || room.pdf_text || {};
-      return {
+      const combatant = {
         player: firstPresent(
           literal.player,
           literal.player_visible,
@@ -2885,6 +3123,485 @@
       `;
     }
 
+    function normalizedCombatText(value) {
+      return String(value || "")
+        .replace(/[â€“âˆ’]/g, "-")
+        .replace(/\r\n/g, "\n")
+        .trim();
+    }
+
+    function titleCaseName(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
+        .replace(/\bDc\b/g, "DC");
+    }
+
+    function combatStatValue(text, label) {
+      const pattern = new RegExp(`\\b${label}\\s+([^;\\n]+)`, "i");
+      const match = text.match(pattern);
+      return match ? match[1].trim() : "";
+    }
+
+    function firstNumber(value) {
+      const match = String(value || "").match(/-?\d+/);
+      return match ? Number.parseInt(match[0], 10) : null;
+    }
+
+    function initiativeBonus(combatant) {
+      const value = String(combatant.initiative || "");
+      const signed = value.match(/[+-]\d+/);
+      if (signed) return Number.parseInt(signed[0], 10);
+      const plain = value.match(/\b\d+\b/);
+      return plain ? Number.parseInt(plain[0], 10) : 0;
+    }
+
+    function signedNumber(value) {
+      return value >= 0 ? `+${value}` : String(value);
+    }
+
+    function shortInitiativeLabel(combatant, bonus) {
+      if (Number.isFinite(combatant.initiativeRoll)) {
+        return `Total ${combatant.initiativeRoll}`;
+      }
+      return `Bonus ${signedNumber(bonus)}`;
+    }
+
+    function combatAttackLines(text) {
+      return text
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => /^(Melee|Ranged|Damage)/i.test(line))
+        .slice(0, 6);
+    }
+
+    function combatAbilityLines(text) {
+      return text
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => /^(Primal|Occult|Arcane|Divine|Spell|Reactive|Free|Frequency|Trigger|Effect|Vengeful|Self-|Baffling|Claim|Consume|Flicker|Blood|Death|Breath|Poison|Grab|Constrict|Rend|Pounce)/i.test(line))
+        .slice(0, 6);
+    }
+
+    function withCombatHp(combatant) {
+      const maxHp = firstNumber(combatant.hp);
+      const count = Math.max(1, Number.parseInt(combatant.count || 1, 10) || 1);
+      if (Array.isArray(combatant.hpTrack) && combatant.hpTrack.length === count) {
+        return combatant;
+      }
+      combatant.maxHp = maxHp;
+      combatant.hpTrack = Array.from({ length: count }, () => maxHp);
+      return combatant;
+    }
+
+    function parseCombatHeading(heading) {
+      const clean = normalizedCombatText(heading);
+      const match = clean.match(/^(.+?)\s+(CREATURE|HAZARD|TRAP)\s+(-?\d+)/i);
+      const rawName = (match?.[1] || clean).trim();
+      const countMatch = rawName.match(/\((\d+)\)\s*$/);
+      const name = rawName.replace(/\s*\(\d+\)\s*$/, "").trim();
+      return {
+        name: titleCaseName(name || rawName || "Unknown Combatant"),
+        count: countMatch ? Number.parseInt(countMatch[1], 10) : 1,
+        type: match?.[2] || "CREATURE",
+        level: match?.[3] || "",
+      };
+    }
+
+    function combatantFromBlock(block, room) {
+      const text = normalizedCombatText(block);
+      const headingMatch = text.match(/^([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+)/);
+      const heading = headingMatch?.[1] || text.split("\n")[0] || "Unknown Combatant";
+      const parsed = parseCombatHeading(heading);
+      const combatant = {
+        id: `${room.room_id || "room"}-${parsed.name}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || "",
+        roomTitle: room.title || "",
+        ...parsed,
+        initiative: combatStatValue(text, "Initiative"),
+        initiativeBonus: initiativeBonus({ initiative: combatStatValue(text, "Initiative") }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: combatStatValue(text, "AC"),
+        hp: combatStatValue(text, "HP"),
+        fort: combatStatValue(text, "Fort"),
+        ref: combatStatValue(text, "Ref"),
+        will: combatStatValue(text, "Will"),
+        speed: combatStatValue(text, "Speed"),
+        attacks: combatAttackLines(text),
+        abilities: combatAbilityLines(text),
+        detail: text,
+      };
+      return withCombatHp(combatant);
+    }
+
+    function combatBlocksFromEncounterText(encounterText) {
+      const text = normalizedCombatText(encounterText);
+      if (!text) return [];
+      const blockPattern = /([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+[\s\S]*?)(?=\n\n[A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+|$)/g;
+      const blocks = [];
+      for (const match of text.matchAll(blockPattern)) {
+        blocks.push(match[1].trim());
+      }
+      return blocks.length ? blocks : [text];
+    }
+
+    function combatantsFromRoom(room) {
+      const literal = roomLiteralParts(room);
+      const combatants = combatBlocksFromEncounterText(literal.gm)
+        .map((block) => combatantFromBlock(block, room))
+        .filter((combatant) => combatant.name && !/^No Encounter Text/i.test(combatant.name));
+      if (combatants.length) {
+        return combatants;
+      }
+      return (room.monsters || []).map((name) => ({
+        id: `${room.room_id || "room"}-${name}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || "",
+        roomTitle: room.title || "",
+        name: String(name || "Unknown Monster"),
+        count: 1,
+        type: "CREATURE",
+        level: "",
+        initiative: "",
+        initiativeBonus: 0,
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: "",
+        hp: "",
+        fort: "",
+        ref: "",
+        will: "",
+        speed: "",
+        attacks: [],
+        abilities: [],
+        detail: "No literal encounter text is available for this monster yet.",
+      })).map(withCombatHp);
+    }
+
+    function renderCreaturePicker() {
+      const select = document.getElementById("combat-creature-select");
+      if (!select) return;
+      if (!aonCreatures.length) {
+        select.innerHTML = '<option value="">No PF2e creatures found</option>';
+        return;
+      }
+      select.innerHTML = aonCreatures.map((creature) => {
+        const badges = [
+          `Level ${creature.level}`,
+          creature.remastered ? "Remastered" : "",
+          creature.legacy ? "Legacy" : "",
+          creature.source || "",
+        ].filter(Boolean).join(" | ");
+        return `<option value="${escapeHtml(String(creature.creature_id))}">${escapeHtml(creature.name)} (${escapeHtml(badges)})</option>`;
+      }).join("");
+    }
+
+    async function loadAonCreatures(query = "") {
+      const note = document.getElementById("combat-creature-note");
+      try {
+        const payload = await fetchJson(`${endpoints.aonCreatures}?q=${encodeURIComponent(query)}&limit=40`);
+        aonCreatures = payload.items || [];
+        renderCreaturePicker();
+        if (note) {
+          note.textContent = aonCreatures.length
+            ? "PF2e creature list loaded from DMA's AoN index. Selecting one fetches the current AoN stat block and caches it locally."
+            : "No PF2e creatures matched that search.";
+        }
+      } catch (error) {
+        aonCreatures = [];
+        renderCreaturePicker();
+        if (note) {
+          note.textContent = error.message || "Could not load the PF2e creature list.";
+        }
+      }
+    }
+
+    function combatantFromAonCreature(creature) {
+      const traits = (creature.traits || []).join(", ");
+      const attackLines = (creature.attacks || []).filter((line) => /^(Melee|Ranged|Damage)/i.test(line));
+      const abilityLines = (creature.attacks || []).filter((line) => !/^(Melee|Ranged|Damage)/i.test(line));
+      const sourceFlags = [
+        creature.remastered ? "Remastered" : "",
+        creature.legacy ? "Legacy content" : "",
+        creature.source ? `Source: ${creature.source}` : "",
+        creature.source_url || "",
+      ].filter(Boolean).join("\n");
+      const detail = [
+        sourceFlags,
+        traits ? `Traits: ${traits}` : "",
+        creature.content || "",
+      ].filter(Boolean).join("\n\n");
+      return withCombatHp({
+        id: `aon-${creature.creature_id}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: "AoN",
+        roomTitle: creature.remastered ? "PF2e Remastered source" : "PF2e source",
+        name: creature.name || "Unknown Creature",
+        count: 1,
+        type: "CREATURE",
+        level: creature.level ?? "",
+        initiative: creature.perception ? `Perception ${creature.perception}` : "",
+        initiativeBonus: initiativeBonus({ initiative: creature.perception ? `Perception ${creature.perception}` : "" }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: creature.ac || "",
+        hp: creature.hp || "",
+        fort: creature.fort || "",
+        ref: creature.ref || "",
+        will: creature.will || "",
+        speed: creature.speed || "",
+        attacks: attackLines,
+        abilities: abilityLines,
+        detail,
+      });
+    }
+
+    async function addSelectedAonCreature() {
+      const select = document.getElementById("combat-creature-select");
+      const note = document.getElementById("combat-creature-note");
+      const creatureId = select?.value || "";
+      if (!creatureId) {
+        if (note) note.textContent = "Select a PF2e creature first.";
+        return;
+      }
+      if (note) note.textContent = "Fetching PF2e stat block from Archives of Nethys...";
+      try {
+        const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(creatureId)}`);
+        const combatant = combatantFromAonCreature(payload.creature || {});
+        currentCombat = {
+          roomId: currentCombat.roomId || "Custom combat",
+          roomTitle: currentCombat.roomTitle || "Mixed encounter",
+          combatants: [...(currentCombat.combatants || []), combatant],
+        };
+        renderCombatPanel();
+        if (note) {
+          const source = payload.creature?.source || "AoN";
+          const status = payload.creature?.remastered ? "remastered PF2e" : "PF2e";
+          note.textContent = `Added ${payload.creature?.name || "creature"} from ${source} (${status}).`;
+        }
+      } catch (error) {
+        if (note) note.textContent = error.message || "Could not fetch that PF2e creature from AoN.";
+      }
+    }
+
+    function activeOpenRoom() {
+      const roomId = openRoomId();
+      if (!roomId || !activeRoomKey) return null;
+      return (activeRoomKey.rooms || []).find((room) => (
+        String(room.room_id || "").toLowerCase() === String(roomId).toLowerCase()
+      )) || null;
+    }
+
+    function renderCombatStatus(message) {
+      document.getElementById("combat-meta").innerHTML = `<span class="stat-badge">${escapeHtml(message)}</span>`;
+    }
+
+    function setCombatFromRoom(room, { append = false } = {}) {
+      if (!room) {
+        renderCombatStatus("Open a room card in Map Room first.");
+        return;
+      }
+      const combatants = combatantsFromRoom(room);
+      if (!combatants.length) {
+        renderCombatStatus(`No monsters or encounter text found for ${room.room_id || "this room"}.`);
+        return;
+      }
+      currentCombat = {
+        roomId: room.room_id || currentCombat.roomId,
+        roomTitle: room.title || currentCombat.roomTitle,
+        combatants: append ? [...currentCombat.combatants, ...combatants] : combatants,
+      };
+      renderCombatPanel();
+    }
+
+    function compactDefenseLine(combatant) {
+      return [
+        combatant.ac ? `AC ${combatant.ac}` : "",
+        combatant.fort ? `Fort ${combatant.fort}` : "",
+        combatant.ref ? `Ref ${combatant.ref}` : "",
+        combatant.will ? `Will ${combatant.will}` : "",
+      ].filter(Boolean).join("\n");
+    }
+
+    function fallbackDamageLine(combatant) {
+      const detail = normalizedCombatText(combatant.detail || "");
+      const simpleDamage = detail.match(/\bDamage\s+([^;\n]+)/i);
+      return simpleDamage ? `Damage ${simpleDamage[1].trim()}` : "";
+    }
+
+    function renderCombatHp(combatant, combatantIndex) {
+      withCombatHp(combatant);
+      const defenses = compactDefenseLine(combatant);
+      const hpRows = (combatant.hpTrack || []).map((currentHp, targetIndex) => {
+        const label = (combatant.hpTrack || []).length > 1 ? `${targetIndex + 1}: ` : "";
+        const max = combatant.maxHp ?? firstNumber(combatant.hp);
+        const hpText = currentHp === null || Number.isNaN(currentHp)
+          ? (combatant.hp || "-")
+          : `${currentHp}${max !== null && max !== undefined ? `/${max}` : ""}`;
+        return `
+          <div class="combat-hp-line">
+            <span class="combat-hp-value">${escapeHtml(label + hpText)}</span>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-1">-1</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-5">-5</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-10">-10</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="1">+1</button>
+          </div>
+        `;
+      }).join("");
+      return `
+        <div class="combat-hp-stack">
+          ${hpRows || '<span class="combat-hp-value">-</span>'}
+          <div class="combat-defense-line">${escapeHtml(defenses || "No defenses parsed.")}</div>
+        </div>
+      `;
+    }
+
+    function renderActionLines(lines) {
+      if (!lines?.length) return '<div class="combat-action-line">-</div>';
+      return lines
+        .map((line) => `<div class="combat-action-line">${escapeHtml(line)}</div>`)
+        .join("");
+    }
+
+    function combatAttackList(combatant) {
+      return combatant.attacks?.length ? combatant.attacks : [fallbackDamageLine(combatant)].filter(Boolean);
+    }
+
+    function combatAbilityList(combatant) {
+      return combatant.abilities || [];
+    }
+
+    function renderCombatInitiative(combatant, combatantIndex) {
+      const bonus = initiativeBonus(combatant);
+      combatant.initiativeBonus = bonus;
+      const hasDie = Number.isFinite(combatant.initiativeDie);
+      const rollText = Number.isFinite(combatant.initiativeRoll) && hasDie
+        ? `${combatant.initiativeRoll} (${combatant.initiativeDie}${signedNumber(bonus)})`
+        : "";
+      return `
+        <div class="combat-init-cell">
+          <input class="combat-init-input" type="number" value="${escapeHtml(Number.isFinite(combatant.initiativeRoll) ? String(combatant.initiativeRoll) : "")}" placeholder="${escapeHtml(signedNumber(bonus))}" data-combat-init-manual="${combatantIndex}" />
+          <div class="combat-init-roll">${escapeHtml(rollText || shortInitiativeLabel(combatant, bonus))}</div>
+          <button type="button" class="ghost combat-hp-btn" data-combat-init-roll="${combatantIndex}">Roll</button>
+        </div>
+      `;
+    }
+
+    function adjustCombatHp(combatantIndex, targetIndex, delta) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      withCombatHp(combatant);
+      if (!combatant.hpTrack || combatant.hpTrack[targetIndex] === undefined) return;
+      const current = combatant.hpTrack[targetIndex];
+      if (current === null || Number.isNaN(current)) return;
+      combatant.hpTrack[targetIndex] = Math.max(0, current + delta);
+      renderCombatPanel();
+    }
+
+    function rollCombatInitiative(combatantIndex) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const die = 1 + Math.floor(Math.random() * 20);
+      const bonus = initiativeBonus(combatant);
+      combatant.initiativeBonus = bonus;
+      combatant.initiativeDie = die;
+      combatant.initiativeRoll = die + bonus;
+      renderCombatPanel();
+    }
+
+    function setManualCombatInitiative(combatantIndex, value) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const trimmed = String(value || "").trim();
+      if (!trimmed) {
+        combatant.initiativeRoll = null;
+        combatant.initiativeDie = null;
+        renderCombatPanel();
+        return;
+      }
+      const parsed = Number.parseInt(trimmed, 10);
+      if (!Number.isFinite(parsed)) return;
+      combatant.initiativeRoll = parsed;
+      combatant.initiativeDie = null;
+      combatant.initiativeBonus = initiativeBonus(combatant);
+      renderCombatPanel();
+    }
+
+    function rollAllCombatInitiative() {
+      (currentCombat.combatants || []).forEach((_combatant, index) => {
+        const combatant = currentCombat.combatants[index];
+        const die = 1 + Math.floor(Math.random() * 20);
+        const bonus = initiativeBonus(combatant);
+        combatant.initiativeBonus = bonus;
+        combatant.initiativeDie = die;
+        combatant.initiativeRoll = die + bonus;
+      });
+      renderCombatPanel();
+    }
+
+    function sortCombatByInitiative() {
+      currentCombat.combatants = [...(currentCombat.combatants || [])].sort((left, right) => {
+        const leftRoll = Number.isFinite(left.initiativeRoll) ? left.initiativeRoll : -999;
+        const rightRoll = Number.isFinite(right.initiativeRoll) ? right.initiativeRoll : -999;
+        if (rightRoll !== leftRoll) return rightRoll - leftRoll;
+        return initiativeBonus(right) - initiativeBonus(left);
+      });
+      renderCombatPanel();
+    }
+
+    function renderCombatantRow(combatant, combatantIndex) {
+      withCombatHp(combatant);
+      const levelLabel = combatant.level !== "" && combatant.level !== undefined
+        ? `Level ${combatant.level}`
+        : "";
+      return `
+        <tr>
+          <td>
+            <div class="combat-name">${escapeHtml(combatant.name)}</div>
+            <div class="combat-quickline">${escapeHtml(levelLabel)}</div>
+          </td>
+          <td>${renderCombatInitiative(combatant, combatantIndex)}</td>
+          <td>${renderCombatHp(combatant, combatantIndex)}</td>
+          <td>${escapeHtml(combatant.speed || "-")}</td>
+          <td><div class="combat-action-list">${renderActionLines(combatAttackList(combatant))}</div></td>
+          <td><div class="combat-action-list">${renderActionLines(combatAbilityList(combatant))}</div></td>
+        </tr>
+      `;
+    }
+
+    function renderCombatPanel() {
+      const roster = document.getElementById("combat-roster");
+      const meta = document.getElementById("combat-meta");
+      const combatants = currentCombat.combatants || [];
+      if (!combatants.length) {
+        meta.innerHTML = '<span class="stat-badge">No combat loaded</span>';
+        roster.innerHTML = '<div class="empty">Open a room in Map Room, then start combat from it.</div>';
+        return;
+      }
+      const total = combatants.reduce((sum, combatant) => sum + (combatant.count || 1), 0);
+      meta.innerHTML = `
+        <span class="stat-badge">${escapeHtml(currentCombat.roomId || "Custom combat")} ${escapeHtml(currentCombat.roomTitle || "")}</span>
+        <span class="stat-badge">${combatants.length} row${combatants.length === 1 ? "" : "s"}</span>
+        <span class="stat-badge">${total} foe${total === 1 ? "" : "s"} tracked</span>
+      `;
+      roster.innerHTML = `
+        <table class="combat-table">
+          <thead>
+            <tr>
+              <th class="combat-col-enemy">Enemy</th>
+              <th class="combat-col-init">Init</th>
+              <th class="combat-col-hp">HP / Defenses</th>
+              <th class="combat-col-speed">Speed</th>
+              <th class="combat-col-attacks">Attacks</th>
+              <th class="combat-col-abilities">Abilities</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${combatants.map(renderCombatantRow).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
     function roomExists(roomId) {
       const normalized = String(roomId || "").toLowerCase();
       return Boolean((activeRoomKey?.rooms || []).some((room) => (
@@ -2929,11 +3646,7 @@
     }
 
     function renderRoomTextToggle() {
-      return `
-        <div class="room-card-toggle">
-          <button type="button" class="ghost" data-room-mode-toggle>Show Literal PDF Text</button>
-        </div>
-      `;
+      return '<button type="button" class="ghost" data-room-mode-toggle>Show Literal PDF Text</button>';
     }
 
     function updateRoomBackButton() {
@@ -3086,7 +3799,10 @@
             <summary>${escapeHtml(room.room_id)} ${escapeHtml(room.title || "")}</summary>
             <div class="room-card-body">
               ${tags.length ? `<div class="room-tags">${tags.map((tag) => `<span class="room-tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
-              ${renderRoomTextToggle()}
+              <div class="room-card-toggle">
+                <button type="button" class="ghost" data-room-combat-add="${escapeHtml(room.room_id || "")}">Add To Combat</button>
+                ${renderRoomTextToggle()}
+              </div>
               <div data-room-mode-panel="summary">
                 ${renderSummaryRoomSections(room)}
               </div>
@@ -4540,6 +5256,48 @@
     });
     document.getElementById("map-room-back").addEventListener("click", navigateBackRoom);
     document.getElementById("map-room-filter").addEventListener("input", renderRoomKey);
+    document.getElementById("combat-start-open-room").addEventListener("click", () => {
+      setCombatFromRoom(activeOpenRoom(), { append: false });
+    });
+    document.getElementById("combat-add-open-room").addEventListener("click", () => {
+      setCombatFromRoom(activeOpenRoom(), { append: true });
+    });
+    document.getElementById("combat-roll-all").addEventListener("click", rollAllCombatInitiative);
+    document.getElementById("combat-sort-initiative").addEventListener("click", sortCombatByInitiative);
+    document.getElementById("combat-clear").addEventListener("click", () => {
+      currentCombat = { roomId: "", roomTitle: "", combatants: [] };
+      renderCombatPanel();
+    });
+    document.getElementById("combat-roster").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-combat-hp]");
+      if (button) {
+        adjustCombatHp(
+          Number.parseInt(button.dataset.combatHp, 10),
+          Number.parseInt(button.dataset.combatTarget, 10),
+          Number.parseInt(button.dataset.combatDelta, 10),
+        );
+        return;
+      }
+      const initButton = event.target.closest("[data-combat-init-roll]");
+      if (!initButton) return;
+      rollCombatInitiative(Number.parseInt(initButton.dataset.combatInitRoll, 10));
+    });
+    document.getElementById("combat-roster").addEventListener("change", (event) => {
+      const input = event.target.closest("[data-combat-init-manual]");
+      if (!input) return;
+      setManualCombatInitiative(
+        Number.parseInt(input.dataset.combatInitManual, 10),
+        input.value,
+      );
+    });
+    document.getElementById("combat-add-creature").addEventListener("click", addSelectedAonCreature);
+    document.getElementById("combat-creature-search").addEventListener("input", (event) => {
+      window.clearTimeout(event.target.dataset.searchTimer || 0);
+      const timer = window.setTimeout(() => {
+        loadAonCreatures(event.target.value.trim());
+      }, 180);
+      event.target.dataset.searchTimer = String(timer);
+    });
     document.getElementById("map-room-list").addEventListener("click", (event) => {
       const roomLink = event.target.closest("[data-room-link]");
       if (roomLink) {
@@ -4547,6 +5305,16 @@
         const currentCard = roomLink.closest(".room-card");
         const currentMode = currentCard?.dataset.roomTextMode || "literal";
         openRoomCard(roomLink.dataset.roomLink, { mode: currentMode });
+        return;
+      }
+      const combatButton = event.target.closest("[data-room-combat-add]");
+      if (combatButton) {
+        event.preventDefault();
+        const roomId = combatButton.dataset.roomCombatAdd;
+        const room = (activeRoomKey?.rooms || []).find((item) => (
+          String(item.room_id || "").toLowerCase() === String(roomId || "").toLowerCase()
+        ));
+        setCombatFromRoom(room, { append: Boolean(currentCombat.combatants.length) });
         return;
       }
       const button = event.target.closest("[data-room-mode-toggle]");
@@ -4757,6 +5525,8 @@
     setupDraggablePanels();
     renderChatLog();
     renderDiceHistory();
+    renderCombatPanel();
+    loadAonCreatures();
     loadVoices();
     applyTtsPreset();
     if ("speechSynthesis" in window && typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
