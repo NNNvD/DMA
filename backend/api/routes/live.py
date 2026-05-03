@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.config.settings import settings
 from backend.models.base import get_db
 from backend.services.campaign_service import campaign_service
+from backend.services.aon_creature_service import aon_creature_service
 from backend.services.live_assistant_service import live_assistant_service
 from backend.services.live_maptool_service import live_maptool_service
 from backend.services.live_session_service import live_session_service
@@ -73,6 +74,14 @@ class LivePlayerHandoutExportRequest(BaseModel):
     path: str = Field(min_length=1)
     basename: Optional[str] = None
     html_only: bool = False
+
+
+class AonCreatureSearchResponse(BaseModel):
+    items: list[dict]
+
+
+class AonCreatureResponse(BaseModel):
+    creature: dict
 
 
 CAMPAIGN_OVERVIEW_PATH = "Command Center/Campaign Overview.md"
@@ -417,11 +426,49 @@ def _drop_room_heading(text: str, room_id: str, title: str | None = None) -> str
     return text[line_end + 1 :]
 
 
+PDF_NAVIGATION_LINES = {
+    "ruins",
+    "of",
+    "gauntlight",
+    "chapter 1:",
+    "a light in",
+    "the fog",
+    "chapter 2:",
+    "the forgotten",
+    "dungeon",
+    "chapter 3:",
+    "cult of",
+    "the canker",
+    "chapter 4:",
+    "long dream",
+    "the dead",
+    "otari",
+    "gazetteer",
+    "adventure",
+    "toolbox",
+    "mister beak",
+}
+
+
+def _is_pdf_navigation_line(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text).strip().casefold()
+    return normalized in PDF_NAVIGATION_LINES
+
+
+def _remove_pdf_navigation_fragments(line: str) -> str:
+    parts = [part.strip() for part in re.split(r"\s{4,}", line) if part.strip()]
+    if len(parts) < 2:
+        return line
+    kept = [part for part in parts if not _is_pdf_navigation_line(part)]
+    return " ".join(kept)
+
+
 def _clean_literal_room_text(text: str) -> str:
     text = _strip_reference_markup(text)
     paragraphs: list[list[str]] = []
     current: list[str] = []
     for line in text.splitlines():
+        line = _remove_pdf_navigation_fragments(line)
         stripped = re.sub(r"\s+", " ", line).strip()
         if not stripped:
             if current:
@@ -430,7 +477,19 @@ def _clean_literal_room_text(text: str) -> str:
             continue
         if stripped.casefold() in {"chapter 1:", "ruins", "gauntlight"}:
             continue
+        if _is_pdf_navigation_line(stripped):
+            continue
         if re.fullmatch(r"\d{1,4}", stripped):
+            continue
+        if re.fullmatch(
+            r"(?:LOW|MODERATE|SEVERE|EXTREME)\s+\d+(?:\s+Gazetteer)?",
+            stripped,
+        ):
+            continue
+        if re.fullmatch(
+            r"(?:CREATURE|HAZARD|TRAP)\s+[â€“âˆ’-]?\d+",
+            stripped,
+        ):
             continue
         current.append(stripped)
     if current:
@@ -444,6 +503,12 @@ def _clean_literal_room_text(text: str) -> str:
             "",
             text,
         )
+        text = re.sub(
+            r"\b(?:LOW|MODERATE|SEVERE|EXTREME)\s+\d+\b(?:\s+Gazetteer)?",
+            "",
+            text,
+        )
+        text = re.sub(r"\bCREATURE\s+[â€“âˆ’-]?\d+\s+(?=defeating\b)", "", text)
         text = re.sub(r"(\w)-\s+(\w)", r"\1\2", text)
         text = re.sub(r"\s+([,.;:!?])", r"\1", text)
         text = re.sub(r"\s{2,}", " ", text).strip()
@@ -452,27 +517,96 @@ def _clean_literal_room_text(text: str) -> str:
     return "\n\n".join(cleaned_paragraphs)
 
 
+def _remove_between(text: str, start: str, end: str) -> str:
+    pattern = re.compile(
+        rf"{re.escape(start)}.*?(?={re.escape(end)})",
+        flags=re.DOTALL,
+    )
+    return pattern.sub("", text)
+
+
+def _clean_room_bleed(text: str) -> str:
+    text = _remove_between(text, "BEYOND GAUNTLIGHT", "Treasure:")
+    text = _remove_between(text, "WANDERING MONSTERS", "Most of the doors")
+    text = _remove_between(text, "SIDE QUESTS", "Spear Frog Poison")
+    text = re.sub(r"\bPathfinder Bestiary 301\s+", "", text)
+    text = re.sub(r"\bCREATURE\s+3\s+(?=value\b)", "", text)
+    text = re.sub(r"\bHAZARD\s+3\s+(?=A hero Searching\b)", "", text)
+    text = text.replace(
+        "display rack near Volluk caused",
+        "display rack near the southern wall has survived the devastation. Volluk caused",
+    )
+    text = re.sub(r"\s{2,}", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def _first_gm_marker_index(text: str, starters: tuple[str, ...]) -> int | None:
+    indexes = []
+    for starter in starters:
+        index = text.find(f". {starter}")
+        if index > -1:
+            indexes.append(index + 1)
+    return min(indexes) if indexes else None
+
+
 def _split_intro_room_text(text: str) -> tuple[str, str]:
     parts = [part.strip() for part in text.split("\n\n") if part.strip()]
     if not parts:
         return "", ""
-    if len(parts) > 1:
-        if not re.search(r"[.!?][\"”')\]]?$", parts[0]):
-            parts[0] = f"{parts[0]} {parts.pop(1)}"
-        if len(parts) > 1:
-            return parts[0], "\n\n".join(parts[1:])
-
-    single = parts[0]
-    for starter in (
+    gm_starters = (
         "Once ",
         "The opaque ",
         "The room ",
         "This room ",
+        "True to appearances,",
         "A successful ",
         "Any hero ",
         "Characters ",
         "Heroes ",
-    ):
+    )
+    first = parts[0]
+    split_at = _first_gm_marker_index(first, gm_starters)
+    if split_at is not None:
+        general_parts = [first[split_at:].strip(), *parts[1:]]
+        return first[:split_at].strip(), "\n\n".join(
+            part for part in general_parts if part
+        )
+    for starter in gm_starters:
+        marker = f". {starter}"
+        index = first.find(marker)
+        if index > -1:
+            split_at = index + 1
+            general_parts = [first[split_at:].strip(), *parts[1:]]
+            return first[:split_at].strip(), "\n\n".join(
+                part for part in general_parts if part
+            )
+    if len(parts) > 1:
+        if not re.search(r"[.!?][\"”')\]]?$", parts[0]):
+            parts[0] = f"{parts[0]} {parts.pop(1)}"
+            split_at = _first_gm_marker_index(parts[0], gm_starters)
+            if split_at is not None:
+                general_parts = [parts[0][split_at:].strip(), *parts[1:]]
+                return parts[0][:split_at].strip(), "\n\n".join(
+                    part for part in general_parts if part
+                )
+            for starter in gm_starters:
+                marker = f". {starter}"
+                index = parts[0].find(marker)
+                if index > -1:
+                    split_at = index + 1
+                    general_parts = [parts[0][split_at:].strip(), *parts[1:]]
+                    return parts[0][:split_at].strip(), "\n\n".join(
+                        part for part in general_parts if part
+                    )
+        if len(parts) > 1:
+            return parts[0], "\n\n".join(parts[1:])
+
+    single = parts[0]
+    split_at = _first_gm_marker_index(single, gm_starters)
+    if split_at is not None:
+        return single[:split_at].strip(), single[split_at:].strip()
+    for starter in gm_starters:
         marker = f". {starter}"
         index = single.find(marker)
         if index > -1:
@@ -481,7 +615,139 @@ def _split_intro_room_text(text: str) -> tuple[str, str]:
     return single, ""
 
 
+ROOM_READ_ALOUD_END_MARKERS = {
+    "A3": "The water of this pond",
+    "A4": "Many years ago",
+    "A5": "This massive frog",
+    "A6": "This roomâ€™s ceiling",
+    "A10": "The mitflits chose",
+    "A12": "A hero Searching this room",
+    "A14": "This room serves",
+    "A15": "Belcorra made no secret",
+    "A17": "The rowboat",
+    "A20": "These supplies",
+    "A22": "The 5-foot-tall paintings",
+    "A23": "Volluk caused",
+    "A24": "The pier is just as dangerous",
+    "A25": "The locked trap door",
+}
+
+
+def _split_at_sentence_before(text: str, marker: str) -> tuple[str, str] | None:
+    index = text.find(marker)
+    if index <= 0:
+        return None
+    split_at = index
+    while split_at > 0 and text[split_at - 1].isspace():
+        split_at -= 1
+    return text[:split_at].strip(), text[split_at:].strip()
+
+
+def _split_room_intro_by_room(room_id: str | None, text: str) -> tuple[str, str]:
+    if room_id == "A9":
+        split = _split_at_sentence_before(text, "The skeletal")
+        if split:
+            return split
+    if room_id == "A19":
+        read_marker = "This study features"
+        read_start = text.find(read_marker)
+        if read_start > -1:
+            prefix = text[:read_start].strip()
+            read_and_rest = text[read_start:].strip()
+            general_marker = "Volluk once pursued"
+            split = _split_at_sentence_before(read_and_rest, general_marker)
+            if split:
+                read_aloud, general = split
+                return read_aloud, f"{prefix}\n\n{general}".strip()
+    if room_id == "A6":
+        split = _split_at_sentence_before(text, "This room")
+        if split:
+            return split
+    if room_id == "A8":
+        read_marker = "Almost the entire ceiling"
+        read_start = text.find(read_marker)
+        if read_start > -1:
+            prefix = text[:read_start].strip()
+            read_and_rest = text[read_start:].strip()
+            general_marker = "The ancient battle"
+            split = _split_at_sentence_before(read_and_rest, general_marker)
+            if split:
+                read_aloud, general = split
+                return read_aloud, f"{prefix}\n\n{general}".strip()
+    if room_id == "A11":
+        read_marker = "The smooth walls"
+        read_start = text.find(read_marker)
+        if read_start > -1:
+            prefix = text[:read_start].strip()
+            read_and_rest = text[read_start:].strip()
+            general_marker = "The Roseguard"
+            split = _split_at_sentence_before(read_and_rest, general_marker)
+            if split:
+                read_aloud, general = split
+                return read_aloud, f"{prefix}\n\n{general}".strip()
+    marker = ROOM_READ_ALOUD_END_MARKERS.get(room_id or "")
+    if marker:
+        split = _split_at_sentence_before(text, marker)
+        if split:
+            return split
+    return _split_intro_room_text(text)
+
+
+ROOM_ENCOUNTER_FALLBACKS = {
+    "A3": "SLURK CREATURE 2\nPathfinder Bestiary 301\nInitiative Perception +6",
+    "A6": (
+        "GIANT FLIES (2) CREATURE 1\n"
+        "Pathfinder Bestiary 2 120\n"
+        "Initiative Perception +8"
+    ),
+    "A10": (
+        "BITE BITE CREATURE 1\n"
+        "Giant solifugid (Pathfinder Bestiary 2 246)\n"
+        "Initiative Perception +7\n\n"
+        "MITFLITS (2) CREATURE -1\n"
+        "Pathfinder Bestiary 192\n"
+        "Initiative Perception +4\n\n"
+        "BOSS SKRAWNG CREATURE 1\n"
+        "Male mitflit gang boss (Pathfinder Bestiary 192)"
+    ),
+    "A23": (
+        "MISTER BEAK CREATURE 3\n"
+        "CE elite soulbound doll (Pathfinder Bestiary 6, 304)\n"
+        "Initiative Perception +10\n"
+        "Speed 20 feet, fly 20 feet"
+    ),
+    "A24": "FLICKERWISP CREATURE 2\nPage 83\nInitiative Perception +9",
+}
+
+
+def _trim_stat_leak(text: str, marker: str) -> str:
+    index = text.find(marker)
+    return text[:index].strip() if index > -1 else text
+
+
+def _apply_room_literal_fixes(
+    room_id: str | None,
+    literal: dict[str, str],
+) -> dict[str, str]:
+    if not room_id:
+        return literal
+    if room_id in ROOM_ENCOUNTER_FALLBACKS and not literal.get("encounter_text"):
+        literal["encounter_text"] = ROOM_ENCOUNTER_FALLBACKS[room_id]
+    if room_id == "A10" and literal.get("general_text"):
+        literal["general_text"] = _trim_stat_leak(literal["general_text"], "BITE BITE")
+    if room_id == "A23" and literal.get("general_text"):
+        literal["general_text"] = _trim_stat_leak(literal["general_text"], "CE elite")
+    if room_id == "A24" and literal.get("general_text"):
+        literal["general_text"] = _trim_stat_leak(literal["general_text"], "FLICKERWISP")
+    return literal
+
+
 def _format_encounter_text(text: str) -> str:
+    text = re.sub(
+        r"\b([A-Z][A-Z'â€™ -]{2,})\n\n([A-Z][A-Z'â€™ -]{2,}\s+CREATURE\b)",
+        r"\1 \2",
+        text,
+    )
     text = re.sub(
         r"\s+\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|"
         r"Rewards?|Secret Doors?|Side Quest|Environmental Cues):",
@@ -498,6 +764,7 @@ def _format_encounter_text(text: str) -> str:
         r"\n\1",
         text,
     )
+    text = re.sub(r"\bVAMPIRIC\s+MIST\s+CREATURE\b", "VAMPIRIC MIST CREATURE", text)
     return text.strip()
 
 
@@ -509,6 +776,17 @@ STAT_BLOCK_RE = re.compile(
 SECTION_LABEL_RE = re.compile(
     r"\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|"
     r"Rewards?|Secret Doors?|Side Quest|Environmental Cues):"
+)
+
+NON_ROOM_SECTION_RE = re.compile(
+    r"^\s*(?:"
+    r"CHAPTER\s+\d+\s*:"
+    r"|CHAPTER\s+\d+\s+SYNOPSIS\b"
+    r"|CHAPTER\s+\d+\s+TREASURE\b"
+    r"|LEVEL\s+\d+\s*:"
+    r"|ADVENTURE\s+TOOLBOX\b"
+    r")",
+    flags=re.MULTILINE,
 )
 
 
@@ -548,6 +826,7 @@ def _split_literal_room_text(
     if room_id:
         block = _drop_room_heading(block, room_id, title)
     cleaned = _clean_literal_room_text(block)
+    cleaned = _clean_room_bleed(cleaned)
     if not cleaned:
         return {}
     marker = re.search(
@@ -598,6 +877,7 @@ def _split_literal_room_text(
     if room_id:
         block = _drop_room_heading(block, room_id, title)
     cleaned = _clean_literal_room_text(block)
+    cleaned = _clean_room_bleed(cleaned)
     if not cleaned:
         return {}
 
@@ -606,7 +886,7 @@ def _split_literal_room_text(
     literal: dict[str, str] = {}
 
     if not marker:
-        read_aloud, general = _split_intro_room_text(general_source)
+        read_aloud, general = _split_room_intro_by_room(room_id, general_source)
         if read_aloud:
             literal["read_aloud"] = read_aloud
         if general:
@@ -615,12 +895,12 @@ def _split_literal_room_text(
             literal["general_text"] = general_source
         if encounter:
             literal["encounter_text"] = encounter
-        return literal
+        return _apply_room_literal_fixes(room_id, literal)
 
     intro = general_source[: marker.start()].strip()
     general_after_intro = general_source[marker.start() :].strip()
     if intro:
-        read_aloud, general = _split_intro_room_text(intro)
+        read_aloud, general = _split_room_intro_by_room(room_id, intro)
         if read_aloud:
             literal["read_aloud"] = read_aloud
         if general:
@@ -631,7 +911,7 @@ def _split_literal_room_text(
         )
     if encounter:
         literal["encounter_text"] = encounter
-    return literal
+    return _apply_room_literal_fixes(room_id, literal)
 
 
 def _literal_room_texts_from_reference(payload: dict) -> dict[str, dict[str, str]]:
@@ -661,21 +941,12 @@ def _literal_room_texts_from_reference(payload: dict) -> dict[str, dict[str, str
     literal_by_room: dict[str, dict[str, str]] = {}
     for index, (start, room) in enumerate(matches):
         room_id = str(room.get("room_id") or "").strip()
-        prefix_match = re.match(r"([A-Za-z]+)", room_id)
-        next_same_prefix = None
-        if prefix_match:
-            next_match = re.search(
-                rf"^\s*{re.escape(prefix_match.group(1))}\d+[A-Za-z]?\.\s+",
-                text[start + 1 :],
-                flags=re.IGNORECASE | re.MULTILINE,
-            )
-            if next_match:
-                next_same_prefix = start + 1 + next_match.start()
         candidate_ends = [min(len(text), start + 8000)]
         if index + 1 < len(matches):
             candidate_ends.append(matches[index + 1][0])
-        if next_same_prefix:
-            candidate_ends.append(next_same_prefix)
+        next_non_room_section = NON_ROOM_SECTION_RE.search(text, start + 1)
+        if next_non_room_section:
+            candidate_ends.append(next_non_room_section.start())
         end = min(candidate_ends)
         block = text[start:end]
         literal = _split_literal_room_text(
@@ -1591,6 +1862,58 @@ async def get_dungeon_room_key(map_id: str = Query(min_length=1)):
             payload["path"] = path.relative_to(root).as_posix()
             return _enrich_room_key_literal_text(payload)
     raise _not_found("Dungeon room key was not found")
+
+
+@router.get("/aon-creatures", response_model=AonCreatureSearchResponse)
+async def list_aon_creatures(
+    q: Optional[str] = Query(default=None),
+    limit: int = Query(default=30, ge=1, le=100),
+):
+    return {
+        "items": aon_creature_service.search_creatures(q or "", limit=limit),
+    }
+
+
+@router.get("/aon-creature", response_model=AonCreatureResponse)
+async def get_aon_creature(
+    creature_id: int = Query(ge=1),
+    refresh: bool = Query(default=False),
+):
+    try:
+        document = aon_creature_service.get_creature(
+            creature_id,
+            refresh=refresh,
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not fetch PF2e creature data from Archives of Nethys: {exc}",
+        ) from exc
+    return {
+        "creature": {
+            "creature_id": document.creature_id,
+            "name": document.name,
+            "level": document.level,
+            "source_url": document.source_url,
+            "source": document.source,
+            "traits": document.traits,
+            "content": document.content,
+            "remastered": document.remastered,
+            "legacy": document.legacy,
+            "ac": document.ac,
+            "hp": document.hp,
+            "fort": document.fort,
+            "ref": document.ref,
+            "will": document.will,
+            "speed": document.speed,
+            "perception": document.perception,
+            "attacks": document.attacks,
+            "fetched_at": document.fetched_at,
+            "ruleset": "pf2e",
+        },
+    }
 
 
 @page_router.get("/dm-panel", response_class=HTMLResponse)
