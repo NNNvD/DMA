@@ -5697,6 +5697,719 @@
       });
     }
 
+    function firstPresent(...values) {
+      for (const value of values) {
+        if (typeof value === "string" && value.trim()) {
+          return value;
+        }
+      }
+      return "";
+    }
+
+    function roomLiteralParts(room) {
+      const literal = room.literal_text || room.source_text || room.raw_text || room.pdf_text || {};
+      const combatant = {
+        player: firstPresent(
+          literal.player,
+          literal.player_visible,
+          literal.read_aloud,
+          literal.read_to_players,
+          room.literal_player_visible_description,
+          room.literal_player_description,
+          room.source_player_visible_description,
+          room.player_read_aloud,
+          room.read_aloud,
+          room.read_to_players,
+        ),
+        additional: firstPresent(
+          literal.general,
+          literal.general_text,
+          literal.additional,
+          literal.additional_text,
+          literal.middle,
+          literal.context,
+          literal.exploration,
+          room.literal_additional_text,
+          room.source_additional_text,
+        ),
+        gm: firstPresent(
+          literal.encounter,
+          literal.encounter_text,
+          literal.gm,
+          literal.gm_info,
+          literal.info,
+          literal.room_information,
+          literal.details,
+          room.literal_gm_description,
+          room.literal_room_information,
+          room.source_gm_description,
+          room.gm_source_text,
+          room.info_text,
+        ),
+      };
+    }
+
+    function renderSummaryRoomSections(room) {
+      return `
+        <div class="room-card-section">
+          <strong>What PCs see first</strong>
+          <div>${escapeHtml(room.player_visible_description || "No player-visible description listed.")}</div>
+        </div>
+        <div class="room-card-section">
+          <strong>GM-only room note</strong>
+          <div>${escapeHtml(room.gm_description || "No GM-only note listed.")}</div>
+        </div>
+        <div class="room-card-section"><strong>Monsters</strong>${listValues(room.monsters)}</div>
+        <div class="room-card-section"><strong>NPCs</strong>${listValues(room.npcs)}</div>
+        <div class="room-card-section"><strong>Traps, haunts, and hazards</strong>${listValues([...(room.traps || []), ...(room.haunts || []), ...(room.hazards || [])])}</div>
+        <div class="room-card-section"><strong>Loot</strong>${listValues(room.loot)}</div>
+        <div class="room-card-section"><strong>Secret doors and hidden features</strong>${listValues(room.secret_doors)}</div>
+        <div class="room-card-section">
+          <strong>Visibility and detection</strong>
+          <div>${escapeHtml(room.visibility_notes || "No visibility note listed.")}</div>
+          <div class="subtle" style="margin-top: 4px;">${escapeHtml(room.detection_notes || "No detection note listed.")}</div>
+        </div>
+        <div class="room-card-section"><strong>Dependencies</strong>${listValues(room.dependencies)}</div>
+      `;
+    }
+
+    function renderLiteralRoomSections(room) {
+      const literal = roomLiteralParts(room);
+      if (!literal.player && !literal.gm) {
+        return `
+          <div class="room-card-section">
+            <strong>Literal PDF text</strong>
+            <div class="empty">No literal PDF text is stored for this room yet.</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="room-card-section">
+          <strong>Read-aloud text</strong>
+          <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player || "No read-aloud text stored for this room.", "readaloud")}</div>
+        </div>
+        ${literal.additional ? `
+          <div class="room-card-section">
+            <strong>General room text</strong>
+            <div class="room-literal-text room-literal-block room-literal-general">${formatLiteralText(literal.additional, "general")}</div>
+          </div>
+        ` : ""}
+        <div class="room-card-section">
+          <strong>Encounter text</strong>
+          <div class="room-literal-text room-literal-block room-literal-encounter">${formatLiteralText(literal.gm || "No encounter text stored for this room.", "encounter")}</div>
+        </div>
+      `;
+    }
+
+    function normalizedCombatText(value) {
+      return String(value || "")
+        .replace(/[â€“âˆ’]/g, "-")
+        .replace(/\r\n/g, "\n")
+        .trim();
+    }
+
+    function titleCaseName(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
+        .replace(/\bDc\b/g, "DC");
+    }
+
+    function combatStatValue(text, label) {
+      const pattern = new RegExp(`\\b${label}\\s+([^;\\n]+)`, "i");
+      const match = text.match(pattern);
+      return match ? match[1].trim() : "";
+    }
+
+    function firstNumber(value) {
+      const match = String(value || "").match(/-?\d+/);
+      return match ? Number.parseInt(match[0], 10) : null;
+    }
+
+    function initiativeBonus(combatant) {
+      const value = String(combatant.initiative || "");
+      const signed = value.match(/[+-]\d+/);
+      if (signed) return Number.parseInt(signed[0], 10);
+      const plain = value.match(/\b\d+\b/);
+      return plain ? Number.parseInt(plain[0], 10) : 0;
+    }
+
+    function signedNumber(value) {
+      return value >= 0 ? `+${value}` : String(value);
+    }
+
+    function shortInitiativeLabel(combatant, bonus) {
+      if (Number.isFinite(combatant.initiativeRoll)) {
+        return `Total ${combatant.initiativeRoll}`;
+      }
+      return `Bonus ${signedNumber(bonus)}`;
+    }
+
+    function combatAttackLines(text) {
+      return text
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => /^(Melee|Ranged|Damage)/i.test(line))
+        .slice(0, 6);
+    }
+
+    function combatAbilityLines(text) {
+      return text
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => /^(Primal|Occult|Arcane|Divine|Spell|Reactive|Free|Frequency|Trigger|Effect|Vengeful|Self-|Baffling|Claim|Consume|Flicker|Blood|Death|Breath|Poison|Grab|Constrict|Rend|Pounce)/i.test(line))
+        .slice(0, 6);
+    }
+
+    function withCombatHp(combatant) {
+      const maxHp = firstNumber(combatant.hp);
+      const count = Math.max(1, Number.parseInt(combatant.count || 1, 10) || 1);
+      if (Array.isArray(combatant.hpTrack) && combatant.hpTrack.length === count) {
+        return combatant;
+      }
+      combatant.maxHp = maxHp;
+      combatant.hpTrack = Array.from({ length: count }, () => maxHp);
+      return combatant;
+    }
+
+    function parseCombatHeading(heading) {
+      const clean = normalizedCombatText(heading);
+      const match = clean.match(/^(.+?)\s+(CREATURE|HAZARD|TRAP)\s+(-?\d+)/i);
+      const rawName = (match?.[1] || clean).trim();
+      const countMatch = rawName.match(/\((\d+)\)\s*$/);
+      const name = rawName.replace(/\s*\(\d+\)\s*$/, "").trim();
+      return {
+        name: titleCaseName(name || rawName || "Unknown Combatant"),
+        count: countMatch ? Number.parseInt(countMatch[1], 10) : 1,
+        type: match?.[2] || "CREATURE",
+        level: match?.[3] || "",
+      };
+    }
+
+    function combatantFromBlock(block, room) {
+      const text = normalizedCombatText(block);
+      const headingMatch = text.match(/^([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+)/);
+      const heading = headingMatch?.[1] || text.split("\n")[0] || "Unknown Combatant";
+      const parsed = parseCombatHeading(heading);
+      const combatant = {
+        id: `${room.room_id || "room"}-${parsed.name}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || "",
+        roomTitle: room.title || "",
+        ...parsed,
+        initiative: combatStatValue(text, "Initiative"),
+        initiativeBonus: initiativeBonus({ initiative: combatStatValue(text, "Initiative") }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: combatStatValue(text, "AC"),
+        hp: combatStatValue(text, "HP"),
+        fort: combatStatValue(text, "Fort"),
+        ref: combatStatValue(text, "Ref"),
+        will: combatStatValue(text, "Will"),
+        speed: combatStatValue(text, "Speed"),
+        attacks: combatAttackLines(text),
+        abilities: combatAbilityLines(text),
+        detail: text,
+      };
+      return withCombatHp(combatant);
+    }
+
+    function combatBlocksFromEncounterText(encounterText) {
+      const text = normalizedCombatText(encounterText);
+      if (!text) return [];
+      const blockPattern = /([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+[\s\S]*?)(?=\n\n[A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+|$)/g;
+      const blocks = [];
+      for (const match of text.matchAll(blockPattern)) {
+        blocks.push(match[1].trim());
+      }
+      return blocks.length ? blocks : [text];
+    }
+
+    function combatantsFromRoom(room) {
+      const literal = roomLiteralParts(room);
+      const combatants = combatBlocksFromEncounterText(literal.gm)
+        .map((block) => combatantFromBlock(block, room))
+        .filter((combatant) => combatant.name && !/^No Encounter Text/i.test(combatant.name));
+      if (combatants.length) {
+        return combatants;
+      }
+      return (room.monsters || []).map((name) => ({
+        id: `${room.room_id || "room"}-${name}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || "",
+        roomTitle: room.title || "",
+        name: String(name || "Unknown Monster"),
+        count: 1,
+        type: "CREATURE",
+        level: "",
+        initiative: "",
+        initiativeBonus: 0,
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: "",
+        hp: "",
+        fort: "",
+        ref: "",
+        will: "",
+        speed: "",
+        attacks: [],
+        abilities: [],
+        detail: "No literal encounter text is available for this monster yet.",
+      })).map(withCombatHp);
+    }
+
+    function renderCreaturePicker() {
+      const select = document.getElementById("combat-creature-select");
+      if (!select) return;
+      if (!aonCreatures.length) {
+        select.innerHTML = '<option value="">No PF2e creatures found</option>';
+        return;
+      }
+      select.innerHTML = aonCreatures.map((creature) => {
+        const badges = [
+          `Level ${creature.level}`,
+          creature.remastered ? "Remastered" : "",
+          creature.legacy ? "Legacy" : "",
+          creature.source || "",
+        ].filter(Boolean).join(" | ");
+        return `<option value="${escapeHtml(String(creature.creature_id))}">${escapeHtml(creature.name)} (${escapeHtml(badges)})</option>`;
+      }).join("");
+    }
+
+    async function loadAonCreatures(query = "") {
+      const note = document.getElementById("combat-creature-note");
+      try {
+        const payload = await fetchJson(`${endpoints.aonCreatures}?q=${encodeURIComponent(query)}&limit=40`);
+        aonCreatures = payload.items || [];
+        renderCreaturePicker();
+        if (note) {
+          note.textContent = aonCreatures.length
+            ? "PF2e creature list loaded from DMA's AoN index. Selecting one fetches the current AoN stat block and caches it locally."
+            : "No PF2e creatures matched that search.";
+        }
+      } catch (error) {
+        aonCreatures = [];
+        renderCreaturePicker();
+        if (note) {
+          note.textContent = error.message || "Could not load the PF2e creature list.";
+        }
+      }
+    }
+
+    function combatantFromAonCreature(creature) {
+      const traits = (creature.traits || []).join(", ");
+      const attackLines = (creature.attacks || []).filter((line) => /^(Melee|Ranged|Damage)/i.test(line));
+      const abilityLines = (creature.attacks || []).filter((line) => !/^(Melee|Ranged|Damage)/i.test(line));
+      const sourceFlags = [
+        creature.remastered ? "Remastered" : "",
+        creature.legacy ? "Legacy content" : "",
+        creature.source ? `Source: ${creature.source}` : "",
+        creature.source_url || "",
+      ].filter(Boolean).join("\n");
+      const detail = [
+        sourceFlags,
+        traits ? `Traits: ${traits}` : "",
+        creature.content || "",
+      ].filter(Boolean).join("\n\n");
+      return withCombatHp({
+        id: `aon-${creature.creature_id}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: "AoN",
+        roomTitle: creature.remastered ? "PF2e Remastered source" : "PF2e source",
+        name: creature.name || "Unknown Creature",
+        count: 1,
+        type: "CREATURE",
+        level: creature.level ?? "",
+        initiative: creature.perception ? `Perception ${creature.perception}` : "",
+        initiativeBonus: initiativeBonus({ initiative: creature.perception ? `Perception ${creature.perception}` : "" }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: creature.ac || "",
+        hp: creature.hp || "",
+        fort: creature.fort || "",
+        ref: creature.ref || "",
+        will: creature.will || "",
+        speed: creature.speed || "",
+        attacks: attackLines,
+        abilities: abilityLines,
+        detail,
+      });
+    }
+
+    async function addSelectedAonCreature() {
+      const select = document.getElementById("combat-creature-select");
+      const note = document.getElementById("combat-creature-note");
+      const creatureId = select?.value || "";
+      if (!creatureId) {
+        if (note) note.textContent = "Select a PF2e creature first.";
+        return;
+      }
+      if (note) note.textContent = "Fetching PF2e stat block from Archives of Nethys...";
+      try {
+        const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(creatureId)}`);
+        const combatant = combatantFromAonCreature(payload.creature || {});
+        currentCombat = {
+          roomId: currentCombat.roomId || "Custom combat",
+          roomTitle: currentCombat.roomTitle || "Mixed encounter",
+          combatants: [...(currentCombat.combatants || []), combatant],
+        };
+        renderCombatPanel();
+        if (note) {
+          const source = payload.creature?.source || "AoN";
+          const status = payload.creature?.remastered ? "remastered PF2e" : "PF2e";
+          note.textContent = `Added ${payload.creature?.name || "creature"} from ${source} (${status}).`;
+        }
+      } catch (error) {
+        if (note) note.textContent = error.message || "Could not fetch that PF2e creature from AoN.";
+      }
+    }
+
+    function activeOpenRoom() {
+      const roomId = openRoomId();
+      if (!roomId || !activeRoomKey) return null;
+      return (activeRoomKey.rooms || []).find((room) => (
+        String(room.room_id || "").toLowerCase() === String(roomId).toLowerCase()
+      )) || null;
+    }
+
+    function renderCombatStatus(message) {
+      document.getElementById("combat-meta").innerHTML = `<span class="stat-badge">${escapeHtml(message)}</span>`;
+    }
+
+    function setCombatFromRoom(room, { append = false } = {}) {
+      if (!room) {
+        renderCombatStatus("Open a room card in Map Room first.");
+        return;
+      }
+      const combatants = combatantsFromRoom(room);
+      if (!combatants.length) {
+        renderCombatStatus(`No monsters or encounter text found for ${room.room_id || "this room"}.`);
+        return;
+      }
+      currentCombat = {
+        roomId: room.room_id || currentCombat.roomId,
+        roomTitle: room.title || currentCombat.roomTitle,
+        combatants: append ? [...currentCombat.combatants, ...combatants] : combatants,
+      };
+      renderCombatPanel();
+    }
+
+    function compactDefenseLine(combatant) {
+      return [
+        combatant.ac ? `AC ${combatant.ac}` : "",
+        combatant.fort ? `Fort ${combatant.fort}` : "",
+        combatant.ref ? `Ref ${combatant.ref}` : "",
+        combatant.will ? `Will ${combatant.will}` : "",
+      ].filter(Boolean).join("\n");
+    }
+
+    function fallbackDamageLine(combatant) {
+      const detail = normalizedCombatText(combatant.detail || "");
+      const simpleDamage = detail.match(/\bDamage\s+([^;\n]+)/i);
+      return simpleDamage ? `Damage ${simpleDamage[1].trim()}` : "";
+    }
+
+    function renderCombatHp(combatant, combatantIndex) {
+      withCombatHp(combatant);
+      const defenses = compactDefenseLine(combatant);
+      const hpRows = (combatant.hpTrack || []).map((currentHp, targetIndex) => {
+        const label = (combatant.hpTrack || []).length > 1 ? `${targetIndex + 1}: ` : "";
+        const max = combatant.maxHp ?? firstNumber(combatant.hp);
+        const hpText = currentHp === null || Number.isNaN(currentHp)
+          ? (combatant.hp || "-")
+          : `${currentHp}${max !== null && max !== undefined ? `/${max}` : ""}`;
+        return `
+          <div class="combat-hp-line">
+            <span class="combat-hp-value">${escapeHtml(label + hpText)}</span>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-1">-1</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-5">-5</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-10">-10</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="1">+1</button>
+          </div>
+        `;
+      }).join("");
+      return `
+        <div class="combat-hp-stack">
+          ${hpRows || '<span class="combat-hp-value">-</span>'}
+          <div class="combat-defense-line">${escapeHtml(defenses || "No defenses parsed.")}</div>
+        </div>
+      `;
+    }
+
+    function renderActionLines(lines) {
+      if (!lines?.length) return '<div class="combat-action-line">-</div>';
+      return lines
+        .map((line) => `<div class="combat-action-line">${escapeHtml(line)}</div>`)
+        .join("");
+    }
+
+    function combatAttackList(combatant) {
+      return combatant.attacks?.length ? combatant.attacks : [fallbackDamageLine(combatant)].filter(Boolean);
+    }
+
+    function combatAbilityList(combatant) {
+      return combatant.abilities || [];
+    }
+
+    function renderCombatInitiative(combatant, combatantIndex) {
+      const bonus = initiativeBonus(combatant);
+      combatant.initiativeBonus = bonus;
+      const hasDie = Number.isFinite(combatant.initiativeDie);
+      const rollText = Number.isFinite(combatant.initiativeRoll) && hasDie
+        ? `${combatant.initiativeRoll} (${combatant.initiativeDie}${signedNumber(bonus)})`
+        : "";
+      return `
+        <div class="combat-init-cell">
+          <input class="combat-init-input" type="number" value="${escapeHtml(Number.isFinite(combatant.initiativeRoll) ? String(combatant.initiativeRoll) : "")}" placeholder="${escapeHtml(signedNumber(bonus))}" data-combat-init-manual="${combatantIndex}" />
+          <div class="combat-init-roll">${escapeHtml(rollText || shortInitiativeLabel(combatant, bonus))}</div>
+          <button type="button" class="ghost combat-hp-btn" data-combat-init-roll="${combatantIndex}">Roll</button>
+        </div>
+      `;
+    }
+
+    function adjustCombatHp(combatantIndex, targetIndex, delta) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      withCombatHp(combatant);
+      if (!combatant.hpTrack || combatant.hpTrack[targetIndex] === undefined) return;
+      const current = combatant.hpTrack[targetIndex];
+      if (current === null || Number.isNaN(current)) return;
+      combatant.hpTrack[targetIndex] = Math.max(0, current + delta);
+      renderCombatPanel();
+    }
+
+    function rollCombatInitiative(combatantIndex) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const die = 1 + Math.floor(Math.random() * 20);
+      const bonus = initiativeBonus(combatant);
+      combatant.initiativeBonus = bonus;
+      combatant.initiativeDie = die;
+      combatant.initiativeRoll = die + bonus;
+      renderCombatPanel();
+    }
+
+    function setManualCombatInitiative(combatantIndex, value) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const trimmed = String(value || "").trim();
+      if (!trimmed) {
+        combatant.initiativeRoll = null;
+        combatant.initiativeDie = null;
+        renderCombatPanel();
+        return;
+      }
+      const parsed = Number.parseInt(trimmed, 10);
+      if (!Number.isFinite(parsed)) return;
+      combatant.initiativeRoll = parsed;
+      combatant.initiativeDie = null;
+      combatant.initiativeBonus = initiativeBonus(combatant);
+      renderCombatPanel();
+    }
+
+    function rollAllCombatInitiative() {
+      (currentCombat.combatants || []).forEach((_combatant, index) => {
+        const combatant = currentCombat.combatants[index];
+        const die = 1 + Math.floor(Math.random() * 20);
+        const bonus = initiativeBonus(combatant);
+        combatant.initiativeBonus = bonus;
+        combatant.initiativeDie = die;
+        combatant.initiativeRoll = die + bonus;
+      });
+      renderCombatPanel();
+    }
+
+    function sortCombatByInitiative() {
+      currentCombat.combatants = [...(currentCombat.combatants || [])].sort((left, right) => {
+        const leftRoll = Number.isFinite(left.initiativeRoll) ? left.initiativeRoll : -999;
+        const rightRoll = Number.isFinite(right.initiativeRoll) ? right.initiativeRoll : -999;
+        if (rightRoll !== leftRoll) return rightRoll - leftRoll;
+        return initiativeBonus(right) - initiativeBonus(left);
+      });
+      renderCombatPanel();
+    }
+
+    function renderCombatantRow(combatant, combatantIndex) {
+      withCombatHp(combatant);
+      const levelLabel = combatant.level !== "" && combatant.level !== undefined
+        ? `Level ${combatant.level}`
+        : "";
+      return `
+        <tr>
+          <td>
+            <div class="combat-name">${escapeHtml(combatant.name)}</div>
+            <div class="combat-quickline">${escapeHtml(levelLabel)}</div>
+          </td>
+          <td>${renderCombatInitiative(combatant, combatantIndex)}</td>
+          <td>${renderCombatHp(combatant, combatantIndex)}</td>
+          <td>${escapeHtml(combatant.speed || "-")}</td>
+          <td><div class="combat-action-list">${renderActionLines(combatAttackList(combatant))}</div></td>
+          <td><div class="combat-action-list">${renderActionLines(combatAbilityList(combatant))}</div></td>
+        </tr>
+      `;
+    }
+
+    function renderCombatPanel() {
+      const roster = document.getElementById("combat-roster");
+      const meta = document.getElementById("combat-meta");
+      const combatants = currentCombat.combatants || [];
+      if (!combatants.length) {
+        meta.innerHTML = '<span class="stat-badge">No combat loaded</span>';
+        roster.innerHTML = '<div class="empty">Open a room in Map Room, then start combat from it.</div>';
+        return;
+      }
+      const total = combatants.reduce((sum, combatant) => sum + (combatant.count || 1), 0);
+      meta.innerHTML = `
+        <span class="stat-badge">${escapeHtml(currentCombat.roomId || "Custom combat")} ${escapeHtml(currentCombat.roomTitle || "")}</span>
+        <span class="stat-badge">${combatants.length} row${combatants.length === 1 ? "" : "s"}</span>
+        <span class="stat-badge">${total} foe${total === 1 ? "" : "s"} tracked</span>
+      `;
+      roster.innerHTML = `
+        <table class="combat-table">
+          <thead>
+            <tr>
+              <th class="combat-col-enemy">Enemy</th>
+              <th class="combat-col-init">Init</th>
+              <th class="combat-col-hp">HP / Defenses</th>
+              <th class="combat-col-speed">Speed</th>
+              <th class="combat-col-attacks">Attacks</th>
+              <th class="combat-col-abilities">Abilities</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${combatants.map(renderCombatantRow).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function roomExists(roomId) {
+      const normalized = String(roomId || "").toLowerCase();
+      return Boolean((activeRoomKey?.rooms || []).some((room) => (
+        String(room.room_id || "").toLowerCase() === normalized
+      )));
+    }
+
+    function roomReferenceMarkup(roomId) {
+      const label = escapeHtml(roomId);
+      if (!roomExists(roomId)) {
+        return `<span class="room-ref">${label}</span>`;
+      }
+      return `<button type="button" class="room-ref" data-room-link="${label}">${label}</button>`;
+    }
+
+    function formatLiteralText(value, mode) {
+      let html = escapeHtml(value || "");
+      html = html.replace(
+        /\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|Rewards?|Secret Doors?|Side Quest|Environmental Cues):/g,
+        "<b>$1:</b>",
+      );
+      html = html.replace(/\b(DC\s+\d+)\b/g, '<span class="room-dc">$1</span>');
+      if (mode === "encounter") {
+        html = html.replace(
+          /^([A-Z][A-Z0-9'’(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+[–−-]?\d+)/gm,
+          "<b>$1</b>",
+        );
+        html = html.replace(
+          /\b(Pathfinder Bestiary\s+\d+|Initiative|Perception|AC|Fort|Ref|Will|HP|Speed|Melee|Ranged|Damage)\b/g,
+          "<b>$1</b>",
+        );
+      }
+      html = html.split(/(<[^>]+>)/g).map((part) => {
+        if (part.startsWith("<")) {
+          return part;
+        }
+        return part.replace(/\b([A-Z]\d+[A-Za-z]?)\b(?=\s|\.|,|;|:|\))/g, (_, roomId) => (
+          roomReferenceMarkup(roomId)
+        ));
+      }).join("");
+      return html;
+    }
+
+    function renderRoomTextToggle() {
+      return '<button type="button" class="ghost" data-room-mode-toggle>Show Literal PDF Text</button>';
+    }
+
+    function updateRoomBackButton() {
+      const button = document.getElementById("map-room-back");
+      if (!button) {
+        return;
+      }
+      button.disabled = roomNavigationStack.length === 0;
+    }
+
+    function currentOpenRoomId() {
+      const openCard = document.querySelector("#map-room-list .room-card[open]");
+      return openCard?.dataset.roomId || "";
+    }
+
+    function currentOpenRoomMode() {
+      const openCard = document.querySelector("#map-room-list .room-card[open]");
+      return openCard?.dataset.roomTextMode || "summary";
+    }
+
+    function roomCardFor(roomId) {
+      const normalized = String(roomId || "").toLowerCase();
+      return Array.from(document.querySelectorAll("#map-room-list .room-card")).find((card) => (
+        String(card.dataset.roomId || "").toLowerCase() === normalized
+      ));
+    }
+
+    function setRoomCardMode(card, mode) {
+      const nextMode = mode === "literal" ? "literal" : "summary";
+      const button = card.querySelector("[data-room-mode-toggle]");
+      card.dataset.roomTextMode = nextMode;
+      card.querySelector('[data-room-mode-panel="summary"]').hidden = nextMode !== "summary";
+      card.querySelector('[data-room-mode-panel="literal"]').hidden = nextMode !== "literal";
+      if (button) {
+        button.textContent = nextMode === "literal" ? "Show Summary" : "Show Literal PDF Text";
+      }
+    }
+
+    function openRoomCard(roomId, { pushHistory = true, mode = null } = {}) {
+      const targetRoomId = String(roomId || "").trim();
+      if (!targetRoomId || !activeRoomKey) {
+        return false;
+      }
+      if (!roomCardFor(targetRoomId)) {
+        const filter = document.getElementById("map-room-filter");
+        if (filter.value) {
+          filter.value = "";
+          renderRoomKey();
+        }
+      }
+      const target = roomCardFor(targetRoomId);
+      if (!target) {
+        return false;
+      }
+      const previousRoomId = currentOpenRoomId();
+      if (pushHistory && previousRoomId && previousRoomId.toLowerCase() !== targetRoomId.toLowerCase()) {
+        roomNavigationStack.push({
+          roomId: previousRoomId,
+          mode: currentOpenRoomMode(),
+        });
+      }
+      document.querySelectorAll("#map-room-list .room-card").forEach((card) => {
+        card.open = false;
+      });
+      target.open = true;
+      if (mode) {
+        setRoomCardMode(target, mode);
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      updateRoomBackButton();
+      return true;
+    }
+
+    function navigateBackRoom() {
+      const previous = roomNavigationStack.pop();
+      if (!previous) {
+        updateRoomBackButton();
+        return;
+      }
+      openRoomCard(previous.roomId || previous, {
+        pushHistory: false,
+        mode: previous.mode || null,
+      });
+    }
+
     function roomSearchText(room) {
       const literal = roomLiteralParts(room);
       return [
