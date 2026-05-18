@@ -30,9 +30,13 @@ Minimum local setup:
 
 ```bash
 EMBEDDING_PROVIDER=disabled
-DATABASE_URL=sqlite+aiosqlite:///./dma.db
+DATABASE_URL=sqlite+aiosqlite:///./dma-your-campaign.db
 MAPTOOL_BASE_URL=http://127.0.0.1:5005
 ```
+
+Use a campaign-specific database filename. The repository's example profile defaults to
+`dma-abomination-vaults.db`, but a brand-new campaign should get its own database so old
+entities do not leak into a new table.
 
 ## 3. Start DMA
 

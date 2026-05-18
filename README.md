@@ -39,6 +39,8 @@ For a detailed description of goals and functionality, see:
 - [`docs/10-promo-overview.md`](docs/10-promo-overview.md)
 - [`docs/11-new-campaign-setup.md`](docs/11-new-campaign-setup.md)
 - [`docs/12-operations-manual.md`](docs/12-operations-manual.md)
+- [`docs/15-novice-local-setup.md`](docs/15-novice-local-setup.md)
+- [`docs/17-image-curation-workflow.md`](docs/17-image-curation-workflow.md)
 
 ## ✨ High-Level Features
 

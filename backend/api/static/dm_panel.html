@@ -38,7 +38,7 @@
     }
 
     .shell {
-      width: min(1400px, calc(100vw - 32px));
+      width: min(1280px, calc(100vw - 112px));
       margin: 24px auto 48px;
     }
 
@@ -132,6 +132,302 @@
       margin-top: 18px;
     }
 
+    body {
+      padding-top: 76px;
+    }
+
+    .app-frame {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .status-strip {
+      pointer-events: auto;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 7px clamp(14px, 3vw, 28px);
+      border-bottom: 1px solid rgba(90, 71, 59, 0.16);
+      background: rgba(250, 242, 226, 0.94);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 24px rgba(67, 43, 22, 0.08);
+    }
+
+    .status-strip-main {
+      display: grid;
+      gap: 1px;
+    }
+
+    .status-strip-main strong {
+      font-size: 0.98rem;
+    }
+
+    .status-strip-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .status-strip .eyebrow {
+      margin-bottom: 4px;
+      font-size: 0.72rem;
+    }
+
+    .status-strip .stat-badge {
+      padding: 4px 9px;
+      font-size: 0.79rem;
+    }
+
+    .frame-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-button {
+      width: 46px;
+      height: 46px;
+    }
+
+    .tool-menu {
+      pointer-events: auto;
+      position: fixed;
+      top: 66px;
+      right: 18px;
+      width: min(390px, calc(100vw - 36px));
+      max-height: min(74vh, 640px);
+      overflow: auto;
+      padding: 14px;
+      border-radius: 22px;
+      background: rgba(255, 250, 241, 0.98);
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      box-shadow: var(--shadow);
+    }
+
+    .tool-menu[hidden],
+    .tool-drawer[hidden],
+    .sketch-pad[hidden],
+    .chat-float[hidden] {
+      display: none;
+    }
+
+    .tool-menu-list {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .tool-menu-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
+      align-items: center;
+      gap: 6px;
+      padding: 5px;
+      border-radius: 15px;
+      background: rgba(138, 47, 29, 0.035);
+    }
+
+    .tool-menu-open {
+      min-width: 0;
+      justify-content: flex-start;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tool-menu-pin,
+    .tool-menu-move {
+      min-height: 34px;
+      min-width: 34px;
+      padding: 6px 9px;
+    }
+
+    .tool-dock {
+      pointer-events: auto;
+      position: fixed;
+      z-index: 35;
+      top: 92px;
+      right: 16px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .tool-dock-button,
+    .floating-launcher {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      padding: 0;
+      box-shadow: 0 12px 24px rgba(67, 43, 22, 0.15);
+    }
+
+    .tool-dock-button {
+      position: relative;
+    }
+
+    .tool-dock-button::before {
+      content: attr(data-label);
+      position: absolute;
+      right: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(33, 24, 20, 0.92);
+      color: #fff8ef;
+      font-size: 0.78rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+    }
+
+    .tool-dock-button:hover::before,
+    .tool-dock-button:focus-visible::before {
+      opacity: 1;
+    }
+
+    .shell-icon {
+      width: 22px;
+      height: 22px;
+      display: block;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .shell-icon.is-solid {
+      fill: currentColor;
+      stroke: none;
+    }
+
+    .tool-menu-open .shell-icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .tool-menu-open {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-dock-button.is-active {
+      background: var(--accent);
+      color: #fff8ef;
+    }
+
+    .tool-drawer {
+      pointer-events: auto;
+      position: fixed;
+      z-index: 34;
+      top: 76px;
+      right: 74px;
+      width: min(520px, calc(100vw - 104px));
+      max-height: calc(100vh - 94px);
+      overflow: auto;
+      padding: 14px;
+      border-radius: 26px;
+      background: rgba(255, 250, 241, 0.98);
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      box-shadow: var(--shadow);
+    }
+
+    .tool-drawer-chrome {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(90, 71, 59, 0.12);
+    }
+
+    .tool-drawer-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .tool-drawer .panel,
+    .chat-float .panel {
+      box-shadow: none;
+      border: 0;
+      padding: 0;
+      background: transparent;
+    }
+
+    .tool-drawer .drag-handle,
+    .chat-float .drag-handle,
+    .chat-float .module-help {
+      display: none;
+    }
+
+    .floating-launcher {
+      pointer-events: auto;
+      position: fixed;
+      z-index: 35;
+      bottom: 18px;
+    }
+
+    #sketch-launcher {
+      left: 18px;
+    }
+
+    #chat-launcher {
+      right: 18px;
+    }
+
+    .sketch-pad {
+      pointer-events: auto;
+      position: fixed;
+      z-index: 34;
+      left: 18px;
+      bottom: 82px;
+      width: min(420px, calc(100vw - 36px));
+      min-width: 280px;
+      min-height: 230px;
+      resize: both;
+      overflow: auto;
+      padding: 16px;
+      border-radius: 24px;
+      background: rgba(255, 250, 241, 0.98);
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      box-shadow: var(--shadow);
+    }
+
+    .sketch-pad textarea {
+      min-height: 150px;
+    }
+
+    .chat-float {
+      pointer-events: auto;
+      position: fixed;
+      z-index: 34;
+      right: 18px;
+      bottom: 82px;
+      width: min(460px, calc(100vw - 36px));
+      max-height: min(72vh, 720px);
+      overflow: auto;
+      padding: 16px;
+      border-radius: 26px;
+      background: rgba(255, 250, 241, 0.98);
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      box-shadow: var(--shadow);
+    }
+
     .stack {
       display: contents;
     }
@@ -143,6 +439,42 @@
       background: var(--panel);
       border: 1px solid rgba(90, 71, 59, 0.12);
       box-shadow: var(--shadow);
+    }
+
+    .module-map-room,
+    .module-current-combat,
+    .module-session-overview {
+      background:
+        linear-gradient(135deg, rgba(255, 252, 246, 0.98), rgba(247, 236, 215, 0.93));
+      border-color: rgba(138, 47, 29, 0.18);
+    }
+
+    .module-map-room,
+    .module-current-combat {
+      box-shadow: 0 22px 48px rgba(44, 27, 17, 0.16);
+    }
+
+    .module-campaign-overview,
+    .module-pc-sheet-viewer,
+    .module-npc-dossier-viewer {
+      background: rgba(255, 251, 242, 0.86);
+      box-shadow: 0 14px 32px rgba(44, 27, 17, 0.1);
+    }
+
+    .module-map-room .panel-header h2::before,
+    .module-current-combat .panel-header h2::before,
+    .module-session-overview .panel-header h2::before {
+      content: "Live";
+      display: inline-flex;
+      margin-right: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(138, 47, 29, 0.1);
+      color: var(--accent);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      vertical-align: middle;
     }
 
     .panel.is-dragging {
@@ -570,6 +902,74 @@
       color: #2a221d;
     }
 
+    .command-note-view.markdown-render {
+      max-width: 88ch;
+    }
+
+    .note-reader-grid {
+      display: grid;
+      grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+      margin-top: 12px;
+    }
+
+    .note-toc {
+      position: sticky;
+      top: 92px;
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(138, 47, 29, 0.045);
+      border: 1px solid rgba(90, 71, 59, 0.1);
+    }
+
+    .note-toc strong {
+      color: var(--accent);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .note-toc button {
+      justify-content: flex-start;
+      min-height: 0;
+      padding: 5px 7px;
+      color: var(--ink-soft);
+      text-align: left;
+      border-radius: 10px;
+      background: transparent;
+      border: 0;
+    }
+
+    .note-toc button.level-3 {
+      padding-left: 18px;
+      font-size: 0.9rem;
+    }
+
+    .markdown-render {
+      row-gap: 0;
+    }
+
+    .markdown-render h1,
+    .markdown-render h2,
+    .markdown-render h3 {
+      scroll-margin-top: 88px;
+    }
+
+    .markdown-render h2 {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(90, 71, 59, 0.1);
+    }
+
+    .markdown-render h2:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
     .markdown-render {
       display: grid;
       gap: 10px;
@@ -763,6 +1163,43 @@
       align-items: start;
     }
 
+    .map-room-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      border-radius: 16px;
+      background: rgba(255, 252, 246, 0.72);
+    }
+
+    .map-room-filters legend {
+      padding: 0 6px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .map-room-filters label {
+      width: auto;
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(138, 47, 29, 0.07);
+      color: var(--accent);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .map-room-filters input {
+      width: auto;
+      margin: 0;
+    }
+
     .map-viewer {
       min-height: 420px;
       max-height: 72vh;
@@ -843,6 +1280,17 @@
       min-height: 34px;
     }
 
+    .room-readaloud-toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 6px;
+    }
+
+    .room-readaloud-toolbar button {
+      padding: 7px 10px;
+      min-height: 34px;
+    }
+
     .room-literal-text {
       white-space: pre-wrap;
     }
@@ -913,11 +1361,175 @@
       margin-top: 12px;
     }
 
+    .combat-turn-panel {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      border-radius: 16px;
+      background: rgba(255, 252, 246, 0.82);
+    }
+
+    .combat-turn-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
     .combat-roster {
-      overflow-x: auto;
+      overflow: auto;
       border-radius: 14px;
       border: 1px solid rgba(90, 71, 59, 0.14);
       background: rgba(255, 252, 246, 0.92);
+      max-height: min(78vh, 920px);
+      padding: 10px;
+    }
+
+    .combat-initiative-strip {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding: 2px 0 8px;
+    }
+
+    .combat-strip-chip {
+      min-width: 128px;
+      display: grid;
+      gap: 3px;
+      border-radius: 14px;
+      padding: 8px 10px;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background: rgba(255, 252, 246, 0.8);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .combat-strip-chip.is-active {
+      border-color: rgba(138, 47, 29, 0.38);
+      background: rgba(138, 47, 29, 0.1);
+    }
+
+    .combat-strip-chip strong,
+    .combat-strip-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .combat-card-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .combat-card {
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(255, 252, 246, 0.88);
+    }
+
+    .combat-card.is-active {
+      border-color: rgba(138, 47, 29, 0.34);
+      background: rgba(255, 249, 239, 0.98);
+    }
+
+    .combat-card-summary {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto auto minmax(120px, auto);
+      gap: 10px;
+      align-items: center;
+      min-height: 52px;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .combat-card-summary:hover {
+      background: rgba(138, 47, 29, 0.05);
+    }
+
+    .combat-card-name {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: baseline;
+    }
+
+    .combat-duplicate-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      min-height: 24px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff8ef;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .combat-card-summary-stat {
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .combat-card-status {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 5px;
+    }
+
+    .combat-card-body {
+      display: grid;
+      grid-template-columns: 92px 120px 250px 100px minmax(220px, 1fr) minmax(220px, 1fr);
+      gap: 12px;
+      padding: 0 12px 12px;
+      align-items: start;
+    }
+
+    .combat-card-body.is-pc {
+      grid-template-columns: 92px 120px 230px 80px minmax(260px, 1fr);
+    }
+
+    .combat-card-reference {
+      grid-column: 1 / -1;
+    }
+
+    .combat-portrait {
+      width: 82px;
+      height: 104px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(255, 248, 239, 0.75);
+    }
+
+    .combat-portrait.is-monster {
+      object-fit: contain;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .combat-portrait-placeholder {
+      display: grid;
+      width: 82px;
+      height: 104px;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(90, 71, 59, 0.14);
+      background:
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.92), transparent 44%),
+        linear-gradient(145deg, rgba(142, 52, 29, 0.18), rgba(217, 192, 145, 0.38));
+      color: var(--accent);
+      font-weight: 900;
+      letter-spacing: 0.05em;
     }
 
     .combat-picker {
@@ -940,62 +1552,51 @@
       margin-top: 8px;
     }
 
-    .combat-table {
-      width: 100%;
-      table-layout: fixed;
-      min-width: 1180px;
-      border-collapse: collapse;
+    .combat-pc-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
     }
 
-    .combat-table th,
-    .combat-table td {
-      border-bottom: 1px solid rgba(90, 71, 59, 0.12);
-      padding: 9px 10px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .combat-table th {
-      color: var(--ink);
-      font-weight: 800;
-      font-size: 0.78rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      background: rgba(138, 47, 29, 0.07);
-    }
-
-    .combat-table tr:last-child td {
-      border-bottom: 0;
-    }
-
-    .combat-name {
-      color: var(--ink);
+    .combat-pc-pill {
+      border-radius: 999px;
+      padding: 4px 7px;
+      background: rgba(95, 75, 47, 0.08);
+      color: var(--ink-soft);
+      font-size: 0.8rem;
       font-weight: 800;
       white-space: nowrap;
     }
 
-    .combat-col-enemy {
-      width: 15%;
+    .combat-pc-hp .combat-defense-line {
+      display: none;
     }
 
-    .combat-col-init {
-      width: 116px;
+    .combat-pc-hp .combat-condition-stack {
+      margin-top: 5px;
     }
 
-    .combat-col-hp {
-      width: 178px;
+    .combat-pc-hp .combat-condition-badges {
+      margin-top: 5px;
     }
 
-    .combat-col-speed {
-      width: 110px;
+    .combat-pc-hp .combat-condition-add {
+      grid-template-columns: minmax(0, 1fr) 54px auto;
     }
 
-    .combat-col-attacks {
-      width: 31%;
+    .combat-pc-condition-drawer {
+      margin-top: 4px;
+      border: 0;
+      padding: 0;
+      background: transparent;
     }
 
-    .combat-col-abilities {
-      width: auto;
+    .combat-pc-condition-drawer summary {
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 800;
     }
 
     .combat-hp-stack {
@@ -1005,15 +1606,28 @@
 
     .combat-hp-line {
       display: grid;
-      grid-template-columns: minmax(42px, 1fr) repeat(4, auto);
-      gap: 3px;
+      grid-template-columns: auto minmax(58px, 1fr) auto minmax(58px, 1fr);
+      gap: 5px;
       align-items: center;
+    }
+
+    .combat-hp-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      grid-column: 1 / -1;
     }
 
     .combat-hp-value {
       font-weight: 800;
       color: var(--ink);
       white-space: nowrap;
+    }
+
+    .combat-hp-input {
+      min-height: 30px;
+      padding: 4px 6px;
+      width: 100%;
     }
 
     .combat-hp-btn {
@@ -1079,6 +1693,106 @@
       line-height: 1.4;
     }
 
+    .combat-condition-stack {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .combat-condition-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .combat-condition-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 4px 7px;
+      background: rgba(95, 75, 47, 0.1);
+      color: var(--ink);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .combat-condition-badge button {
+      min-height: 20px;
+      padding: 0 5px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+    }
+
+    .combat-condition-add {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 64px auto;
+      gap: 5px;
+      align-items: end;
+    }
+
+    .combat-condition-add select,
+    .combat-condition-add input {
+      min-height: 32px;
+      padding: 5px 7px;
+    }
+
+    .combat-reference-stack {
+      display: grid;
+      gap: 8px;
+      padding: 6px 0 2px;
+    }
+
+    .combat-reference-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      padding: 2px 0;
+    }
+
+    .combat-reference-pill {
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .combat-reference-pill.is-active {
+      background: var(--accent);
+      color: #fff8ef;
+      border-color: var(--accent);
+    }
+
+    .combat-reference-panel {
+      margin-top: 8px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(138, 47, 29, 0.18);
+      background: rgba(255, 250, 241, 0.96);
+    }
+
+    .combat-reference-panel h4 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    .combat-reference-panel pre {
+      white-space: pre-wrap;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-height: 420px;
+      overflow: auto;
+      margin: 0;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(90, 71, 59, 0.1);
+    }
+
     .sheet-module-stack {
       display: grid;
       gap: 14px;
@@ -1135,7 +1849,7 @@
       display: grid;
       place-items: center;
       overflow: hidden;
-      border-radius: 18px;
+      border-radius: 50%;
       border: 1px solid rgba(138, 47, 29, 0.22);
       background:
         radial-gradient(circle at 30% 20%, rgba(196, 91, 57, 0.14), transparent 34%),
@@ -1146,10 +1860,55 @@
       padding: 10px;
     }
 
+    .portrait-frame.has-image {
+      padding: 0;
+    }
+
     .portrait-frame img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .overview-name-cell {
+      display: grid;
+      gap: 5px;
+      min-width: 110px;
+    }
+
+    .overview-portrait {
+      width: 42px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 50%;
+      border: 1px solid rgba(138, 47, 29, 0.18);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(196, 91, 57, 0.14), transparent 34%),
+        linear-gradient(135deg, rgba(255, 252, 246, 0.95), rgba(239, 225, 192, 0.76));
+      color: var(--ink-soft);
+      font-size: 0.66rem;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .overview-portrait img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .image-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .image-meta .stat-badge {
+      font-size: 0.75rem;
     }
 
     .sheet-stat-grid {
@@ -1267,6 +2026,27 @@
         grid-template-columns: 1fr;
       }
 
+      .combat-card-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .combat-card-status {
+        justify-content: flex-start;
+      }
+
+      .combat-card-body,
+      .combat-card-body.is-pc {
+        grid-template-columns: 1fr;
+      }
+
+      .combat-condition-add {
+        grid-template-columns: 1fr 80px;
+      }
+
+      .combat-condition-add button {
+        grid-column: 1 / -1;
+      }
+
       .sheet-browser {
         grid-template-columns: 1fr;
       }
@@ -1275,10 +2055,114 @@
         width: min(100vw - 18px, 1400px);
         margin-top: 12px;
       }
+
+      body {
+        padding-top: 118px;
+        padding-bottom: 78px;
+      }
+
+      .status-strip {
+        align-items: flex-start;
+      }
+
+      .tool-dock {
+        top: auto;
+        right: 84px;
+        bottom: 18px;
+        display: flex;
+        max-width: calc(100vw - 170px);
+        overflow-x: auto;
+      }
+
+      .tool-dock-button::before {
+        display: none;
+      }
+
+      .tool-drawer {
+        top: auto;
+        right: 12px;
+        bottom: 82px;
+        width: calc(100vw - 24px);
+        max-height: min(68vh, 620px);
+      }
+
+      .note-reader-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .note-toc {
+        position: static;
+      }
     }
   </style>
 </head>
 <body>
+  <aside class="app-frame" aria-label="DMA fixed controls">
+    <header class="status-strip">
+      <div class="status-strip-main">
+        <span class="eyebrow">DMA Command Center</span>
+        <strong id="shell-scene-title">No active scene</strong>
+        <div class="status-strip-meta" id="shell-status-meta">
+          <span class="stat-badge">Loading session context…</span>
+        </div>
+      </div>
+      <div class="frame-actions">
+        <button type="button" class="icon-button menu-button" id="tool-menu-toggle" aria-label="Open tools menu">
+          <svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+    <section class="tool-menu" id="tool-menu" hidden>
+      <strong>Tools</strong>
+      <div class="subtle">Pin tools to the dock or open them from here.</div>
+      <div class="tool-menu-list" id="tool-menu-list"></div>
+      <div class="actions">
+        <button type="button" class="ghost" id="tool-reset-defaults">Reset pinned tools</button>
+      </div>
+    </section>
+  </aside>
+  <nav class="tool-dock" id="tool-dock" aria-label="Pinned tools"></nav>
+  <section class="tool-drawer" id="tool-drawer" hidden aria-live="polite">
+    <div class="tool-drawer-chrome">
+      <div class="tool-drawer-title" id="tool-drawer-title"></div>
+      <button type="button" class="icon-button" id="tool-drawer-close" aria-label="Close tool drawer">×</button>
+    </div>
+  </section>
+  <button type="button" class="floating-launcher" id="sketch-launcher" aria-label="Open Sketch Pad">
+    <svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 20h9"></path>
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+    </svg>
+  </button>
+  <section class="sketch-pad" id="sketch-pad" hidden>
+    <div class="panel-header">
+      <h2>Sketch Pad</h2>
+      <div class="panel-tools">
+        <button type="button" class="icon-button" id="sketch-close" aria-label="Close Sketch Pad">–</button>
+      </div>
+    </div>
+    <label>
+      Quick temporary notes
+      <textarea id="sketch-text" placeholder="Jot down damage reminders, improvisations, names, or clues…"></textarea>
+    </label>
+    <div class="actions">
+      <button type="button" id="sketch-copy-session">Copy to Session Notes</button>
+      <button type="button" class="ghost" id="sketch-clear">Clear</button>
+    </div>
+    <div class="result-box" id="sketch-status"><span class="empty">Saved locally in this browser.</span></div>
+  </section>
+  <button type="button" class="floating-launcher" id="chat-launcher" aria-label="Open DMA Chat">
+    <svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5" y="7" width="14" height="12" rx="3"></rect>
+      <path d="M12 3v4"></path>
+      <path d="M8 3h8"></path>
+      <path d="M8.5 12h.01M15.5 12h.01"></path>
+      <path d="M9 16h6"></path>
+    </svg>
+  </button>
+  <section class="chat-float" id="chat-float" hidden></section>
   <main class="shell">
     <section class="hero">
       <p class="eyebrow">Phase 4 Live Assistance</p>
@@ -1363,10 +2247,19 @@
                 </select>
               </label>
               <label>
-                Room Filter
-                <input id="map-room-filter" placeholder="A10, haunt, loot, secret…" />
+                Search Room Text
+                <input id="map-room-search" placeholder="A10, scorpion, read-aloud phrase, secret door…" />
               </label>
             </div>
+            <fieldset class="map-room-filters" aria-label="Room content filters">
+              <legend>Show Rooms With</legend>
+              <label><input type="checkbox" value="secret" /> Secret</label>
+              <label><input type="checkbox" value="loot" /> Loot</label>
+              <label><input type="checkbox" value="monsters" /> Monsters</label>
+              <label><input type="checkbox" value="trap" /> Trap</label>
+              <label><input type="checkbox" value="haunt" /> Haunt</label>
+              <label><input type="checkbox" value="npc" /> NPC</label>
+            </fieldset>
             <div class="actions">
               <button type="submit">Load Map</button>
               <button type="button" class="ghost" id="map-room-refresh">Refresh Maps</button>
@@ -1376,6 +2269,7 @@
           <div class="stat-line" id="map-room-meta">
             <span class="stat-badge">No dungeon map loaded</span>
           </div>
+          <div class="subtle" id="map-room-voice-status">Read-aloud buttons use the best available browser narrator voice.</div>
           <div class="map-room-grid" style="margin-top: 12px;">
             <div class="map-viewer" id="map-room-viewer">
               <div class="empty" style="padding: 16px;">Choose a dungeon map to load it here.</div>
@@ -1391,14 +2285,26 @@
           <div class="combat-layout">
             <div>
               <p class="subtle">
-                Build a quick combat roster from the currently opened Map Room card. This first pass keeps the full encounter text one click away.
+                Run a PF2e encounter from a Map Room card or selected AoN creature: initiative, turns, HP, conditions, tactics, and knowledge prompts in one place.
               </p>
               <div class="combat-toolbar">
                 <button type="button" id="combat-start-open-room">Start From Open Room</button>
                 <button type="button" class="ghost" id="combat-add-open-room">Add Open Room</button>
+                <button type="button" class="ghost" id="combat-add-party">Add Party PCs</button>
                 <button type="button" class="ghost" id="combat-roll-all">Roll All Initiative</button>
                 <button type="button" class="ghost" id="combat-sort-initiative">Order By Initiative</button>
                 <button type="button" class="secondary" id="combat-clear">Clear Combat</button>
+              </div>
+              <div class="combat-turn-panel" id="combat-turn-panel">
+                <div class="stat-line" id="combat-turn-meta">
+                  <span class="stat-badge">Round 1</span>
+                  <span class="stat-badge">No active turn</span>
+                </div>
+                <div class="combat-turn-actions">
+                  <button type="button" class="ghost" id="combat-prev-turn">Previous Turn</button>
+                  <button type="button" id="combat-next-turn">Next Turn</button>
+                  <button type="button" class="ghost" id="combat-reset-round">Reset Round</button>
+                </div>
               </div>
               <div class="combat-picker">
                 <label>
@@ -1442,8 +2348,11 @@
           <div class="stat-line" id="campaign-overview-meta">
             <span class="stat-badge">Campaign overview not loaded yet</span>
           </div>
-          <div class="result-box command-note-view markdown-render" id="campaign-overview-view">
-            <span class="empty">Campaign overview will appear here.</span>
+          <div class="note-reader-grid">
+            <nav class="note-toc" id="campaign-overview-toc" aria-label="Campaign overview sections"></nav>
+            <div class="result-box command-note-view markdown-render" id="campaign-overview-view">
+              <span class="empty">Campaign overview will appear here.</span>
+            </div>
           </div>
           <textarea class="command-note-editor" id="campaign-overview-editor" hidden></textarea>
           <div class="result-box" id="campaign-overview-status"><span class="empty">No campaign overview edits saved yet.</span></div>
@@ -1504,8 +2413,11 @@
               <button type="button" class="ghost" id="session-track-clear">Clear Tracker Fields</button>
             </div>
           </details>
-          <div class="result-box command-note-view markdown-render" id="session-overview-view">
-            <span class="empty">Choose a session tab to view its overview.</span>
+          <div class="note-reader-grid">
+            <nav class="note-toc" id="session-overview-toc" aria-label="Session overview sections"></nav>
+            <div class="result-box command-note-view markdown-render" id="session-overview-view">
+              <span class="empty">Choose a session tab to view its overview.</span>
+            </div>
           </div>
           <textarea class="command-note-editor" id="session-overview-editor" hidden></textarea>
           <div class="result-box" id="session-overview-status"><span class="empty">No session overview edits saved yet.</span></div>
@@ -1761,10 +2673,17 @@
         <article class="panel">
           <h2>Voice Reader</h2>
           <p class="subtle">
-            Use your browser’s installed voices to read boxed text, NPC dialogue, or moderator recap in-character.
+            Read boxed text, NPC dialogue, or moderator recap in-character. Browser voice works everywhere; Piper gives better local narration when configured.
           </p>
           <form id="tts-form">
             <div class="grid-two">
+              <label>
+                TTS Engine
+                <select id="tts-engine">
+                  <option value="browser" selected>Browser Voice</option>
+                  <option value="piper">Piper Local Narrator</option>
+                </select>
+              </label>
               <label>
                 Voice Preset
                 <select id="tts-preset">
@@ -1775,6 +2694,8 @@
                   <option value="urgent">Urgent Caller</option>
                 </select>
               </label>
+            </div>
+            <div class="grid-two">
               <label>
                 Installed Voice
                 <select id="tts-voice">
@@ -1918,6 +2839,8 @@
       referencePdfs: "/api/live/reference-pdfs",
       dungeonMaps: "/api/live/dungeon-maps",
       dungeonRoomKey: "/api/live/dungeon-room-key",
+      ttsStatus: "/api/live/tts/status",
+      ttsSynthesize: "/api/live/tts/synthesize",
       aonCreatures: "/api/live/aon-creatures",
       aonCreature: "/api/live/aon-creature",
       pcSheets: "/api/live/pc-sheets",
@@ -1941,8 +2864,11 @@
     let currentCombat = {
       roomId: "",
       roomTitle: "",
+      round: 1,
+      activeIndex: 0,
       combatants: [],
     };
+    let combatSaveTimer = null;
     let aonCreatures = [];
     let pcSheets = [];
     let npcSheets = [];
@@ -1970,20 +2896,22 @@
       },
     };
     let availableVoices = [];
+    let ttsServerStatus = { provider: "browser", piper_ready: false };
+    let activeTtsAudio = null;
     let audioContext = null;
     let activeAudioNodes = [];
 
     const moduleInstructions = {
       "Current Scene": "Use this first at the start of play and whenever the table moves to a new situation.\n\nScene Title is the short label for what is happening now. Focus tells DMA what kind of help to prioritize, such as scouting, social tension, combat, or rules friction. Current Location, Active PCs, and Active NPCs give chat, prep, sound recommendations, and continuity tools the right context. MapTool Map ID is used by Session Mechanics when you sync a map. DM Notes are for short reminders that matter right now, not full session notes. Save Live State after changing these fields.",
-      "Map Room": "Use this during dungeon exploration when you want the map and room key on one screen.\n\nDungeon Map loads a local map image from the configured campaign media folder. Room Filter narrows the sidebar by room number, title, monster, haunt, trap, loot, secret, or any matching text in the room key. Each room card is collapsed by default. Expand the room the party is entering to see what the PCs notice first, then GM-only contents such as monsters, NPCs, traps, haunts, loot, secret doors, visibility notes, and detection notes. This first version does not place clickable hotspots on the map yet; use the printed room labels on the image and the sidebar together.",
-      "Current Combat": "Use this when initiative starts.\n\nOpen the relevant Map Room card, then press Start From Open Room. The roster pulls creatures and stat snippets from the room's encounter text and keeps a compact line visible for AC, saves, initiative, attacks, and notable abilities when those are available. Expand a creature card for the full extracted stat text. This first version is a GM reference and roster builder; HP editing, turn order, and conditions can come next.",
+      "Map Room": "Use this during dungeon exploration when you want the map and room key on one screen.\n\nDungeon Map loads a local map image from the configured campaign media folder. Use the Secret, Loot, Monsters, Trap, Haunt, and NPC checkboxes when you want to surface only rooms with those features. Use Search Room Text to search room summaries and literal source text at the same time. Each room card is collapsed by default. Expand the room the party is entering to see what the PCs notice first, then GM-only contents such as monsters, NPCs, traps, haunts, loot, secret doors, visibility notes, and detection notes. The Read Aloud button speaks the player-facing boxed/read-aloud text with the configured narrator voice. This first version does not place clickable hotspots on the map yet; use the printed room labels on the image and the sidebar together.",
+      "Current Combat": "Use this when initiative starts.\n\nOpen the relevant Map Room card, then press Start From Open Room. The roster adds the party PCs from the PC Sheet Viewer, pulls room creatures, enriches known monsters from the local Archives of Nethys index, and opens the active combatant while keeping everyone else compact. The initiative strip gives the full turn order at a glance. Collapsed cards show the essentials only: name, HP, AC, and current conditions. Use Add Party PCs if you started with a custom monster or want to restore missing PCs. Use Next Turn and Previous Turn to track the active combatant and round; timed conditions count down automatically when turns advance. Edit current or max HP directly if you want to tune difficulty during play. Duplicate creatures receive letter labels such as A and B so you can keep them apart. Monster cards expose Strategy, Look, Recall, and AoN detail pills when you need more context.",
       "Campaign Overview": "Use this as the campaign-level compass.\n\nThis note is stored in the Obsidian vault at Command Center/Campaign Overview.md, so edits here remain available in Obsidian and vice versa. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, and DM notes. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
       "Session Overview": "Use this as the immediate session command center.\n\nEach tab opens a session note from the Obsidian vault. Next Session is the working prep tab; other Session tabs can hold runbooks, recaps, or future prep. Keep each session note organized around goal, starting situation, likely scenes, important NPCs, monsters/hazards/treasure, secrets, unexpected-player contingencies, live notes, and after-session recap. Use Edit Text during or after play to keep the DMA memory fresh.",
       "Quick Rules": "Use this when you want a direct rules answer with citations rather than a conversational answer.\n\nType the rules question in plain language. Strict rules mode keeps the answer close to approved rules documents and is best during live play. Top K controls how many source chunks DMA considers; use 3 for fast focused answers and 5 or 8 when the first answer needs more context. For looser questions, the /rules button in DMA Chat is often enough.",
       "Quick Prep": "Use this to generate a structured prep brief from the current live scene, recent sessions, and campaign state.\n\nBrief Title names the generated prep document. Prep Focus can override the current scene focus if you want a more specific brief, such as Level 1 hazards or Otari social fallout. Session Count controls how much recent history DMA considers. Store as session_prep document writes the brief back into DMA so it appears later in Session Context and the Obsidian export.",
       "Vault Workspace": "Use this when you want to read the Obsidian campaign command center without leaving DMA.\n\nSearch Vault Notes filters note paths and titles, then the list opens notes in the viewer on the right. This is read-oriented, so it is best for consulting map keys, NPC notes, session runbooks, player handouts, and command-center pages during play. Export DMA To Vault regenerates supported vault content from DMA. Sync Vault To DMA imports supported edited vault sections back into the database. Use those sync buttons deliberately, especially after editing notes in Obsidian.",
       "DMA Chat Workbench": "Use this as the main place to talk to DMA.\n\nAsk normal questions, or use the quick slash prompt buttons. /scene summarizes the current live situation. /rules starts a rules question. /recap asks for recent continuity. /prep asks for preparation help. /search looks up campaign memory. Chat Mode lets you steer the assistant when your request is ambiguous. Chat responses stay in this browser session and can be sent to Voice Reader with Use Assistant Reply.",
-      "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
+      "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. When matching player-named vault sheets exist, the viewer reads those first so the DM sees the current campaign party rather than stale database placeholders. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
       "NPC Dossier Viewer": "Use this to inspect and update NPC campaign dossiers during play.\n\nSearch by NPC name, role, status, or summary, then open the dossier. NPCs are displayed differently from PCs: the focus is portrait, appearance, role, current location, player-facing description, GM summary, whether the party has encountered them, relationship to the PCs, campaign encounter points, goals, secrets, clues, relationships, and optional combat/statblock data. Use Edit NPC Notes And Details for table notes, better status values, appearance text, and disposition changes.",
       "Dice Roller": "Use this for quick checks, saves, attacks, damage, and fortune or misfortune rolls.\n\nType formulas like 1d20+7, 2d6+4, 4d6kh3, or 2d20kl1+9. The die and modifier buttons help build common expressions quickly. Flat Check, Skill Check, Fortune, and Misfortune load useful templates that you can edit before rolling. Roll history keeps the latest results visible while the page stays open.",
       "Session Soundboard": "Use this for lightweight sound cues and ambience during play.\n\nThe recommended sounds are based on the saved scene title, focus, and current location, so update Current Scene first if the suggestions feel off. One-shot cues play briefly. Ambience loops until you stop it or start a different ambience. Stop All Audio cuts off all sounds started by this panel. These are browser-generated sounds, not imported audio tracks.",
@@ -2113,6 +3041,24 @@
       return response.json();
     }
 
+    async function fetchBlob(url, options = {}) {
+      const response = await fetch(url, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options,
+      });
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const payload = await response.json();
+          detail = payload.detail || JSON.stringify(payload);
+        } catch (_error) {
+          detail = await response.text();
+        }
+        throw new Error(detail || "Request failed");
+      }
+      return response.blob();
+    }
+
     function summaryCard(label, value) {
       return `
         <div class="summary-card">
@@ -2147,6 +3093,161 @@
       "pc-sheet-viewer",
       "npc-dossier-viewer",
     ];
+    const pinnedToolsKey = "dma.dmPanel.tools.pinned";
+    const activeToolKey = "dma.dmPanel.tools.active";
+    const sketchPadKey = "dma.dmPanel.sketchPad";
+    const defaultPinnedToolIds = ["dice-roller", "session-soundboard"];
+    const toolDefinitions = [
+      { id: "current-scene", title: "Current Scene", icon: "scene" },
+      { id: "quick-rules", title: "Quick Rules", icon: "book-open" },
+      { id: "quick-prep", title: "Quick Prep", icon: "sparkles" },
+      { id: "vault-workspace", title: "Vault Workspace", icon: "folder" },
+      { id: "dice-roller", title: "Dice Roller", icon: "dice" },
+      { id: "session-soundboard", title: "Session Soundboard", icon: "music" },
+      { id: "voice-reader", title: "Voice Reader", icon: "mic" },
+      { id: "reference-pdfs", title: "Reference PDFs", icon: "file-text" },
+      { id: "session-mechanics", title: "Session Mechanics", icon: "sliders" },
+      { id: "continuity-search", title: "Continuity Search", icon: "search" },
+      { id: "session-context", title: "Session Context", icon: "layers" },
+    ];
+    let activeToolId = "";
+
+    function iconSvg(name) {
+      const icons = {
+        scene: '<path d="M4 20h16"></path><path d="M6 20V8l6-4 6 4v12"></path><path d="M9 13h6"></path>',
+        "book-open": '<path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path>',
+        sparkles: '<path d="m12 3 1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"></path><path d="m19 16 .8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"></path>',
+        folder: '<path d="M3 7h5l2 2h11v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M3 7v-2a2 2 0 0 1 2-2h4l2 2h4"></path>',
+        dice: '<rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"></path>',
+        music: '<path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle>',
+        mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path>',
+        "file-text": '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"></path><path d="M14 2v6h6"></path><path d="M8 13h8M8 17h8M8 9h2"></path>',
+        sliders: '<path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path>',
+        search: '<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>',
+        layers: '<path d="m12 2 9 5-9 5-9-5z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path>',
+      };
+      return `<svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.scene}</svg>`;
+    }
+
+    function toolDefinition(id) {
+      return toolDefinitions.find((tool) => tool.id === id);
+    }
+
+    function loadPinnedToolIds() {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(pinnedToolsKey) || "[]");
+        if (Array.isArray(saved) && saved.length) {
+          return saved.filter((id) => toolDefinition(id));
+        }
+      } catch (_error) {
+        // Fall through to defaults.
+      }
+      return [...defaultPinnedToolIds];
+    }
+
+    function savePinnedToolIds(ids) {
+      window.localStorage.setItem(pinnedToolsKey, JSON.stringify(ids));
+    }
+
+    function initializeToolShell() {
+      const drawer = document.getElementById("tool-drawer");
+      toolDefinitions.forEach((tool) => {
+        const panel = document.querySelector(`.layout > .panel[data-module-id="${tool.id}"]`);
+        if (!panel) return;
+        panel.dataset.toolPanel = "true";
+        panel.hidden = true;
+        drawer.appendChild(panel);
+      });
+
+      const chatPanel = document.querySelector('.layout > .panel[data-module-id="dma-chat-workbench"]');
+      if (chatPanel) {
+        document.getElementById("chat-float").appendChild(chatPanel);
+      }
+      renderToolChrome();
+      hydrateSketchPad();
+      const rememberedTool = window.localStorage.getItem(activeToolKey);
+      if (rememberedTool && toolDefinition(rememberedTool)) {
+        openTool(rememberedTool);
+      }
+    }
+
+    function renderToolChrome() {
+      const pinned = loadPinnedToolIds();
+      const dock = document.getElementById("tool-dock");
+      dock.innerHTML = pinned.map((id) => {
+        const tool = toolDefinition(id);
+        return `
+          <button type="button" class="tool-dock-button ${activeToolId === id ? "is-active" : ""}" data-label="${escapeHtml(tool.title)}" data-open-tool="${tool.id}" title="${escapeHtml(tool.title)}" aria-label="Open ${escapeHtml(tool.title)}">
+            ${iconSvg(tool.icon)}
+          </button>
+        `;
+      }).join("");
+      document.getElementById("tool-menu-list").innerHTML = toolDefinitions.map((tool) => {
+        const isPinned = pinned.includes(tool.id);
+        const pinIndex = pinned.indexOf(tool.id);
+        return `
+          <div class="tool-menu-row">
+            <button type="button" class="ghost tool-menu-open" data-open-tool="${tool.id}">${iconSvg(tool.icon)} ${escapeHtml(tool.title)}</button>
+            <button type="button" class="ghost tool-menu-pin" data-pin-tool="${tool.id}" title="${isPinned ? "Unpin" : "Pin"} ${escapeHtml(tool.title)}" aria-label="${isPinned ? "Unpin" : "Pin"} ${escapeHtml(tool.title)}">${isPinned ? "−" : "+"}</button>
+            <button type="button" class="ghost tool-menu-move" data-move-tool="${tool.id}" data-direction="-1" ${pinIndex <= 0 ? "disabled" : ""} aria-label="Move ${escapeHtml(tool.title)} up">↑</button>
+            <button type="button" class="ghost tool-menu-move" data-move-tool="${tool.id}" data-direction="1" ${!isPinned || pinIndex === pinned.length - 1 ? "disabled" : ""} aria-label="Move ${escapeHtml(tool.title)} down">↓</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function openTool(id) {
+      const drawer = document.getElementById("tool-drawer");
+      const panel = drawer.querySelector(`[data-module-id="${id}"]`);
+      if (!panel) return;
+      activeToolId = activeToolId === id ? "" : id;
+      drawer.querySelectorAll("[data-tool-panel='true']").forEach((item) => {
+        item.hidden = item.dataset.moduleId !== activeToolId;
+      });
+      drawer.hidden = !activeToolId;
+      if (activeToolId) {
+        const tool = toolDefinition(activeToolId);
+        document.getElementById("tool-drawer-title").innerHTML = `${iconSvg(tool.icon)} ${escapeHtml(tool.title)}`;
+        const body = panel.querySelector(".panel-body");
+        const collapseButton = panel.querySelector(".panel-tools .icon-button:last-child");
+        if (body) body.hidden = false;
+        panel.classList.remove("is-collapsed");
+        if (collapseButton) {
+          collapseButton.textContent = "–";
+          collapseButton.title = `Collapse ${toolDefinition(id)?.title || "tool"}`;
+        }
+      }
+      if (activeToolId) {
+        window.localStorage.setItem(activeToolKey, activeToolId);
+      } else {
+        window.localStorage.removeItem(activeToolKey);
+      }
+      renderToolChrome();
+    }
+
+    function toggleToolPinned(id) {
+      const pinned = loadPinnedToolIds();
+      const next = pinned.includes(id)
+        ? pinned.filter((toolId) => toolId !== id)
+        : [...pinned, id];
+      savePinnedToolIds(next);
+      renderToolChrome();
+    }
+
+    function movePinnedTool(id, direction) {
+      const pinned = loadPinnedToolIds();
+      const index = pinned.indexOf(id);
+      if (index < 0) return;
+      const target = index + direction;
+      if (target < 0 || target >= pinned.length) return;
+      [pinned[index], pinned[target]] = [pinned[target], pinned[index]];
+      savePinnedToolIds(pinned);
+      renderToolChrome();
+    }
+
+    function hydrateSketchPad() {
+      document.getElementById("sketch-text").value = window.localStorage.getItem(sketchPadKey) || "";
+    }
 
     function moduleIdFromTitle(title) {
       return title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -2606,6 +3707,32 @@
       return html.join("");
     }
 
+    function sectionSlug(text, index) {
+      const slug = String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      return `${slug || "section"}-${index + 1}`;
+    }
+
+    function renderNoteToc(viewId, tocId) {
+      const view = document.getElementById(viewId);
+      const toc = document.getElementById(tocId);
+      const headings = Array.from(view.querySelectorAll("h2, h3"));
+      if (!headings.length) {
+        toc.innerHTML = '<span class="empty">No sections yet.</span>';
+        return;
+      }
+      toc.innerHTML = `
+        <strong>Jump To</strong>
+        ${headings.map((heading, index) => {
+          heading.id = sectionSlug(heading.textContent, index);
+          const level = heading.tagName === "H3" ? "level-3" : "level-2";
+          return `<button type="button" class="${level}" data-note-jump="${escapeHtml(heading.id)}">${escapeHtml(heading.textContent)}</button>`;
+        }).join("")}
+      `;
+    }
+
     function setCommandNoteMode(prefix, isEditing) {
       document.getElementById(`${prefix}-view`).hidden = isEditing;
       document.getElementById(`${prefix}-editor`).hidden = !isEditing;
@@ -2630,6 +3757,7 @@
         return;
       }
       document.getElementById("campaign-overview-view").innerHTML = markdownToHtml(note.content);
+      renderNoteToc("campaign-overview-view", "campaign-overview-toc");
       document.getElementById("campaign-overview-editor").value = note.content || "";
       document.getElementById("campaign-overview-meta").innerHTML = `
         ${safetyBadgeForNote(note)}
@@ -2708,6 +3836,7 @@
         return;
       }
       document.getElementById("session-overview-view").innerHTML = markdownToHtml(note.content);
+      renderNoteToc("session-overview-view", "session-overview-toc");
       document.getElementById("session-overview-editor").value = note.content || "";
       document.getElementById("session-overview-meta").innerHTML = `
         ${safetyBadgeForNote(note)}
@@ -2792,6 +3921,10 @@
       if (!panel) {
         return;
       }
+      if (panel.dataset.toolPanel === "true") {
+        openTool(moduleId);
+        return;
+      }
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -2799,7 +3932,7 @@
       await loadVaultNotes("");
       await openVaultNote(path);
       setLaunchStatus(`${label} opened in Vault Workspace.`);
-      focusModule("vault-workspace");
+      openTool("vault-workspace");
     }
 
     async function launchCurrentSession() {
@@ -2821,7 +3954,7 @@
         const levelThreeMapId = findLevelThreeMapId();
         if (levelThreeMapId) {
           document.getElementById("map-room-select").value = levelThreeMapId;
-          document.getElementById("map-room-filter").value = "c7";
+          document.getElementById("map-room-search").value = "c7";
           await loadMapRoom(levelThreeMapId);
         }
 
@@ -3017,6 +4150,1551 @@
         return '<span class="empty">None listed.</span>';
       }
       return `<ul>${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul>`;
+    }
+
+    function firstPresent(...values) {
+      for (const value of values) {
+        if (typeof value === "string" && value.trim()) {
+          return value;
+        }
+      }
+      return "";
+    }
+
+    function roomLiteralParts(room) {
+      const literal = room.literal_text || room.source_text || room.raw_text || room.pdf_text || {};
+      const combatant = {
+        player: firstPresent(
+          literal.player,
+          literal.player_visible,
+          literal.read_aloud,
+          literal.read_to_players,
+          room.literal_player_visible_description,
+          room.literal_player_description,
+          room.source_player_visible_description,
+          room.player_read_aloud,
+          room.read_aloud,
+          room.read_to_players,
+        ),
+        additional: firstPresent(
+          literal.general,
+          literal.general_text,
+          literal.additional,
+          literal.additional_text,
+          literal.middle,
+          literal.context,
+          literal.exploration,
+          room.literal_additional_text,
+          room.source_additional_text,
+        ),
+        gm: firstPresent(
+          literal.encounter,
+          literal.encounter_text,
+          literal.gm,
+          literal.gm_info,
+          literal.info,
+          literal.room_information,
+          literal.details,
+          room.literal_gm_description,
+          room.literal_room_information,
+          room.source_gm_description,
+          room.gm_source_text,
+          room.info_text,
+        ),
+      };
+      return combatant;
+    }
+
+    function renderSummaryRoomSections(room) {
+      return `
+        <div class="room-card-section">
+          <strong>What PCs see first</strong>
+          <div>${escapeHtml(room.player_visible_description || "No player-visible description listed.")}</div>
+        </div>
+        <div class="room-card-section">
+          <strong>GM-only room note</strong>
+          <div>${escapeHtml(room.gm_description || "No GM-only note listed.")}</div>
+        </div>
+        <div class="room-card-section"><strong>Monsters</strong>${listValues(room.monsters)}</div>
+        <div class="room-card-section"><strong>NPCs</strong>${listValues(room.npcs)}</div>
+        <div class="room-card-section"><strong>Traps, haunts, and hazards</strong>${listValues([...(room.traps || []), ...(room.haunts || []), ...(room.hazards || [])])}</div>
+        <div class="room-card-section"><strong>Loot</strong>${listValues(room.loot)}</div>
+        <div class="room-card-section"><strong>Secret doors and hidden features</strong>${listValues(room.secret_doors)}</div>
+        <div class="room-card-section">
+          <strong>Visibility and detection</strong>
+          <div>${escapeHtml(room.visibility_notes || "No visibility note listed.")}</div>
+          <div class="subtle" style="margin-top: 4px;">${escapeHtml(room.detection_notes || "No detection note listed.")}</div>
+        </div>
+        <div class="room-card-section"><strong>Dependencies</strong>${listValues(room.dependencies)}</div>
+      `;
+    }
+
+    function renderLiteralRoomSections(room) {
+      const literal = roomLiteralParts(room);
+      if (!literal.player && !literal.gm) {
+        return `
+          <div class="room-card-section">
+            <strong>Literal PDF text</strong>
+            <div class="empty">No literal PDF text is stored for this room yet.</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="room-card-section">
+          <strong>Read-aloud text</strong>
+          ${literal.player ? `
+            <div class="room-readaloud-toolbar">
+              <button type="button" class="ghost" data-room-read-aloud="${escapeHtml(room.room_id || "")}">Read Aloud</button>
+            </div>
+          ` : ""}
+          <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player || "No read-aloud text stored for this room.", "readaloud")}</div>
+        </div>
+        ${literal.additional ? `
+          <div class="room-card-section">
+            <strong>General room text</strong>
+            <div class="room-literal-text room-literal-block room-literal-general">${formatLiteralText(literal.additional, "general")}</div>
+          </div>
+        ` : ""}
+        <div class="room-card-section">
+          <strong>Encounter text</strong>
+          <div class="room-literal-text room-literal-block room-literal-encounter">${formatLiteralText(literal.gm || "No encounter text stored for this room.", "encounter")}</div>
+        </div>
+      `;
+    }
+
+    function normalizedCombatText(value) {
+      return String(value || "")
+        .replace(/[â€“âˆ’]/g, "-")
+        .replace(/\r\n/g, "\n")
+        .trim();
+    }
+
+    function titleCaseName(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
+        .replace(/\bDc\b/g, "DC");
+    }
+
+    function combatStatValue(text, label) {
+      const pattern = new RegExp(`\\b${label}\\s+([^;\\n]+)`, "i");
+      const match = text.match(pattern);
+      return match ? match[1].trim() : "";
+    }
+
+    function firstNumber(value) {
+      const match = String(value || "").match(/-?\d+/);
+      return match ? Number.parseInt(match[0], 10) : null;
+    }
+
+    function initiativeBonus(combatant) {
+      const value = String(combatant.initiative || "");
+      const signed = value.match(/[+-]\d+/);
+      if (signed) return Number.parseInt(signed[0], 10);
+      const plain = value.match(/\b\d+\b/);
+      return plain ? Number.parseInt(plain[0], 10) : 0;
+    }
+
+    function signedNumber(value) {
+      return value >= 0 ? `+${value}` : String(value);
+    }
+
+    function shortInitiativeLabel(combatant, bonus) {
+      if (Number.isFinite(combatant.initiativeRoll)) {
+        return `Total ${combatant.initiativeRoll}`;
+      }
+      return `Bonus ${signedNumber(bonus)}`;
+    }
+
+    function combatAttackLines(text) {
+      return text
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => /^(Melee|Ranged|Damage)/i.test(line))
+        .slice(0, 6);
+    }
+
+    function combatAbilityLines(text) {
+      return text
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => /^(Primal|Occult|Arcane|Divine|Spell|Reactive|Free|Frequency|Trigger|Effect|Vengeful|Self-|Baffling|Claim|Consume|Flicker|Blood|Death|Breath|Poison|Grab|Constrict|Rend|Pounce)/i.test(line))
+        .slice(0, 6);
+    }
+
+    const pf2eConditions = [
+      "blinded",
+      "broken",
+      "clumsy",
+      "concealed",
+      "confused",
+      "controlled",
+      "dazzled",
+      "deafened",
+      "doomed",
+      "drained",
+      "dying",
+      "encumbered",
+      "enfeebled",
+      "fascinated",
+      "fatigued",
+      "fleeing",
+      "friendly",
+      "frightened",
+      "grabbed",
+      "helpful",
+      "hidden",
+      "hostile",
+      "immobilized",
+      "indifferent",
+      "invisible",
+      "observed",
+      "off-guard",
+      "paralyzed",
+      "persistent damage",
+      "petrified",
+      "prone",
+      "quickened",
+      "restrained",
+      "sickened",
+      "slowed",
+      "stunned",
+      "stupefied",
+      "unconscious",
+      "undetected",
+      "unfriendly",
+      "unnoticed",
+      "wounded",
+    ];
+
+    const conditionValueHints = {
+      clumsy: "1",
+      doomed: "1",
+      drained: "1",
+      dying: "1",
+      enfeebled: "1",
+      frightened: "1",
+      "persistent damage": "1d6 type",
+      quickened: "stride/strike",
+      sickened: "1",
+      slowed: "1",
+      stunned: "1",
+      stupefied: "1",
+      wounded: "1",
+    };
+
+    function conditionOptions() {
+      return pf2eConditions
+        .map((condition) => `<option value="${escapeHtml(condition)}">${escapeHtml(titleCaseName(condition))}</option>`)
+        .join("");
+    }
+
+    function normalizeCreatureLookupName(value) {
+      let name = String(value || "")
+        .toLowerCase()
+        .replace(/\([^)]*\)/g, "")
+        .replace(/\b(elite|weak)\b/g, "")
+        .replace(/\b\d+\b/g, "")
+        .replace(/[^a-z\s'-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const aliases = {
+        "mitflits": "mitflit",
+        "mudlicker maggot": "giant maggot",
+        "mudlicker maggots": "giant maggot",
+        "giant flies": "giant fly",
+        "boss skrawng": "mitflit",
+        "bite bite": "giant solifugid",
+        "mister beak": "soulbound doll",
+        "stonescale spirits": "",
+      };
+      if (aliases[name] !== undefined) return aliases[name];
+      if (name.endsWith("ies")) return `${name.slice(0, -3)}y`;
+      if (name.endsWith("s") && !name.endsWith("ss")) return name.slice(0, -1);
+      return name;
+    }
+
+    function findAonCreatureForCombatant(combatant) {
+      const lookup = normalizeCreatureLookupName(combatant.name);
+      if (!lookup) return null;
+      return aonCreatures.find((creature) => (
+        normalizeCreatureLookupName(creature.name) === lookup
+      )) || aonCreatures.find((creature) => {
+        const creatureName = normalizeCreatureLookupName(creature.name);
+        return creatureName && (lookup.includes(creatureName) || creatureName.includes(lookup));
+      }) || null;
+    }
+
+    function mergeAonDetailsIntoCombatant(combatant, creature) {
+      const enriched = combatantFromAonCreature(creature);
+      return withCombatHp({
+        ...combatant,
+        source: "AoN",
+        sourceUrl: creature.source_url || enriched.sourceUrl || "",
+        level: enriched.level !== "" && enriched.level !== undefined ? enriched.level : combatant.level,
+        traits: creature.traits || enriched.traits || combatant.traits || [],
+        content: creature.content || enriched.content || combatant.content || "",
+        initiative: enriched.initiative || combatant.initiative,
+        initiativeBonus: enriched.initiativeBonus || combatant.initiativeBonus,
+        ac: enriched.ac || combatant.ac,
+        hp: enriched.hp || combatant.hp,
+        fort: enriched.fort || combatant.fort,
+        ref: enriched.ref || combatant.ref,
+        will: enriched.will || combatant.will,
+        speed: enriched.speed || combatant.speed,
+        attacks: enriched.attacks?.length ? enriched.attacks : combatant.attacks,
+        abilities: enriched.abilities?.length ? enriched.abilities : combatant.abilities,
+        detail: enriched.detail || combatant.detail,
+        imageUrl: enriched.imageUrl || combatant.imageUrl || "",
+        aonName: creature.name || combatant.name,
+      });
+    }
+
+    async function enrichCombatantsFromAon(combatants) {
+      const enriched = [];
+      for (const combatant of combatants) {
+        const match = findAonCreatureForCombatant(combatant);
+        if (!match) {
+          enriched.push(combatant);
+          continue;
+        }
+        try {
+          const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(match.creature_id)}`);
+          enriched.push(mergeAonDetailsIntoCombatant(combatant, payload.creature || match));
+        } catch (_error) {
+          enriched.push({
+            ...combatant,
+            detail: [
+              combatant.detail || "",
+              `AoN detail fetch failed for ${match.name}. Use the Find Monster picker to retry.`,
+            ].filter(Boolean).join("\n\n"),
+          });
+        }
+      }
+      return enriched;
+    }
+
+    async function refreshMonsterCombatantsFromAon() {
+      if (!aonCreatures.length || !currentCombat.combatants?.length) return;
+      let changed = false;
+      const refreshed = [];
+      for (const combatant of currentCombat.combatants) {
+        if (combatant.kind === "pc" || combatant.imageUrl) {
+          refreshed.push(combatant);
+          continue;
+        }
+        const match = findAonCreatureForCombatant(combatant);
+        if (!match) {
+          refreshed.push(combatant);
+          continue;
+        }
+        try {
+          const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(match.creature_id)}`);
+          const merged = mergeAonDetailsIntoCombatant(combatant, payload.creature || match);
+          refreshed.push(merged);
+          changed = changed || Boolean(merged.imageUrl);
+        } catch (_error) {
+          refreshed.push(combatant);
+        }
+      }
+      if (!changed) return;
+      currentCombat.combatants = labelDuplicateCombatants(refreshed);
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    function withCombatHp(combatant) {
+      const maxHp = Number.isFinite(combatant.maxHp) ? combatant.maxHp : firstNumber(combatant.hp);
+      const count = Math.max(1, Number.parseInt(combatant.count || 1, 10) || 1);
+      combatant.maxHp = maxHp;
+      if (!Array.isArray(combatant.conditions)) {
+        combatant.conditions = [];
+      }
+      if (Array.isArray(combatant.hpTrack) && combatant.hpTrack.length === count) {
+        return combatant;
+      }
+      const previous = Array.isArray(combatant.hpTrack) ? combatant.hpTrack : [];
+      combatant.hpTrack = Array.from({ length: count }, (_unused, index) => (
+        previous[index] !== undefined ? previous[index] : maxHp
+      ));
+      return combatant;
+    }
+
+    function duplicateCombatantLabel(index) {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      if (index < alphabet.length) return alphabet[index];
+      return String(index + 1);
+    }
+
+    function expandGroupedCombatants(combatants) {
+      return (combatants || []).flatMap((combatant) => {
+        withCombatHp(combatant);
+        const count = Math.max(1, Number.parseInt(combatant.count || 1, 10) || 1);
+        if (count === 1) {
+          return [{ ...combatant, count: 1, hpTrack: [combatant.hpTrack?.[0] ?? combatant.maxHp] }];
+        }
+        return Array.from({ length: count }, (_unused, index) => ({
+          ...combatant,
+          id: `${combatant.id}-${index + 1}`,
+          count: 1,
+          hpTrack: [combatant.hpTrack?.[index] ?? combatant.maxHp],
+        }));
+      });
+    }
+
+    function labelDuplicateCombatants(combatants) {
+      const totals = new Map();
+      const seen = new Map();
+      (combatants || []).forEach((combatant) => {
+        if (combatant.kind === "pc") return;
+        const key = normalizeCreatureLookupName(combatant.name) || String(combatant.name || "");
+        totals.set(key, (totals.get(key) || 0) + 1);
+      });
+      return (combatants || []).map((combatant) => {
+        if (combatant.kind === "pc") return combatant;
+        const key = normalizeCreatureLookupName(combatant.name) || String(combatant.name || "");
+        const index = seen.get(key) || 0;
+        seen.set(key, index + 1);
+        return {
+          ...combatant,
+          instanceLabel: totals.get(key) > 1 ? duplicateCombatantLabel(index) : "",
+        };
+      });
+    }
+
+    function combatantDisplayName(combatant) {
+      return [combatant.name, combatant.instanceLabel].filter(Boolean).join(" ");
+    }
+
+    function syncActiveCombatExpansion() {
+      (currentCombat.combatants || []).forEach((combatant, index) => {
+        combatant.isExpanded = index === (currentCombat.activeIndex || 0);
+      });
+    }
+
+    function ensureCombatExpansion() {
+      const combatants = currentCombat.combatants || [];
+      if (!combatants.length) return;
+      if (!combatants.some((combatant) => combatant.isExpanded)) {
+        syncActiveCombatExpansion();
+      }
+    }
+
+    function parseCombatHeading(heading) {
+      const clean = normalizedCombatText(heading);
+      const match = clean.match(/^(.+?)\s+(CREATURE|HAZARD|TRAP)\s+(-?\d+)/i);
+      const rawName = (match?.[1] || clean).trim();
+      const countMatch = rawName.match(/\((\d+)\)\s*$/);
+      const name = rawName.replace(/\s*\(\d+\)\s*$/, "").trim();
+      return {
+        name: titleCaseName(name || rawName || "Unknown Combatant"),
+        count: countMatch ? Number.parseInt(countMatch[1], 10) : 1,
+        type: match?.[2] || "CREATURE",
+        level: match?.[3] || "",
+      };
+    }
+
+    function combatantFromBlock(block, room) {
+      const text = normalizedCombatText(block);
+      const headingMatch = text.match(/^([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+)/);
+      const heading = headingMatch?.[1] || text.split("\n")[0] || "Unknown Combatant";
+      const parsed = parseCombatHeading(heading);
+      const combatant = {
+        id: `${room.room_id || "room"}-${parsed.name}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || "",
+        roomTitle: room.title || "",
+        ...parsed,
+        initiative: combatStatValue(text, "Initiative"),
+        initiativeBonus: initiativeBonus({ initiative: combatStatValue(text, "Initiative") }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: combatStatValue(text, "AC"),
+        hp: combatStatValue(text, "HP"),
+        fort: combatStatValue(text, "Fort"),
+        ref: combatStatValue(text, "Ref"),
+        will: combatStatValue(text, "Will"),
+        speed: combatStatValue(text, "Speed"),
+        attacks: combatAttackLines(text),
+        abilities: combatAbilityLines(text),
+        detail: text,
+      };
+      return withCombatHp(combatant);
+    }
+
+    function combatBlocksFromEncounterText(encounterText) {
+      const text = normalizedCombatText(encounterText);
+      if (!text) return [];
+      const blockPattern = /([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+[\s\S]*?)(?=\n\n[A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+|$)/g;
+      const blocks = [];
+      for (const match of text.matchAll(blockPattern)) {
+        blocks.push(match[1].trim());
+      }
+      return blocks.length ? blocks : [text];
+    }
+
+    function combatantsFromRoom(room) {
+      const literal = roomLiteralParts(room);
+      const combatants = combatBlocksFromEncounterText(literal.gm)
+        .map((block) => combatantFromBlock(block, room))
+        .filter((combatant) => combatant.name && !/^No Encounter Text/i.test(combatant.name));
+      if (combatants.length) {
+        return combatants;
+      }
+      return (room.monsters || []).map((name) => ({
+        id: `${room.room_id || "room"}-${name}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || "",
+        roomTitle: room.title || "",
+        name: String(name || "Unknown Monster"),
+        count: 1,
+        type: "CREATURE",
+        level: "",
+        initiative: "",
+        initiativeBonus: 0,
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: "",
+        hp: "",
+        fort: "",
+        ref: "",
+        will: "",
+        speed: "",
+        attacks: [],
+        abilities: [],
+        traits: [],
+        content: "",
+        sourceUrl: "",
+        detail: "No literal encounter text is available for this monster yet.",
+      })).map(withCombatHp);
+    }
+
+    function renderCreaturePicker() {
+      const select = document.getElementById("combat-creature-select");
+      if (!select) return;
+      if (!aonCreatures.length) {
+        select.innerHTML = '<option value="">No PF2e creatures found</option>';
+        return;
+      }
+      select.innerHTML = aonCreatures.map((creature) => {
+        const badges = [
+          `Level ${creature.level}`,
+          creature.remastered ? "Remastered" : "",
+          creature.legacy ? "Legacy" : "",
+          creature.source || "",
+        ].filter(Boolean).join(" | ");
+        return `<option value="${escapeHtml(String(creature.creature_id))}">${escapeHtml(creature.name)} (${escapeHtml(badges)})</option>`;
+      }).join("");
+    }
+
+    async function loadAonCreatures(query = "") {
+      const note = document.getElementById("combat-creature-note");
+      try {
+        const payload = await fetchJson(`${endpoints.aonCreatures}?q=${encodeURIComponent(query)}&limit=40`);
+        aonCreatures = payload.items || [];
+        renderCreaturePicker();
+        if (note) {
+          note.textContent = aonCreatures.length
+            ? "PF2e creature list loaded from DMA's AoN index. Selecting one fetches the current AoN stat block and caches it locally."
+            : "No PF2e creatures matched that search.";
+        }
+        await refreshMonsterCombatantsFromAon();
+      } catch (error) {
+        aonCreatures = [];
+        renderCreaturePicker();
+        if (note) {
+          note.textContent = error.message || "Could not load the PF2e creature list.";
+        }
+      }
+    }
+
+    function combatantFromAonCreature(creature) {
+      const traits = (creature.traits || []).join(", ");
+      const attackLines = (creature.attacks || []).filter((line) => /^(Melee|Ranged|Damage)/i.test(line));
+      const abilityLines = (creature.attacks || []).filter((line) => !/^(Melee|Ranged|Damage)/i.test(line));
+      const sourceFlags = [
+        creature.remastered ? "Remastered" : "",
+        creature.legacy ? "Legacy content" : "",
+        creature.source ? `Source: ${creature.source}` : "",
+        creature.source_url || "",
+      ].filter(Boolean).join("\n");
+      const detail = [
+        sourceFlags,
+        traits ? `Traits: ${traits}` : "",
+        creature.content || "",
+      ].filter(Boolean).join("\n\n");
+      return withCombatHp({
+        id: `aon-${creature.creature_id}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: "AoN",
+        roomTitle: creature.remastered ? "PF2e Remastered source" : "PF2e source",
+        name: creature.name || "Unknown Creature",
+        count: 1,
+        type: "CREATURE",
+        level: creature.level ?? "",
+        traits: creature.traits || [],
+        content: creature.content || "",
+        sourceUrl: creature.source_url || "",
+        imageUrl: creature.image_url || "",
+        initiative: creature.perception ? `Perception ${creature.perception}` : "",
+        initiativeBonus: initiativeBonus({ initiative: creature.perception ? `Perception ${creature.perception}` : "" }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: creature.ac || "",
+        hp: creature.hp || "",
+        fort: creature.fort || "",
+        ref: creature.ref || "",
+        will: creature.will || "",
+        speed: creature.speed || "",
+        attacks: attackLines,
+        abilities: abilityLines,
+        detail,
+      });
+    }
+
+    function pcCombatDetail(sheet) {
+      const identity = sheet.identity || {};
+      const combat = sheet.combat || {};
+      const abilities = Object.fromEntries((sheet.abilities || []).map((ability) => [ability.key, ability.score]));
+      return [
+        `Player: ${sheet.player_name || "Unknown"}`,
+        `Character: ${sheet.character_name || "Unnamed PC"}`,
+        `Class: ${[identity.class_name, identity.level ? `level ${identity.level}` : ""].filter(Boolean).join(" ") || "not listed"}`,
+        `Ancestry: ${[identity.ancestry, identity.heritage].filter(Boolean).join(" / ") || "not listed"}`,
+        `Combat: AC ${formatValue(combat.ac)}, HP ${formatValue(combat.hp)}, Speed ${formatValue(combat.speed)}, Class DC ${formatValue(combat.class_dc)}`,
+        `Saves: Fort ${formatValue(combat.fortitude)}, Ref ${formatValue(combat.reflex)}, Will ${formatValue(combat.will)}`,
+        `Awareness: Perception ${formatValue(combat.perception)}, Initiative ${formatValue(combat.initiative)}`,
+        `Abilities: STR ${formatValue(abilities.str)}, DEX ${formatValue(abilities.dex)}, CON ${formatValue(abilities.con)}, INT ${formatValue(abilities.int)}, WIS ${formatValue(abilities.wis)}, CHA ${formatValue(abilities.cha)}`,
+        `Top skills: ${topSkills(sheet.skills, 8).join(", ") || "not listed"}`,
+        `Specials: ${compactList([...(sheet.specials || []), ...(sheet.resistances || [])], 12)}`,
+      ].join("\n");
+    }
+
+    function combatantFromPcSheet(sheet) {
+      const identity = sheet.identity || {};
+      const combat = sheet.combat || {};
+      const initiativeValue = Number.isFinite(combat.initiative) ? signedNumber(combat.initiative) : formatValue(combat.initiative);
+      return withCombatHp({
+        id: `pc-${sheet.id}`,
+        roomId: "Party",
+        roomTitle: "Player Characters",
+        name: sheet.character_name || sheet.player_name || "Unnamed PC",
+        playerName: sheet.player_name || "",
+        count: 1,
+        kind: "pc",
+        type: "PC",
+        level: identity.level ?? "",
+        traits: [identity.ancestry, identity.heritage, identity.class_name].filter(Boolean),
+        initiative: initiativeValue,
+        initiativeBonus: Number.isFinite(combat.initiative) ? combat.initiative : initiativeBonus({ initiative: initiativeValue }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: combat.ac || "",
+        hp: combat.hp || "",
+        maxHp: firstNumber(combat.hp),
+        fort: combat.fortitude || "",
+        ref: combat.reflex || "",
+        will: combat.will || "",
+        perception: combat.perception || "",
+        classDc: combat.class_dc || "",
+        speed: combat.speed || "",
+        attacks: [],
+        abilities: [],
+        detail: pcCombatDetail(sheet),
+        source: "PC Sheet",
+        portraitUrl: sheet.portrait || sheet.image?.url || "",
+      });
+    }
+
+    async function ensurePcSheetsLoaded() {
+      if (pcSheets.length) return;
+      await loadPcSheets();
+    }
+
+    function partyCombatants() {
+      return (pcSheets || []).map(combatantFromPcSheet);
+    }
+
+    function mergePartyCombatants(combatants) {
+      const existingIds = new Set((combatants || []).map((combatant) => combatant.id));
+      const party = partyCombatants().filter((combatant) => !existingIds.has(combatant.id));
+      return [...party, ...(combatants || [])];
+    }
+
+    function refreshPartyCombatantsFromSheets() {
+      if (!pcSheets.length || !currentCombat.combatants?.length) return;
+      const latestById = new Map(partyCombatants().map((combatant) => [combatant.id, combatant]));
+      currentCombat.combatants = currentCombat.combatants.map((combatant) => {
+        if (combatant.kind !== "pc" || !latestById.has(combatant.id)) {
+          return combatant;
+        }
+        const latest = latestById.get(combatant.id);
+        return {
+          ...latest,
+          initiativeRoll: combatant.initiativeRoll,
+          initiativeDie: combatant.initiativeDie,
+          hpTrack: combatant.hpTrack,
+          maxHp: combatant.maxHp ?? latest.maxHp,
+          conditions: combatant.conditions,
+          isExpanded: combatant.isExpanded,
+        };
+      });
+      currentCombat.combatants = labelDuplicateCombatants(currentCombat.combatants);
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    async function addPartyToCombat() {
+      await ensurePcSheetsLoaded();
+      const existingIds = new Set((currentCombat.combatants || []).map((combatant) => combatant.id));
+      const party = partyCombatants().filter((combatant) => !existingIds.has(combatant.id));
+      if (!party.length) {
+        renderCombatStatus(pcSheets.length ? "Party PCs are already in combat." : "No PC sheets are loaded yet.");
+        return;
+      }
+      currentCombat = {
+        roomId: currentCombat.roomId || "Party",
+        roomTitle: currentCombat.roomTitle || "Player Characters",
+        round: currentCombat.round || 1,
+        activeIndex: currentCombat.combatants?.length ? currentCombat.activeIndex || 0 : 0,
+        combatants: labelDuplicateCombatants([...party, ...(currentCombat.combatants || [])]),
+      };
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    async function addSelectedAonCreature() {
+      const select = document.getElementById("combat-creature-select");
+      const note = document.getElementById("combat-creature-note");
+      const creatureId = select?.value || "";
+      if (!creatureId) {
+        if (note) note.textContent = "Select a PF2e creature first.";
+        return;
+      }
+      if (note) note.textContent = "Fetching PF2e stat block from Archives of Nethys...";
+      try {
+        const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(creatureId)}`);
+        const combatant = combatantFromAonCreature(payload.creature || {});
+        currentCombat = {
+          roomId: currentCombat.roomId || "Custom combat",
+          roomTitle: currentCombat.roomTitle || "Mixed encounter",
+          round: currentCombat.round || 1,
+          activeIndex: currentCombat.combatants?.length ? currentCombat.activeIndex || 0 : 0,
+          combatants: labelDuplicateCombatants([...(currentCombat.combatants || []), combatant]),
+        };
+        syncActiveCombatExpansion();
+        commitCombatState();
+        if (note) {
+          const source = payload.creature?.source || "AoN";
+          const status = payload.creature?.remastered ? "remastered PF2e" : "PF2e";
+          note.textContent = `Added ${payload.creature?.name || "creature"} from ${source} (${status}).`;
+        }
+      } catch (error) {
+        if (note) note.textContent = error.message || "Could not fetch that PF2e creature from AoN.";
+      }
+    }
+
+    function activeOpenRoom() {
+      const roomId = openRoomId();
+      if (!roomId || !activeRoomKey) return null;
+      return (activeRoomKey.rooms || []).find((room) => (
+        String(room.room_id || "").toLowerCase() === String(roomId).toLowerCase()
+      )) || null;
+    }
+
+    function renderCombatStatus(message) {
+      document.getElementById("combat-meta").innerHTML = `<span class="stat-badge">${escapeHtml(message)}</span>`;
+    }
+
+    async function setCombatFromRoom(room, { append = false } = {}) {
+      if (!room) {
+        renderCombatStatus("Open a room card in Map Room first.");
+        return;
+      }
+      let combatants = combatantsFromRoom(room);
+      if (!combatants.length) {
+        renderCombatStatus(`No monsters or encounter text found for ${room.room_id || "this room"}.`);
+        return;
+      }
+      renderCombatStatus(`Loading combat details for ${room.room_id || "this room"}...`);
+      await ensurePcSheetsLoaded();
+      combatants = await enrichCombatantsFromAon(combatants);
+      combatants = labelDuplicateCombatants(expandGroupedCombatants(combatants));
+      const combinedCombatants = append
+        ? labelDuplicateCombatants([...(currentCombat.combatants || []), ...combatants])
+        : labelDuplicateCombatants(mergePartyCombatants(combatants));
+      currentCombat = {
+        roomId: room.room_id || currentCombat.roomId,
+        roomTitle: room.title || currentCombat.roomTitle,
+        round: append ? currentCombat.round || 1 : 1,
+        activeIndex: append ? currentCombat.activeIndex || 0 : 0,
+        combatants: combinedCombatants,
+      };
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    function compactDefenseLine(combatant) {
+      return [
+        combatant.ac ? `AC ${combatant.ac}` : "",
+        combatant.fort ? `Fort ${combatant.fort}` : "",
+        combatant.ref ? `Ref ${combatant.ref}` : "",
+        combatant.will ? `Will ${combatant.will}` : "",
+      ].filter(Boolean).join("\n");
+    }
+
+    function fallbackDamageLine(combatant) {
+      const detail = normalizedCombatText(combatant.detail || "");
+      const simpleDamage = detail.match(/\bDamage\s+([^;\n]+)/i);
+      return simpleDamage ? `Damage ${simpleDamage[1].trim()}` : "";
+    }
+
+    function renderCombatConditions(combatant, combatantIndex) {
+      const conditions = Array.isArray(combatant.conditions) ? combatant.conditions : [];
+      const badges = conditions.map((condition, conditionIndex) => {
+        const value = condition.value ? ` ${condition.value}` : "";
+        const timing = condition.timing ? ` · ${condition.timing}` : "";
+        return `
+          <span class="combat-condition-badge">
+            ${escapeHtml(titleCaseName(condition.name || "") + value + timing)}
+            <button type="button" class="ghost" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>
+          </span>
+        `;
+      }).join("");
+      return `
+        <div class="combat-condition-stack">
+          <div class="combat-condition-badges">${badges || '<span class="empty">No conditions.</span>'}</div>
+          <div class="combat-condition-add">
+            <select data-combat-condition-select="${combatantIndex}">${conditionOptions()}</select>
+            <input data-combat-condition-value="${combatantIndex}" placeholder="value" />
+            <button type="button" class="ghost combat-hp-btn" data-combat-condition-add="${combatantIndex}">Add</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCombatHp(combatant, combatantIndex) {
+      withCombatHp(combatant);
+      const defenses = compactDefenseLine(combatant);
+      const hpRows = (combatant.hpTrack || []).map((currentHp, targetIndex) => {
+        const label = (combatant.hpTrack || []).length > 1 ? `${targetIndex + 1}: ` : "";
+        const max = combatant.maxHp ?? firstNumber(combatant.hp);
+        return `
+          <div class="combat-hp-line">
+            <span class="combat-hp-value">${escapeHtml(label)}HP</span>
+            <input class="combat-hp-input" type="number" value="${escapeHtml(currentHp ?? "")}" data-combat-hp-current="${combatantIndex}" data-combat-target="${targetIndex}" />
+            <span class="combat-hp-value">Max</span>
+            <input class="combat-hp-input" type="number" value="${escapeHtml(max ?? "")}" data-combat-hp-max="${combatantIndex}" />
+            <div class="combat-hp-buttons">
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-1">-1</button>
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-5">-5</button>
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-10">-10</button>
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="1">+1</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+      return `
+        <div class="combat-hp-stack">
+          ${hpRows || '<span class="combat-hp-value">-</span>'}
+          <div class="combat-defense-line">${escapeHtml(defenses || "No defenses parsed.")}</div>
+          ${renderCombatConditions(combatant, combatantIndex)}
+        </div>
+      `;
+    }
+
+    function renderPcCombatHp(combatant, combatantIndex) {
+      withCombatHp(combatant);
+      const currentHp = combatant.hpTrack?.[0];
+      const max = combatant.maxHp ?? firstNumber(combatant.hp);
+      const conditions = Array.isArray(combatant.conditions) ? combatant.conditions : [];
+      const badges = conditions.map((condition, conditionIndex) => {
+        const value = condition.value ? ` ${condition.value}` : "";
+        const timing = condition.timing ? ` · ${condition.timing}` : "";
+        return `
+          <span class="combat-condition-badge">
+            ${escapeHtml(titleCaseName(condition.name || "") + value + timing)}
+            <button type="button" class="ghost" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>
+          </span>
+        `;
+      }).join("");
+      return `
+        <div class="combat-hp-line">
+          <span class="combat-hp-value">HP</span>
+          <input class="combat-hp-input" type="number" value="${escapeHtml(currentHp ?? "")}" data-combat-hp-current="${combatantIndex}" data-combat-target="0" />
+          <span class="combat-hp-value">Max</span>
+          <input class="combat-hp-input" type="number" value="${escapeHtml(max ?? "")}" data-combat-hp-max="${combatantIndex}" />
+          <div class="combat-hp-buttons">
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="0" data-combat-delta="-1">-1</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="0" data-combat-delta="-5">-5</button>
+            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="0" data-combat-delta="1">+1</button>
+          </div>
+        </div>
+        <div class="combat-condition-badges">${badges || '<span class="empty">No conditions.</span>'}</div>
+        <details class="combat-pc-condition-drawer">
+          <summary>Add condition</summary>
+          <div class="combat-condition-add">
+            <select data-combat-condition-select="${combatantIndex}">${conditionOptions()}</select>
+            <input data-combat-condition-value="${combatantIndex}" placeholder="value" />
+            <button type="button" class="ghost combat-hp-btn" data-combat-condition-add="${combatantIndex}">Add</button>
+          </div>
+        </details>
+      `;
+    }
+
+    function renderActionLines(lines) {
+      if (!lines?.length) return '<div class="combat-action-line">-</div>';
+      return lines
+        .map((line) => `<div class="combat-action-line">${escapeHtml(line)}</div>`)
+        .join("");
+    }
+
+    function renderCombatDetail(combatant) {
+      const detail = normalizedCombatText(combatant.detail || "");
+      if (!detail) {
+        return "No detailed stat text loaded for this combatant.";
+      }
+      return detail;
+    }
+
+    function traitText(combatant) {
+      return (combatant.traits || []).join(", ");
+    }
+
+    function recommendedKnowledgeSkill(combatant) {
+      const traits = traitText(combatant).toLowerCase();
+      if (traits.includes("undead") || traits.includes("haunt")) return "Religion";
+      if (traits.includes("construct")) return "Arcana or Crafting";
+      if (traits.includes("fey") || traits.includes("animal") || traits.includes("plant")) return "Nature";
+      if (traits.includes("aberration") || traits.includes("ooze")) return "Occultism";
+      if (traits.includes("humanoid")) return "Society";
+      return "Relevant Recall Knowledge skill";
+    }
+
+    function recallKnowledgeDc(combatant) {
+      const level = Number.parseInt(combatant.level, 10);
+      if (!Number.isFinite(level)) return "level-based DC";
+      const dcs = {
+        "-1": 13,
+        0: 14,
+        1: 15,
+        2: 16,
+        3: 18,
+        4: 19,
+        5: 20,
+        6: 22,
+        7: 23,
+        8: 24,
+        9: 26,
+        10: 27,
+      };
+      return dcs[level] || `${14 + level} or level-based DC`;
+    }
+
+    function monsterRoleGuess(combatant) {
+      const text = normalizedCombatText(`${combatant.detail || ""}\n${traitText(combatant)}`).toLowerCase();
+      if (text.includes("ranged") || text.includes("spell")) return "ranged pressure / special abilities";
+      if (text.includes("grab") || text.includes("constrict")) return "lockdown grappler";
+      if (text.includes("fly") || text.includes("flying")) return "mobile skirmisher";
+      if (text.includes("stealth") || text.includes("sneak")) return "ambusher";
+      if (text.includes("mindless")) return "direct attacker";
+      return "front-line threat";
+    }
+
+    function renderCombatTactics(combatant) {
+      const attacks = combatAttackList(combatant);
+      const abilities = combatAbilityList(combatant);
+      const role = monsterRoleGuess(combatant);
+      return [
+        `Best-guess role: ${role}.`,
+        attacks.length ? `Open with: ${attacks[0]}.` : "Open by closing distance, threatening the nearest vulnerable PC, or using the room's terrain.",
+        abilities.length ? `Use special option when relevant: ${abilities[0]}.` : "If no special ability is obvious, use simple pressure: flank, block exits, or focus on isolated PCs.",
+        "Morale guess: unintelligent creatures fight for food/territory; intelligent foes retreat, call allies, bargain, or exploit prepared terrain if the room text supports it.",
+      ].join("\n");
+    }
+
+    function renderCombatAppearance(combatant) {
+      const traits = traitText(combatant);
+      const level = combatant.level !== "" && combatant.level !== undefined ? `Level ${combatant.level}` : "Unknown level";
+      return [
+        `What it looks like: ${combatant.aonName || combatant.name} is a ${[level, traits].filter(Boolean).join(", ")} creature. Use its name, traits, attacks, and room context to describe size, movement, weapons, and unnatural features.`,
+        `At first glance: PCs can usually tell obvious body shape, equipment, movement mode, visible weapons, and whether it looks bestial, undead, constructed, fey, or humanoid.`,
+        "Do not reveal yet: exact AC, HP, saves, weaknesses, resistances, reactions, or hidden abilities unless the PCs learn them through play or Recall Knowledge.",
+      ].join("\n");
+    }
+
+    function renderCombatRecallKnowledge(combatant) {
+      const skill = recommendedKnowledgeSkill(combatant);
+      const dc = recallKnowledgeDc(combatant);
+      const attacks = combatAttackList(combatant).slice(0, 2).join("; ");
+      const abilities = combatAbilityList(combatant).slice(0, 2).join("; ");
+      return [
+        `Suggested skill: ${skill}. Suggested DC: ${dc}.`,
+        `Success: identify ${combatant.aonName || combatant.name} and reveal one useful known attribute, such as strongest attack, notable defense, movement, or a signature ability.`,
+        attacks ? `Good success reveal: ${attacks}.` : "",
+        `Critical success: add a second useful fact, such as a weakness, resistance, reaction trigger, best save to target, or dangerous special action.`,
+        abilities ? `Good critical-success reveal: ${abilities}.` : "",
+        "Failure: give no useful tactical certainty, or only a vague creature category. Critical failure: give a plausible but wrong tactical assumption.",
+      ].filter(Boolean).join("\n");
+    }
+
+    function renderCombatReference(combatant) {
+      const activeReference = combatant.activeReference || "";
+      const references = {
+        strategy: {
+          label: "Strategy",
+          title: "Suggested Strategy",
+          content: renderCombatTactics(combatant),
+        },
+        appearance: {
+          label: "Look",
+          title: "Appearance / First Glance",
+          content: renderCombatAppearance(combatant),
+        },
+        recall: {
+          label: "Recall",
+          title: "Recall Knowledge",
+          content: renderCombatRecallKnowledge(combatant),
+        },
+        details: {
+          label: "AoN",
+          title: `Details${combatant.source ? ` · ${combatant.source}` : ""}`,
+          content: renderCombatDetail(combatant),
+        },
+      };
+      const panel = references[activeReference];
+      return `
+        <div class="combat-reference-stack">
+          <div class="combat-reference-pills">
+            ${Object.entries(references).map(([key, reference]) => `
+              <button
+                type="button"
+                class="ghost combat-reference-pill ${activeReference === key ? "is-active" : ""}"
+                data-combat-ref="${escapeHtml(String(combatant.id || ""))}"
+                data-combat-ref-key="${escapeHtml(key)}"
+              >${escapeHtml(reference.label)}</button>
+            `).join("")}
+          </div>
+          ${panel ? `
+            <div class="combat-reference-panel">
+              <h4>${escapeHtml(panel.title)}</h4>
+              <pre>${escapeHtml(panel.content)}</pre>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function combatAttackList(combatant) {
+      return combatant.attacks?.length ? combatant.attacks : [fallbackDamageLine(combatant)].filter(Boolean);
+    }
+
+    function combatAbilityList(combatant) {
+      return combatant.abilities || [];
+    }
+
+    function renderCombatInitiative(combatant, combatantIndex) {
+      const bonus = initiativeBonus(combatant);
+      combatant.initiativeBonus = bonus;
+      const hasDie = Number.isFinite(combatant.initiativeDie);
+      const rollText = Number.isFinite(combatant.initiativeRoll) && hasDie
+        ? `${combatant.initiativeRoll} (${combatant.initiativeDie}${signedNumber(bonus)})`
+        : "";
+      return `
+        <div class="combat-init-cell">
+          <input class="combat-init-input" type="number" value="${escapeHtml(Number.isFinite(combatant.initiativeRoll) ? String(combatant.initiativeRoll) : "")}" placeholder="${escapeHtml(signedNumber(bonus))}" data-combat-init-manual="${combatantIndex}" />
+          <div class="combat-init-roll">${escapeHtml(rollText || shortInitiativeLabel(combatant, bonus))}</div>
+          <button type="button" class="ghost combat-hp-btn" data-combat-init-roll="${combatantIndex}">Roll</button>
+        </div>
+      `;
+    }
+
+    function adjustCombatHp(combatantIndex, targetIndex, delta) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      withCombatHp(combatant);
+      if (!combatant.hpTrack || combatant.hpTrack[targetIndex] === undefined) return;
+      const current = combatant.hpTrack[targetIndex];
+      if (current === null || Number.isNaN(current)) return;
+      combatant.hpTrack[targetIndex] = Math.max(0, current + delta);
+      commitCombatState();
+    }
+
+    function setCombatHpCurrent(combatantIndex, targetIndex, value) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      withCombatHp(combatant);
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed)) return;
+      combatant.hpTrack[targetIndex] = Math.max(0, parsed);
+      commitCombatState();
+    }
+
+    function setCombatHpMax(combatantIndex, value) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed)) return;
+      const oldMax = Number.isFinite(combatant.maxHp) ? combatant.maxHp : firstNumber(combatant.hp);
+      combatant.maxHp = Math.max(0, parsed);
+      combatant.hp = String(combatant.maxHp);
+      combatant.hpTrack = (combatant.hpTrack || []).map((current) => {
+        if (current === oldMax || current === null || current === undefined) {
+          return combatant.maxHp;
+        }
+        return Math.min(current, combatant.maxHp);
+      });
+      commitCombatState();
+    }
+
+    function addCombatCondition(combatantIndex) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const select = document.querySelector(`[data-combat-condition-select="${combatantIndex}"]`);
+      const input = document.querySelector(`[data-combat-condition-value="${combatantIndex}"]`);
+      const name = select?.value || "frightened";
+      const value = (input?.value || conditionValueHints[name] || "").trim();
+      combatant.conditions = Array.isArray(combatant.conditions) ? combatant.conditions : [];
+      combatant.conditions.push({
+        name,
+        value,
+        timing: "turn",
+      });
+      commitCombatState();
+    }
+
+    function conditionTurnsRemaining(condition) {
+      const value = String(condition?.value || "").trim();
+      return /^\d+$/.test(value) ? Number.parseInt(value, 10) : null;
+    }
+
+    function tickConditionsForCombatant(combatant) {
+      if (!combatant || !Array.isArray(combatant.conditions)) return;
+      combatant.conditions = combatant.conditions
+        .map((condition) => {
+          const turns = conditionTurnsRemaining(condition);
+          if (turns === null) return condition;
+          return {
+            ...condition,
+            value: String(Math.max(0, turns - 1)),
+          };
+        })
+        .filter((condition) => conditionTurnsRemaining(condition) !== 0);
+    }
+
+    function removeCombatCondition(combatantIndex, conditionIndex) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant || !Array.isArray(combatant.conditions)) return;
+      combatant.conditions.splice(conditionIndex, 1);
+      commitCombatState();
+    }
+
+    function activeCombatant() {
+      const combatants = currentCombat.combatants || [];
+      if (!combatants.length) return null;
+      const index = Math.min(Math.max(currentCombat.activeIndex || 0, 0), combatants.length - 1);
+      currentCombat.activeIndex = index;
+      return combatants[index];
+    }
+
+    function renderCombatTurnPanel() {
+      const host = document.getElementById("combat-turn-meta");
+      if (!host) return;
+      const active = activeCombatant();
+      host.innerHTML = `
+        <span class="stat-badge">Round ${escapeHtml(currentCombat.round || 1)}</span>
+        <span class="stat-badge">${active ? `Turn: ${escapeHtml(active.name)}` : "No active turn"}</span>
+        ${active?.conditions?.length ? `<span class="stat-badge">Conditions: ${escapeHtml(active.conditions.map((condition) => condition.name).join(", "))}</span>` : ""}
+      `;
+      renderShellStatus(panelSnapshot);
+    }
+
+    function nextCombatTurn() {
+      const combatants = currentCombat.combatants || [];
+      if (!combatants.length) return;
+      tickConditionsForCombatant(combatants[currentCombat.activeIndex || 0]);
+      currentCombat.activeIndex = (currentCombat.activeIndex || 0) + 1;
+      if (currentCombat.activeIndex >= combatants.length) {
+        currentCombat.activeIndex = 0;
+        currentCombat.round = (currentCombat.round || 1) + 1;
+      }
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    function previousCombatTurn() {
+      const combatants = currentCombat.combatants || [];
+      if (!combatants.length) return;
+      currentCombat.activeIndex = (currentCombat.activeIndex || 0) - 1;
+      if (currentCombat.activeIndex < 0) {
+        currentCombat.activeIndex = combatants.length - 1;
+        currentCombat.round = Math.max(1, (currentCombat.round || 1) - 1);
+      }
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    function resetCombatRound() {
+      currentCombat.round = 1;
+      currentCombat.activeIndex = 0;
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    function toggleCombatantCard(combatantIndex) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const shouldOpen = !combatant.isExpanded;
+      (currentCombat.combatants || []).forEach((item) => {
+        item.isExpanded = false;
+      });
+      combatant.isExpanded = shouldOpen;
+      commitCombatState();
+    }
+
+    function rollCombatInitiative(combatantIndex) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const die = 1 + Math.floor(Math.random() * 20);
+      const bonus = initiativeBonus(combatant);
+      combatant.initiativeBonus = bonus;
+      combatant.initiativeDie = die;
+      combatant.initiativeRoll = die + bonus;
+      commitCombatState();
+    }
+
+    function setManualCombatInitiative(combatantIndex, value) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      const trimmed = String(value || "").trim();
+      if (!trimmed) {
+        combatant.initiativeRoll = null;
+        combatant.initiativeDie = null;
+        commitCombatState();
+        return;
+      }
+      const parsed = Number.parseInt(trimmed, 10);
+      if (!Number.isFinite(parsed)) return;
+      combatant.initiativeRoll = parsed;
+      combatant.initiativeDie = null;
+      combatant.initiativeBonus = initiativeBonus(combatant);
+      commitCombatState();
+    }
+
+    function rollAllCombatInitiative() {
+      (currentCombat.combatants || []).forEach((_combatant, index) => {
+        const combatant = currentCombat.combatants[index];
+        const die = 1 + Math.floor(Math.random() * 20);
+        const bonus = initiativeBonus(combatant);
+        combatant.initiativeBonus = bonus;
+        combatant.initiativeDie = die;
+        combatant.initiativeRoll = die + bonus;
+      });
+      commitCombatState();
+    }
+
+    function sortCombatByInitiative() {
+      currentCombat.combatants = [...(currentCombat.combatants || [])].sort((left, right) => {
+        const leftRoll = Number.isFinite(left.initiativeRoll) ? left.initiativeRoll : -999;
+        const rightRoll = Number.isFinite(right.initiativeRoll) ? right.initiativeRoll : -999;
+        if (rightRoll !== leftRoll) return rightRoll - leftRoll;
+        return initiativeBonus(right) - initiativeBonus(left);
+      });
+      currentCombat.activeIndex = 0;
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
+    function combatantHpSummary(combatant) {
+      withCombatHp(combatant);
+      const current = combatant.hpTrack?.[0];
+      return `${formatValue(current)}/${formatValue(combatant.maxHp)}`;
+    }
+
+    function combatantConditionSummary(combatant, { removable = false, combatantIndex = null } = {}) {
+      const conditions = Array.isArray(combatant.conditions) ? combatant.conditions : [];
+      if (!conditions.length) return '<span class="empty">No effects</span>';
+      return conditions.map((condition, conditionIndex) => {
+        const value = condition.value ? ` ${condition.value}` : "";
+        const remove = removable
+          ? `<button type="button" class="ghost" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>`
+          : "";
+        return `<span class="combat-condition-badge">${escapeHtml(titleCaseName(condition.name || "") + value)}${remove}</span>`;
+      }).join("");
+    }
+
+    function renderCombatantCard(combatant, combatantIndex) {
+      withCombatHp(combatant);
+      const levelLabel = combatant.level !== "" && combatant.level !== undefined
+        ? `Level ${combatant.level}`
+        : "";
+      const active = combatantIndex === (currentCombat.activeIndex || 0);
+      const expanded = Boolean(combatant.isExpanded);
+      const displayName = combatantDisplayName(combatant);
+      const duplicateBadge = combatant.instanceLabel
+        ? `<span class="combat-duplicate-badge">${escapeHtml(combatant.instanceLabel)}</span>`
+        : "";
+      const cardBody = combatant.kind === "pc"
+        ? renderPcCombatantBody(combatant, combatantIndex)
+        : renderMonsterCombatantBody(combatant, combatantIndex);
+      return `
+        <article class="combat-card ${active ? "is-active" : ""}">
+          <button type="button" class="combat-card-summary" data-combat-toggle="${combatantIndex}">
+            <span class="combat-card-name">
+              ${duplicateBadge}
+              <strong>${escapeHtml(displayName)}</strong>
+              <span class="subtle">${escapeHtml([levelLabel, active ? "Active turn" : ""].filter(Boolean).join(" · "))}</span>
+            </span>
+            <span class="combat-card-summary-stat">HP ${escapeHtml(combatantHpSummary(combatant))}</span>
+            <span class="combat-card-summary-stat">AC ${escapeHtml(formatValue(combatant.ac))}</span>
+            <span class="combat-card-status">${combatantConditionSummary(combatant)}</span>
+          </button>
+          ${expanded ? cardBody : ""}
+        </article>
+      `;
+    }
+
+    function combatantInitials(combatant) {
+      return String(combatantDisplayName(combatant) || "?")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() || "")
+        .join("") || "?";
+    }
+
+    function renderCombatPortrait(combatant) {
+      const imageUrl = combatant.kind === "pc"
+        ? combatant.portraitUrl
+        : combatant.imageUrl;
+      const displayName = combatantDisplayName(combatant);
+      if (!imageUrl) {
+        return `<div class="combat-portrait-placeholder" aria-label="No portrait for ${escapeHtml(displayName)}">${escapeHtml(combatantInitials(combatant))}</div>`;
+      }
+      const className = combatant.kind === "pc"
+        ? "combat-portrait"
+        : "combat-portrait is-monster";
+      return `<img class="${className}" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(displayName)} portrait" loading="lazy" />`;
+    }
+
+    function renderMonsterCombatantBody(combatant, combatantIndex) {
+      if (combatant.kind === "pc") {
+        return "";
+      }
+      return `
+        <div class="combat-card-body">
+          <div>${renderCombatPortrait(combatant)}</div>
+          <div>${renderCombatInitiative(combatant, combatantIndex)}</div>
+          <div>${renderCombatHp(combatant, combatantIndex)}</div>
+          <div>
+            <strong>Speed</strong><div>${escapeHtml(combatant.speed || "-")}</div>
+          </div>
+          <div><strong>Attacks</strong><div class="combat-action-list">${renderActionLines(combatAttackList(combatant))}</div></div>
+          <div><strong>Abilities</strong><div class="combat-action-list">${renderActionLines(combatAbilityList(combatant))}</div></div>
+          <div class="combat-card-reference">${renderCombatReference(combatant)}</div>
+        </div>
+      `;
+    }
+
+    function renderPcCombatChecks(combatant) {
+      const signedStat = (label, value) => (
+        value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value))
+          ? `${label} ${signedNumber(Number(value))}`
+          : ""
+      );
+      return [
+        combatant.ac ? `AC ${combatant.ac}` : "",
+        signedStat("Fort", combatant.fort),
+        signedStat("Ref", combatant.ref),
+        signedStat("Will", combatant.will),
+        signedStat("Perc", combatant.perception),
+        combatant.classDc ? `Class DC ${combatant.classDc}` : "",
+      ].filter(Boolean).map((line) => `<span class="combat-pc-pill">${escapeHtml(line)}</span>`).join("");
+    }
+
+    function renderPcCombatantBody(combatant, combatantIndex) {
+      return `
+        <div class="combat-card-body is-pc">
+          <div>${renderCombatPortrait(combatant)}</div>
+          <div>${renderCombatInitiative(combatant, combatantIndex)}</div>
+          <div class="combat-pc-hp">${renderPcCombatHp(combatant, combatantIndex)}</div>
+          <div><strong>Speed</strong><div>${escapeHtml(combatant.speed || "-")}</div></div>
+          <div class="combat-pc-checks">${renderPcCombatChecks(combatant) || '<span class="empty">No PC stats yet.</span>'}</div>
+        </div>
+      `;
+    }
+
+    function renderInitiativeStrip(combatants) {
+      return `
+        <div class="combat-initiative-strip">
+          ${combatants.map((combatant, index) => `
+            <button type="button" class="combat-strip-chip ${index === (currentCombat.activeIndex || 0) ? "is-active" : ""}" data-combat-toggle="${index}">
+              <strong>${escapeHtml(combatantDisplayName(combatant))}</strong>
+              <span>${Number.isFinite(combatant.initiativeRoll) ? `Init ${combatant.initiativeRoll}` : shortInitiativeLabel(combatant, initiativeBonus(combatant))}</span>
+              <span>HP ${escapeHtml(combatantHpSummary(combatant))}</span>
+            </button>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderCombatPanel() {
+      const roster = document.getElementById("combat-roster");
+      const meta = document.getElementById("combat-meta");
+      const combatants = currentCombat.combatants || [];
+      if (!combatants.length) {
+        meta.innerHTML = '<span class="stat-badge">No combat loaded</span>';
+        roster.innerHTML = '<div class="empty">Open a room in Map Room, then start combat from it.</div>';
+        renderCombatTurnPanel();
+        return;
+      }
+      if ((currentCombat.activeIndex || 0) >= combatants.length) {
+        currentCombat.activeIndex = Math.max(0, combatants.length - 1);
+      }
+      ensureCombatExpansion();
+      const pcTotal = combatants.filter((combatant) => combatant.kind === "pc").length;
+      const foeTotal = combatants.filter((combatant) => combatant.kind !== "pc").length;
+      meta.innerHTML = `
+        <span class="stat-badge">${escapeHtml(currentCombat.roomId || "Custom combat")} ${escapeHtml(currentCombat.roomTitle || "")}</span>
+        <span class="stat-badge">${pcTotal} PC${pcTotal === 1 ? "" : "s"}</span>
+        <span class="stat-badge">${foeTotal} foe${foeTotal === 1 ? "" : "s"}</span>
+      `;
+      renderCombatTurnPanel();
+      roster.innerHTML = `
+        ${renderInitiativeStrip(combatants)}
+        <div class="combat-card-list">${combatants.map(renderCombatantCard).join("")}</div>
+      `;
+    }
+
+    function roomExists(roomId) {
+      const normalized = String(roomId || "").toLowerCase();
+      return Boolean((activeRoomKey?.rooms || []).some((room) => (
+        String(room.room_id || "").toLowerCase() === normalized
+      )));
+    }
+
+    function roomReferenceMarkup(roomId) {
+      const label = escapeHtml(roomId);
+      if (!roomExists(roomId)) {
+        return `<span class="room-ref">${label}</span>`;
+      }
+      return `<button type="button" class="room-ref" data-room-link="${label}">${label}</button>`;
+    }
+
+    function formatLiteralText(value, mode) {
+      let html = escapeHtml(value || "");
+      html = html.replace(
+        /\b(Creatures?|Hazards?|Traps?|Haunts?|Treasure|Development|Morale|Tactics|Rewards?|Secret Doors?|Side Quest|Environmental Cues):/g,
+        "<b>$1:</b>",
+      );
+      html = html.replace(/\b(DC\s+\d+)\b/g, '<span class="room-dc">$1</span>');
+      if (mode === "encounter") {
+        html = html.replace(
+          /^([A-Z][A-Z0-9'’(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+[–−-]?\d+)/gm,
+          "<b>$1</b>",
+        );
+        html = html.replace(
+          /\b(Pathfinder Bestiary\s+\d+|Initiative|Perception|AC|Fort|Ref|Will|HP|Speed|Melee|Ranged|Damage)\b/g,
+          "<b>$1</b>",
+        );
+      }
+      html = html.split(/(<[^>]+>)/g).map((part) => {
+        if (part.startsWith("<")) {
+          return part;
+        }
+        return part.replace(/\b([A-Z]\d+[A-Za-z]?)\b(?=\s|\.|,|;|:|\))/g, (_, roomId) => (
+          roomReferenceMarkup(roomId)
+        ));
+      }).join("");
+      return html;
+    }
+
+    function renderRoomTextToggle() {
+      return '<button type="button" class="ghost" data-room-mode-toggle>Show Literal PDF Text</button>';
+    }
+
+    function updateRoomBackButton() {
+      const button = document.getElementById("map-room-back");
+      if (!button) {
+        return;
+      }
+      button.disabled = roomNavigationStack.length === 0;
+    }
+
+    function currentOpenRoomId() {
+      const openCard = document.querySelector("#map-room-list .room-card[open]");
+      return openCard?.dataset.roomId || "";
+    }
+
+    function currentOpenRoomMode() {
+      const openCard = document.querySelector("#map-room-list .room-card[open]");
+      return openCard?.dataset.roomTextMode || "summary";
+    }
+
+    function roomCardFor(roomId) {
+      const normalized = String(roomId || "").toLowerCase();
+      return Array.from(document.querySelectorAll("#map-room-list .room-card")).find((card) => (
+        String(card.dataset.roomId || "").toLowerCase() === normalized
+      ));
+    }
+
+    function setRoomCardMode(card, mode) {
+      const nextMode = mode === "literal" ? "literal" : "summary";
+      const button = card.querySelector("[data-room-mode-toggle]");
+      card.dataset.roomTextMode = nextMode;
+      card.querySelector('[data-room-mode-panel="summary"]').hidden = nextMode !== "summary";
+      card.querySelector('[data-room-mode-panel="literal"]').hidden = nextMode !== "literal";
+      if (button) {
+        button.textContent = nextMode === "literal" ? "Show Summary" : "Show Literal PDF Text";
+      }
+    }
+
+    function openRoomCard(roomId, { pushHistory = true, mode = null } = {}) {
+      const targetRoomId = String(roomId || "").trim();
+      if (!targetRoomId || !activeRoomKey) {
+        return false;
+      }
+      if (!roomCardFor(targetRoomId)) {
+        const search = document.getElementById("map-room-search");
+        const tagFilters = document.querySelectorAll(".map-room-filters input[type='checkbox']:checked");
+        if (search.value || tagFilters.length) {
+          search.value = "";
+          tagFilters.forEach((checkbox) => {
+            checkbox.checked = false;
+          });
+          renderRoomKey();
+        }
+      }
+      const target = roomCardFor(targetRoomId);
+      if (!target) {
+        return false;
+      }
+      const previousRoomId = currentOpenRoomId();
+      if (pushHistory && previousRoomId && previousRoomId.toLowerCase() !== targetRoomId.toLowerCase()) {
+        roomNavigationStack.push({
+          roomId: previousRoomId,
+          mode: currentOpenRoomMode(),
+        });
+      }
+      document.querySelectorAll("#map-room-list .room-card").forEach((card) => {
+        card.open = false;
+      });
+      target.open = true;
+      if (mode) {
+        setRoomCardMode(target, mode);
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      updateRoomBackButton();
+      return true;
+    }
+
+    function navigateBackRoom() {
+      const previous = roomNavigationStack.pop();
+      if (!previous) {
+        updateRoomBackButton();
+        return;
+      }
+      openRoomCard(previous.roomId || previous, {
+        pushHistory: false,
+        mode: previous.mode || null,
+      });
     }
 
     function firstPresent(...values) {
@@ -3766,6 +6444,25 @@
       return tags;
     }
 
+    function activeRoomTagFilters() {
+      return Array.from(document.querySelectorAll(".map-room-filters input[type='checkbox']:checked"))
+        .map((checkbox) => checkbox.value);
+    }
+
+    function roomMatchesTag(room, tag) {
+      if (tag === "secret") return Boolean((room.secret_doors || []).length);
+      if (tag === "loot") return Boolean((room.loot || []).length);
+      if (tag === "monsters") return Boolean((room.monsters || []).length);
+      if (tag === "trap") return Boolean((room.traps || []).length);
+      if (tag === "haunt") return Boolean((room.haunts || []).length);
+      if (tag === "npc") return Boolean((room.npcs || []).length);
+      return false;
+    }
+
+    function roomMatchesSelectedTags(room, selectedTags) {
+      return !selectedTags.length || selectedTags.some((tag) => roomMatchesTag(room, tag));
+    }
+
     function renderRoomKey() {
       const list = document.getElementById("map-room-list");
       const meta = document.getElementById("map-room-meta");
@@ -3776,13 +6473,17 @@
         return;
       }
 
-      const query = document.getElementById("map-room-filter").value.trim().toLowerCase();
+      const query = document.getElementById("map-room-search").value.trim().toLowerCase();
+      const selectedTags = activeRoomTagFilters();
       const rooms = (activeRoomKey.rooms || []).filter((room) => (
-        !query || roomSearchText(room).includes(query)
+        roomMatchesSelectedTags(room, selectedTags)
+        && (!query || roomSearchText(room).includes(query))
       ));
       meta.innerHTML = `
         <span class="stat-badge">${escapeHtml(activeRoomKey.title || activeRoomKey.map_id || "Dungeon map")}</span>
         <span class="stat-badge">${rooms.length} room${rooms.length === 1 ? "" : "s"}</span>
+        ${selectedTags.length ? `<span class="stat-badge">Tags: ${escapeHtml(selectedTags.join(", "))}</span>` : ""}
+        ${query ? `<span class="stat-badge">Search: ${escapeHtml(query)}</span>` : ""}
       `;
 
       if (!rooms.length) {
@@ -3841,13 +6542,23 @@
         activeRoomKey = await fetchJson(
           `${endpoints.dungeonRoomKey}?map_id=${encodeURIComponent(selectedMapId)}`,
         );
-        renderRoomKey();
       } catch (error) {
         document.getElementById("map-room-meta").innerHTML = `
           <span class="stat-badge">${escapeHtml(map.title)}</span>
           <span class="stat-badge">No room key found</span>
         `;
-        list.innerHTML = `<div class="empty">Map loaded, but no room-key JSON matched <code>${escapeHtml(selectedMapId)}</code>.</div>`;
+        list.innerHTML = `<div class="empty">Map loaded, but no room-key JSON matched <code>${escapeHtml(selectedMapId)}</code>. ${escapeHtml(error.message || "")}</div>`;
+        updateRoomBackButton();
+        return;
+      }
+      try {
+        renderRoomKey();
+      } catch (error) {
+        document.getElementById("map-room-meta").innerHTML = `
+          <span class="stat-badge">${escapeHtml(map.title)}</span>
+          <span class="stat-badge">Room key render error</span>
+        `;
+        list.innerHTML = `<div class="empty">Room-key JSON loaded for <code>${escapeHtml(selectedMapId)}</code>, but the sidebar could not render it: ${escapeHtml(error.message || "Unknown error")}</div>`;
         updateRoomBackButton();
       }
     }
@@ -3867,14 +6578,54 @@
       return String(value);
     }
 
-    function renderPortrait(ref, label) {
+    function renderPortrait(ref, label, image = null) {
+      if (image?.status === "needs review") {
+        return `<div class="portrait-frame">Image<br />needs review</div>`;
+      }
       if (!ref) {
         return `<div class="portrait-frame">Portrait<br />placeholder</div>`;
       }
       if (/^https?:\/\//.test(ref) || ref.startsWith("/")) {
-        return `<div class="portrait-frame"><img src="${escapeHtml(ref)}" alt="${escapeHtml(label || "Portrait")}" /></div>`;
+        return `<div class="portrait-frame has-image"><img src="${escapeHtml(ref)}" alt="${escapeHtml(label || "Portrait")}" /></div>`;
       }
       return `<div class="portrait-frame">${escapeHtml(ref)}</div>`;
+    }
+
+    function renderOverviewPortrait(ref, label, image = null) {
+      if (image?.status === "needs review") {
+        return '<div class="overview-portrait">Review</div>';
+      }
+      if (!ref) {
+        return `<div class="overview-portrait">${escapeHtml(
+          String(label || "?")
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0]?.toUpperCase() || "")
+            .join("") || "?"
+        )}</div>`;
+      }
+      if (/^https?:\/\//.test(ref) || ref.startsWith("/")) {
+        return `<div class="overview-portrait"><img src="${escapeHtml(ref)}" alt="${escapeHtml(label || "Portrait")}" loading="lazy" /></div>`;
+      }
+      return `<div class="overview-portrait">${escapeHtml(
+        String(label || "?")
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part[0]?.toUpperCase() || "")
+          .join("") || "?"
+      )}</div>`;
+    }
+
+    function renderImageMeta(image) {
+      if (!image) return "";
+      const badges = [
+        image.status ? `<span class="stat-badge">${escapeHtml(image.status)}</span>` : "",
+        image.source ? `<span class="stat-badge">${escapeHtml(image.source)}</span>` : "",
+        image.attribution ? `<span class="stat-badge">${escapeHtml(image.attribution)}</span>` : "",
+      ].filter(Boolean).join("");
+      return badges ? `<div class="image-meta">${badges}</div>` : "";
     }
 
     function renderSheetStats(stats) {
@@ -4104,9 +6855,12 @@
                   return `
                     <tr>
                       <td>
-                        <strong>${escapeHtml(sheet.character_name || "Unnamed PC")}</strong>
-                        <div class="subtle">${escapeHtml(sheet.player_name || "Unknown player")}</div>
-                        <div class="subtle">${escapeHtml([identity.class_name, identity.level ? `level ${identity.level}` : ""].filter(Boolean).join(", ") || "No class/level")}</div>
+                        <div class="overview-name-cell">
+                          <strong>${escapeHtml(sheet.character_name || "Unnamed PC")}</strong>
+                          ${renderOverviewPortrait(sheet.portrait, sheet.character_name, sheet.image)}
+                          <div class="subtle">${escapeHtml(sheet.player_name || "Unknown player")}</div>
+                          <div class="subtle">${escapeHtml([identity.class_name, identity.level ? `level ${identity.level}` : ""].filter(Boolean).join(", ") || "No class/level")}</div>
+                        </div>
                       </td>
                       <td><div class="overview-cell-list">
                         ${overviewLine("AC", combat.ac)}
@@ -4188,8 +6942,11 @@
                   return `
                     <tr>
                       <td>
-                        <strong>${escapeHtml(npc.name || "Unnamed NPC")}</strong>
-                        <div class="subtle">${escapeHtml(npc.role || "No role listed")}</div>
+                        <div class="overview-name-cell">
+                          <strong>${escapeHtml(npc.name || "Unnamed NPC")}</strong>
+                          ${renderOverviewPortrait(npc.portrait, npc.name, npc.image)}
+                          <div class="subtle">${escapeHtml(npc.role || "No role listed")}</div>
+                        </div>
                       </td>
                       <td><div class="overview-cell-list">
                         ${overviewLine("Status", npc.status)}
@@ -4287,6 +7044,7 @@
         pcSheets = payload.items || [];
         renderSheetList(pcSheets, "pc-sheet-list", "PC sheets");
         await hydratePcSheetOverviews();
+        refreshPartyCombatantsFromSheets();
       } catch (error) {
         host.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
         document.getElementById("pc-sheet-overview").innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
@@ -4302,11 +7060,12 @@
         const combat = sheet.combat || {};
         viewer.innerHTML = `
           <div class="sheet-hero">
-            ${renderPortrait(sheet.portrait, sheet.character_name)}
+            ${renderPortrait(sheet.portrait, sheet.character_name, sheet.image)}
             <div>
               <h3 style="margin-top: 0;">${escapeHtml(sheet.character_name || "Unnamed PC")}</h3>
               <div class="subtle">${escapeHtml(sheet.player_name ? `Player: ${sheet.player_name}` : "Player name not linked yet")}</div>
               <div class="subtle">${escapeHtml(sheet.summary || "No summary imported.")}</div>
+              ${renderImageMeta(sheet.image)}
               ${renderSheetStats([
                 { label: "Level", value: identity.level },
                 { label: "Class", value: identity.class_name },
@@ -4379,11 +7138,12 @@
         const details = dossier.details || {};
         viewer.innerHTML = `
           <div class="sheet-hero">
-            ${renderPortrait(dossier.portrait, dossier.name)}
+            ${renderPortrait(dossier.portrait, dossier.name, dossier.image)}
             <div>
               <h3 style="margin-top: 0;">${escapeHtml(dossier.name || "Unnamed NPC")}</h3>
               <div class="subtle">${escapeHtml(dossier.role || dossier.status || "No role/status listed.")}</div>
               <div class="subtle">${escapeHtml(dossier.summary || "No summary imported.")}</div>
+              ${renderImageMeta(dossier.image)}
               ${renderSheetStats([
                 { label: "Location", value: dossier.current_location?.name },
                 { label: "Role", value: dossier.role },
@@ -4485,6 +7245,21 @@
         summaryCard("Active PCs", String((snapshot.active_pcs || []).length)),
         summaryCard("Active NPCs", String((snapshot.active_npcs || []).length)),
         summaryCard("Map", mapSummary),
+      ].join("");
+      renderShellStatus(snapshot);
+    }
+
+    function renderShellStatus(snapshot) {
+      const state = snapshot?.state || {};
+      const active = activeCombatant();
+      document.getElementById("shell-scene-title").textContent =
+        state.scene_title || "No active scene";
+      document.getElementById("shell-status-meta").innerHTML = [
+        `<span class="stat-badge">${escapeHtml(snapshot?.current_location?.name || "No location")}</span>`,
+        `<span class="stat-badge">${escapeHtml(state.focus || "No live focus")}</span>`,
+        active
+          ? `<span class="stat-badge">Round ${escapeHtml(currentCombat.round || 1)} · ${escapeHtml(active.name)}</span>`
+          : '<span class="stat-badge">No active combat</span>',
       ].join("");
     }
 
@@ -5026,6 +7801,33 @@
           ${escapeHtml(voice.name)}${voice.lang ? ` (${escapeHtml(voice.lang)})` : ""}
         </option>
       `).join("");
+      const narrator = preferredNarratorVoice();
+      document.getElementById("map-room-voice-status").textContent = narrator
+        ? `Read-aloud buttons will prefer ${narrator.name}${narrator.lang ? ` (${narrator.lang})` : ""}.`
+        : "Read-aloud buttons use the default browser narrator voice.";
+    }
+
+    async function loadTtsStatus() {
+      try {
+        ttsServerStatus = await fetchJson(endpoints.ttsStatus);
+      } catch (error) {
+        ttsServerStatus = {
+          provider: "browser",
+          piper_ready: false,
+          piper_detail: error.message,
+        };
+      }
+      const engine = document.getElementById("tts-engine");
+      if (ttsServerStatus.provider === "piper") {
+        engine.value = "piper";
+      }
+      const status = ttsServerStatus.provider === "piper" && ttsServerStatus.piper_ready
+        ? "Piper local narrator is ready."
+        : ttsServerStatus.provider === "piper"
+          ? `Piper selected, but not ready: ${ttsServerStatus.piper_detail || "check settings"}`
+          : "Browser voice mode is active. Piper is optional.";
+      document.getElementById("tts-status-copy").textContent = status;
+      document.getElementById("map-room-voice-status").textContent = status;
     }
 
     function applyTtsPreset() {
@@ -5036,10 +7838,96 @@
         `Preset loaded: ${document.getElementById("tts-preset").selectedOptions[0]?.textContent || "Moderator"}.`;
     }
 
-    function speakText(event) {
-      event.preventDefault();
-      const host = document.getElementById("tts-result");
-      const text = document.getElementById("tts-text").value.trim();
+    function preferredNarratorVoice() {
+      const englishVoices = availableVoices.filter((voice) => (
+        String(voice.lang || "").toLowerCase().startsWith("en")
+      ));
+      const preferredNames = [
+        "daniel",
+        "alex",
+        "samantha",
+        "google uk english male",
+        "google uk english female",
+        "google us english",
+        "microsoft david",
+        "microsoft mark",
+        "microsoft aria",
+      ];
+      for (const name of preferredNames) {
+        const match = englishVoices.find((voice) => voice.name.toLowerCase().includes(name));
+        if (match) return match;
+      }
+      return englishVoices[0] || availableVoices[0] || null;
+    }
+
+    async function speakPiperText(text, {
+      host = document.getElementById("tts-result"),
+      label = "text",
+    } = {}) {
+      if (!text) {
+        host.innerHTML = '<span class="error">Enter or load some text to read aloud.</span>';
+        return false;
+      }
+      host.innerHTML = `<span>Synthesizing ${escapeHtml(label)} with Piper…</span>`;
+      const blob = await fetchBlob(endpoints.ttsSynthesize, {
+        method: "POST",
+        body: JSON.stringify({ text }),
+      });
+      if (activeTtsAudio) {
+        activeTtsAudio.pause();
+        activeTtsAudio = null;
+      }
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      activeTtsAudio = audio;
+      audio.onplay = () => {
+        host.innerHTML = `<span>Playing ${escapeHtml(label)} with Piper local narrator.</span>`;
+      };
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        if (activeTtsAudio === audio) {
+          activeTtsAudio = null;
+        }
+        host.innerHTML = "<span>Finished speaking.</span>";
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        host.innerHTML = '<span class="error">Piper audio playback failed.</span>';
+      };
+      await audio.play();
+      return true;
+    }
+
+    async function speakConfiguredText(text, {
+      host = document.getElementById("tts-result"),
+      voice = null,
+      rate = 1,
+      pitch = 1,
+      label = "text",
+      allowPiper = true,
+    } = {}) {
+      const engine = document.getElementById("tts-engine")?.value || ttsServerStatus.provider || "browser";
+      if (allowPiper && engine === "piper") {
+        try {
+          await speakPiperText(text, { host, label });
+          return;
+        } catch (error) {
+          host.innerHTML = `<span class="error">Piper failed, falling back to browser voice: ${escapeHtml(error.message)}</span>`;
+        }
+      }
+      speakBrowserText(text, { host, voice, rate, pitch, label });
+    }
+
+    function speakBrowserText(text, {
+      host = document.getElementById("tts-result"),
+      voice = null,
+      rate = 1,
+      pitch = 1,
+      label = "text",
+    } = {}) {
       if (!text) {
         host.innerHTML = '<span class="error">Enter or load some text to read aloud.</span>';
         return;
@@ -5051,16 +7939,14 @@
 
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      const selectedIndex = document.getElementById("tts-voice").value;
-      const selectedVoice = selectedIndex !== "" ? availableVoices[Number.parseInt(selectedIndex, 10)] : null;
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        utterance.lang = selectedVoice.lang || utterance.lang;
+      if (voice) {
+        utterance.voice = voice;
+        utterance.lang = voice.lang || utterance.lang;
       }
-      utterance.rate = clamp(Number.parseFloat(document.getElementById("tts-rate").value) || 1, 0.6, 1.4);
-      utterance.pitch = clamp(Number.parseFloat(document.getElementById("tts-pitch").value) || 1, 0.6, 1.5);
+      utterance.rate = clamp(rate, 0.6, 1.4);
+      utterance.pitch = clamp(pitch, 0.6, 1.5);
       utterance.onstart = () => {
-        host.innerHTML = `<span>Speaking with ${escapeHtml(selectedVoice?.name || "default browser voice")}.</span>`;
+        host.innerHTML = `<span>Speaking ${escapeHtml(label)} with ${escapeHtml(voice?.name || "default browser voice")}.</span>`;
       };
       utterance.onend = () => {
         host.innerHTML = "<span>Finished speaking.</span>";
@@ -5071,28 +7957,83 @@
       window.speechSynthesis.speak(utterance);
     }
 
+    function speakText(event) {
+      event.preventDefault();
+      const selectedIndex = document.getElementById("tts-voice").value;
+      const selectedVoice = selectedIndex !== "" ? availableVoices[Number.parseInt(selectedIndex, 10)] : null;
+      speakConfiguredText(document.getElementById("tts-text").value.trim(), {
+        voice: selectedVoice,
+        rate: Number.parseFloat(document.getElementById("tts-rate").value) || 1,
+        pitch: Number.parseFloat(document.getElementById("tts-pitch").value) || 1,
+        label: "voice-reader text",
+      });
+    }
+
+    function speakMapRoomReadAloud(roomId) {
+      if (!availableVoices.length) {
+        loadVoices();
+      }
+      const room = (activeRoomKey?.rooms || []).find((item) => (
+        String(item.room_id || "").toLowerCase() === String(roomId || "").toLowerCase()
+      ));
+      const literal = room ? roomLiteralParts(room) : null;
+      const text = literal?.player || "";
+      const voice = preferredNarratorVoice();
+      const status = document.getElementById("map-room-voice-status");
+      speakConfiguredText(text, {
+        host: status,
+        voice,
+        rate: 0.92,
+        pitch: 0.92,
+        label: `${room?.room_id || "room"} read-aloud text`,
+      });
+    }
+
     function stateIdsFromGrid(elementId) {
       return Array.from(document.querySelectorAll(`#${elementId} input[type="checkbox"]:checked`))
         .map((checkbox) => Number.parseInt(checkbox.value, 10))
         .filter((value) => Number.isInteger(value));
     }
 
-    async function loadPanel() {
-      try {
-        panelSnapshot = await fetchJson(endpoints.state);
-        renderSummary(panelSnapshot);
-        populateStateForm(panelSnapshot);
-        renderMapTool(panelSnapshot);
-        renderSoundboard(panelSnapshot);
-        renderSessionContext(panelSnapshot);
-      } catch (error) {
-        document.getElementById("state-message").innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
-      }
+    function emptyCombatState() {
+      return {
+        roomId: "",
+        roomTitle: "",
+        round: 1,
+        activeIndex: 0,
+        combatants: [],
+      };
     }
 
-    async function saveLiveState(event) {
-      event.preventDefault();
-      const payload = {
+    function normalizedCombatState(value) {
+      if (!value || typeof value !== "object") {
+        return emptyCombatState();
+      }
+      const combatants = labelDuplicateCombatants(
+        expandGroupedCombatants(Array.isArray(value.combatants) ? value.combatants : [])
+      );
+      const round = Number.parseInt(value.round, 10);
+      const activeIndex = Number.parseInt(value.activeIndex, 10);
+      return {
+        roomId: String(value.roomId || ""),
+        roomTitle: String(value.roomTitle || ""),
+        round: Number.isFinite(round) && round > 0 ? round : 1,
+        activeIndex: Number.isFinite(activeIndex) && activeIndex >= 0
+          ? Math.min(activeIndex, Math.max(0, combatants.length - 1))
+          : 0,
+        combatants,
+      };
+    }
+
+    function hydrateCombatState(snapshot) {
+      currentCombat = normalizedCombatState(snapshot?.state?.combat_state);
+      refreshPartyCombatantsFromSheets();
+      void refreshMonsterCombatantsFromAon();
+      renderCombatPanel();
+    }
+
+    function liveStatePayload() {
+      return {
         scene_title: document.getElementById("scene-title").value || null,
         focus: document.getElementById("scene-focus").value || null,
         current_location_id: document.getElementById("current-location").value
@@ -5103,12 +8044,55 @@
         maptool_map_id: document.getElementById("maptool-map-id").value || null,
         notes: document.getElementById("scene-notes").value || null,
         frugal_mode: document.getElementById("frugal-mode").checked,
+        combat_state: normalizedCombatState(currentCombat),
       };
+    }
 
+    async function persistCombatState() {
+      if (!panelSnapshot) return;
       try {
         panelSnapshot = await fetchJson(endpoints.state, {
           method: "PUT",
-          body: JSON.stringify(payload),
+          body: JSON.stringify(liveStatePayload()),
+        });
+      } catch (error) {
+        document.getElementById("combat-meta").innerHTML =
+          `<span class="error">Combat state was not saved: ${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    function scheduleCombatPersist() {
+      window.clearTimeout(combatSaveTimer);
+      combatSaveTimer = window.setTimeout(() => {
+        void persistCombatState();
+      }, 450);
+    }
+
+    function commitCombatState() {
+      renderCombatPanel();
+      scheduleCombatPersist();
+    }
+
+    async function loadPanel() {
+      try {
+        panelSnapshot = await fetchJson(endpoints.state);
+        renderSummary(panelSnapshot);
+        populateStateForm(panelSnapshot);
+        hydrateCombatState(panelSnapshot);
+        renderMapTool(panelSnapshot);
+        renderSoundboard(panelSnapshot);
+        renderSessionContext(panelSnapshot);
+      } catch (error) {
+        document.getElementById("state-message").innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
+    async function saveLiveState(event) {
+      event.preventDefault();
+      try {
+        panelSnapshot = await fetchJson(endpoints.state, {
+          method: "PUT",
+          body: JSON.stringify(liveStatePayload()),
         });
         renderSummary(panelSnapshot);
         renderMapTool(panelSnapshot);
@@ -5127,6 +8111,7 @@
         panelSnapshot = await fetchJson(endpoints.state, { method: "DELETE" });
         renderSummary(panelSnapshot);
         populateStateForm(panelSnapshot);
+        hydrateCombatState(panelSnapshot);
         renderMapTool(panelSnapshot);
         renderSoundboard(panelSnapshot);
         renderSessionContext(panelSnapshot);
@@ -5255,20 +8240,34 @@
       await loadMapRoom();
     });
     document.getElementById("map-room-back").addEventListener("click", navigateBackRoom);
-    document.getElementById("map-room-filter").addEventListener("input", renderRoomKey);
+    document.getElementById("map-room-search").addEventListener("input", renderRoomKey);
+    document.querySelectorAll(".map-room-filters input[type='checkbox']").forEach((checkbox) => {
+      checkbox.addEventListener("change", renderRoomKey);
+    });
     document.getElementById("combat-start-open-room").addEventListener("click", () => {
-      setCombatFromRoom(activeOpenRoom(), { append: false });
+      void setCombatFromRoom(activeOpenRoom(), { append: false });
     });
     document.getElementById("combat-add-open-room").addEventListener("click", () => {
-      setCombatFromRoom(activeOpenRoom(), { append: true });
+      void setCombatFromRoom(activeOpenRoom(), { append: true });
+    });
+    document.getElementById("combat-add-party").addEventListener("click", () => {
+      void addPartyToCombat();
     });
     document.getElementById("combat-roll-all").addEventListener("click", rollAllCombatInitiative);
     document.getElementById("combat-sort-initiative").addEventListener("click", sortCombatByInitiative);
     document.getElementById("combat-clear").addEventListener("click", () => {
-      currentCombat = { roomId: "", roomTitle: "", combatants: [] };
-      renderCombatPanel();
+      currentCombat = { roomId: "", roomTitle: "", round: 1, activeIndex: 0, combatants: [] };
+      commitCombatState();
     });
+    document.getElementById("combat-next-turn").addEventListener("click", nextCombatTurn);
+    document.getElementById("combat-prev-turn").addEventListener("click", previousCombatTurn);
+    document.getElementById("combat-reset-round").addEventListener("click", resetCombatRound);
     document.getElementById("combat-roster").addEventListener("click", (event) => {
+      const toggleButton = event.target.closest("[data-combat-toggle]");
+      if (toggleButton) {
+        toggleCombatantCard(Number.parseInt(toggleButton.dataset.combatToggle, 10));
+        return;
+      }
       const button = event.target.closest("[data-combat-hp]");
       if (button) {
         adjustCombatHp(
@@ -5278,11 +8277,49 @@
         );
         return;
       }
+      const addConditionButton = event.target.closest("[data-combat-condition-add]");
+      if (addConditionButton) {
+        addCombatCondition(Number.parseInt(addConditionButton.dataset.combatConditionAdd, 10));
+        return;
+      }
+      const removeConditionButton = event.target.closest("[data-combat-condition-remove]");
+      if (removeConditionButton) {
+        removeCombatCondition(
+          Number.parseInt(removeConditionButton.dataset.combatConditionRemove, 10),
+          Number.parseInt(removeConditionButton.dataset.conditionIndex, 10),
+        );
+        return;
+      }
+      const referenceButton = event.target.closest("[data-combat-ref]");
+      if (referenceButton) {
+        const combatantId = referenceButton.dataset.combatRef;
+        const key = referenceButton.dataset.combatRefKey || "";
+        const combatant = (currentCombat.combatants || []).find((item) => String(item.id || "") === combatantId);
+        if (combatant) {
+          combatant.activeReference = combatant.activeReference === key ? "" : key;
+          commitCombatState();
+        }
+        return;
+      }
       const initButton = event.target.closest("[data-combat-init-roll]");
       if (!initButton) return;
       rollCombatInitiative(Number.parseInt(initButton.dataset.combatInitRoll, 10));
     });
     document.getElementById("combat-roster").addEventListener("change", (event) => {
+      const currentHp = event.target.closest("[data-combat-hp-current]");
+      if (currentHp) {
+        setCombatHpCurrent(
+          Number.parseInt(currentHp.dataset.combatHpCurrent, 10),
+          Number.parseInt(currentHp.dataset.combatTarget, 10),
+          currentHp.value,
+        );
+        return;
+      }
+      const maxHp = event.target.closest("[data-combat-hp-max]");
+      if (maxHp) {
+        setCombatHpMax(Number.parseInt(maxHp.dataset.combatHpMax, 10), maxHp.value);
+        return;
+      }
       const input = event.target.closest("[data-combat-init-manual]");
       if (!input) return;
       setManualCombatInitiative(
@@ -5314,7 +8351,13 @@
         const room = (activeRoomKey?.rooms || []).find((item) => (
           String(item.room_id || "").toLowerCase() === String(roomId || "").toLowerCase()
         ));
-        setCombatFromRoom(room, { append: Boolean(currentCombat.combatants.length) });
+        void setCombatFromRoom(room, { append: Boolean(currentCombat.combatants.length) });
+        return;
+      }
+      const readAloudButton = event.target.closest("[data-room-read-aloud]");
+      if (readAloudButton) {
+        event.preventDefault();
+        speakMapRoomReadAloud(readAloudButton.dataset.roomReadAloud);
         return;
       }
       const button = event.target.closest("[data-room-mode-toggle]");
@@ -5467,10 +8510,25 @@
       renderPdfTabs();
     });
     document.getElementById("tts-stop").addEventListener("click", () => {
+      if (activeTtsAudio) {
+        activeTtsAudio.pause();
+        activeTtsAudio = null;
+      }
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
       document.getElementById("tts-result").innerHTML = "<span>Voice playback stopped.</span>";
+    });
+    document.getElementById("tts-engine").addEventListener("change", () => {
+      const engine = document.getElementById("tts-engine").value;
+      if (engine === "piper" && !ttsServerStatus.piper_ready) {
+        document.getElementById("tts-status-copy").textContent =
+          `Piper is selected but may not be ready: ${ttsServerStatus.piper_detail || "check .env settings"}. Browser fallback will be used if it fails.`;
+      } else if (engine === "piper") {
+        document.getElementById("tts-status-copy").textContent = "Piper local narrator selected.";
+      } else {
+        document.getElementById("tts-status-copy").textContent = "Browser voice selected.";
+      }
     });
     document.getElementById("tts-preset").addEventListener("change", applyTtsPreset);
     document.getElementById("tts-use-assistant").addEventListener("click", () => {
@@ -5519,15 +8577,99 @@
         setSoundboardStatus(error.message || "Could not play that sound.", true);
       }
     });
+    document.getElementById("tool-menu-toggle").addEventListener("click", () => {
+      const menu = document.getElementById("tool-menu");
+      menu.hidden = !menu.hidden;
+    });
+    document.getElementById("tool-menu-list").addEventListener("click", (event) => {
+      const openButton = event.target.closest("[data-open-tool]");
+      if (openButton) {
+        openTool(openButton.dataset.openTool);
+        document.getElementById("tool-menu").hidden = true;
+        return;
+      }
+      const pinButton = event.target.closest("[data-pin-tool]");
+      if (pinButton) {
+        toggleToolPinned(pinButton.dataset.pinTool);
+        return;
+      }
+      const moveButton = event.target.closest("[data-move-tool]");
+      if (moveButton) {
+        movePinnedTool(
+          moveButton.dataset.moveTool,
+          Number.parseInt(moveButton.dataset.direction, 10) || 0,
+        );
+      }
+    });
+    document.getElementById("tool-dock").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-open-tool]");
+      if (button) {
+        openTool(button.dataset.openTool);
+      }
+    });
+    document.getElementById("tool-drawer-close").addEventListener("click", () => {
+      if (activeToolId) {
+        openTool(activeToolId);
+      }
+    });
+    document.getElementById("tool-reset-defaults").addEventListener("click", () => {
+      savePinnedToolIds([...defaultPinnedToolIds]);
+      renderToolChrome();
+    });
+    document.getElementById("sketch-launcher").addEventListener("click", () => {
+      const pad = document.getElementById("sketch-pad");
+      pad.hidden = !pad.hidden;
+    });
+    document.getElementById("sketch-close").addEventListener("click", () => {
+      document.getElementById("sketch-pad").hidden = true;
+    });
+    document.getElementById("sketch-text").addEventListener("input", (event) => {
+      window.localStorage.setItem(sketchPadKey, event.target.value);
+      document.getElementById("sketch-status").innerHTML = "<span>Saved locally.</span>";
+    });
+    document.getElementById("sketch-clear").addEventListener("click", () => {
+      document.getElementById("sketch-text").value = "";
+      window.localStorage.removeItem(sketchPadKey);
+      document.getElementById("sketch-status").innerHTML = "<span>Sketch Pad cleared.</span>";
+    });
+    document.getElementById("sketch-copy-session").addEventListener("click", () => {
+      const text = document.getElementById("sketch-text").value.trim();
+      if (!text) {
+        document.getElementById("sketch-status").innerHTML = '<span class="error">Sketch Pad is empty.</span>';
+        return;
+      }
+      const notes = document.getElementById("session-track-notes");
+      notes.value = [notes.value.trim(), text].filter(Boolean).join("\n\n");
+      document.getElementById("sketch-status").innerHTML = "<span>Copied into live session notes. Save the session tracker when ready.</span>";
+    });
+    document.getElementById("chat-launcher").addEventListener("click", () => {
+      const chat = document.getElementById("chat-float");
+      chat.hidden = !chat.hidden;
+    });
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest("#tool-menu") && !event.target.closest("#tool-menu-toggle")) {
+        document.getElementById("tool-menu").hidden = true;
+      }
+    });
+    document.addEventListener("click", (event) => {
+      const jumpButton = event.target.closest("[data-note-jump]");
+      if (!jumpButton) return;
+      const target = document.getElementById(jumpButton.dataset.noteJump);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
 
     initializeModuleLayout();
     setupCollapsiblePanels();
+    initializeToolShell();
     setupDraggablePanels();
     renderChatLog();
     renderDiceHistory();
     renderCombatPanel();
     loadAonCreatures();
     loadVoices();
+    loadTtsStatus();
     applyTtsPreset();
     if ("speechSynthesis" in window && typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
       window.speechSynthesis.onvoiceschanged = loadVoices;
