@@ -114,7 +114,8 @@ The live panel is used to:
 Notes:
 
 - the soundboard uses browser-generated audio, so it works without a separate sound library
-- the voice reader uses the browser speech engine, so available voices depend on the local machine and browser
+- the voice reader uses the browser speech engine by default, so available voices depend on the local machine and browser
+- optional Piper support can provide a better local English narrator when installed and configured
 - the vault browser reads from `OBSIDIAN_VAULT_PATH`, defaulting to `./obsidian-abomination-vaults-vault`
 - the PDF tabs read from `REFERENCE_PDF_ROOT`, defaulting to `./assets/imports/misc/private-local/reference/raw`
 - the Map Room reads map images from `DUNGEON_MAP_ROOT`, defaulting to `./assets/imports/misc/private-local/media`
@@ -137,6 +138,77 @@ Room-key files are JSON documents under `DUNGEON_ROOM_KEY_ROOT`. The first suppo
 
 Each room key should use a `map_id` that matches the map image stem normalized to lowercase with
 spaces replaced by hyphens. For example, `Level1.jpg` becomes `level1`.
+
+Literal room text can be enriched from the private local reference markdown. This text is
+copyright-sensitive and must remain in ignored/private files only.
+
+Preview a backfill:
+
+```bash
+python3 scripts/backfill_room_literal_text.py --map-id level1
+```
+
+Apply a backfill to the private room-key JSON:
+
+```bash
+python3 scripts/backfill_room_literal_text.py --map-id level1 --apply
+```
+
+### Current Combat
+
+Use `Current Combat` when initiative starts.
+
+1. open a room in `Map Room`
+2. click `Start From Open Room`, or use `Find Monster` and `Add Monster`
+3. click `Roll All Initiative`
+4. click `Order By Initiative`
+5. use the initiative strip to see order at a glance
+6. use `Next Turn` and `Previous Turn` to track active turn and round
+7. edit current or max HP directly if the encounter needs adjustment
+8. add PF2e conditions under each combatant as they happen
+9. use the compact cards during play; only the active combatant opens automatically
+10. open the `Strategy`, `Look`, `Recall`, and `AoN` pills only when you need extra detail
+
+The module enriches known creatures from the local Archives of Nethys creature index.
+If AoN cannot be reached, it keeps the local room encounter snippet and marks missing
+details so the GM can retry from `Find Monster`.
+
+If a combat has several monsters of the same type, DMA splits them into separate cards
+and labels them `A`, `B`, `C`, and so on. Timed conditions with numeric durations count
+down automatically when turns advance.
+
+`Suggested Strategy` is GM-facing inference unless it appears in the campaign text.
+Use it as a table aid, not as official adventure text.
+
+### Voice Reader And Piper
+
+The DMA voice reader always supports browser TTS through Chrome's built-in speech
+engine. This requires no extra setup and is the safest default.
+
+For better local English narration, install Piper locally and configure DMA to use
+it. Piper voices are local files and should not be committed unless their license
+explicitly allows redistribution.
+
+Example `.env` values:
+
+```env
+TTS_PROVIDER=piper
+PIPER_BINARY_PATH=piper
+PIPER_VOICE_PATH=/absolute/path/to/en_US-voice.onnx
+```
+
+Optional Piper tuning:
+
+```env
+PIPER_SPEAKER_ID=
+PIPER_LENGTH_SCALE=
+PIPER_NOISE_SCALE=
+PIPER_NOISE_W=
+```
+
+When `TTS_PROVIDER=piper`, the frontend will try the server-side Piper endpoint
+for Voice Reader and Map Room read-aloud buttons. If Piper is not configured or
+fails, the frontend falls back to browser speech synthesis.
 
 ### Campaign Overview
 
@@ -188,6 +260,9 @@ write the note back to the Obsidian vault.
 
 Use `PC Sheet Viewer` when you need a fast table reference for a party member.
 
+The viewer prefers current player-named PC sheets from the Obsidian vault when they
+exist, then falls back to database records.
+
 The viewer shows:
 
 - portrait slot or placeholder
@@ -200,6 +275,33 @@ The viewer shows:
 
 The current version is read-only. Portraits appear when the PC entity has a `portrait`,
 `portrait_url`, `image`, or `image_link` detail field.
+
+### Image Curation
+
+Use local vault assets for player portraits and manually confirmed NPC portraits.
+DMA resolves local Obsidian image wikilinks such as
+`[[Library/Assets/Portraits/PCs/Daan.png]]` into browser-loadable images in the
+PC and NPC viewers.
+
+Recommended metadata:
+
+```yaml
+imageLink: "[[Library/Assets/Portraits/PCs/Daan.png]]"
+image_status: "confirmed"
+image_source: "player supplied"
+image_attribution: "Daan"
+```
+
+For extracted campaign art, build a manual review gallery:
+
+```bash
+python3 scripts/build_image_curation_index.py
+```
+
+Then open `Command Center/Assets/NPC Image Curation.md` in Obsidian and assign only
+confirmed portraits to canonical NPC notes. Monster images from Archives of Nethys are
+treated as remote references when available; do not copy them into redistributable
+project assets without a separate rights review.
 
 ### NPC Dossier Viewer
 

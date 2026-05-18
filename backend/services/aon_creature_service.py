@@ -6,8 +6,11 @@ from html import unescape
 from pathlib import Path
 import json
 import re
+import ssl
 from typing import Any, Optional
 from urllib.request import Request, urlopen
+
+import certifi
 
 
 @dataclass(frozen=True)
@@ -45,6 +48,7 @@ class AonCreatureDocument:
     speed: str
     perception: str
     attacks: list[str]
+    image_url: str
     fetched_at: str
 
 
@@ -107,9 +111,17 @@ class AonCreatureService:
         cache_path = self._cache_path(item)
         if cache_path.exists() and not refresh:
             payload = json.loads(cache_path.read_text(encoding="utf-8"))
-            return AonCreatureDocument(**payload)
+            if "image_url" in payload:
+                return AonCreatureDocument(**payload)
 
-        html_text = self._fetch_text(item.url, timeout_seconds=timeout_seconds)
+        try:
+            html_text = self._fetch_text(item.url, timeout_seconds=timeout_seconds)
+        except Exception:
+            if cache_path.exists() and not refresh:
+                payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                payload.setdefault("image_url", "")
+                return AonCreatureDocument(**payload)
+            raise
         document = self.parse_creature_page(html_text, item)
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         cache_path.write_text(
@@ -149,6 +161,7 @@ class AonCreatureService:
             speed=self._stat_value(content, "Speed"),
             perception=self._stat_value(content, "Perception"),
             attacks=self._attack_lines(content),
+            image_url=self._image_url(html_text),
             fetched_at=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -170,7 +183,8 @@ class AonCreatureService:
                 "Accept": "text/html,application/xhtml+xml",
             },
         )
-        with urlopen(request, timeout=timeout_seconds) as response:
+        context = ssl.create_default_context(cafile=certifi.where())
+        with urlopen(request, timeout=timeout_seconds, context=context) as response:
             return response.read().decode("utf-8", errors="replace")
 
     def _extract_main_fragment(self, html_text: str) -> str:
@@ -180,6 +194,25 @@ class AonCreatureService:
         fragment = html_text[start:]
         end = fragment.find('<div class="clear">')
         return fragment if end < 0 else fragment[:end]
+
+    def _image_url(self, html_text: str) -> str:
+        candidates = re.findall(
+            r'<img[^>]+src=["\']([^"\']+)["\']',
+            html_text,
+            flags=re.IGNORECASE,
+        )
+        for candidate in candidates:
+            normalized_candidate = candidate.replace("\\", "/")
+            if (
+                "Images/Monsters/" in normalized_candidate
+                or "Images/Creatures/" in normalized_candidate
+            ):
+                return (
+                    normalized_candidate
+                    if normalized_candidate.startswith(("http://", "https://"))
+                    else f"{self.base_url}/{normalized_candidate.lstrip('/')}"
+                )
+        return ""
 
     def _html_to_text(self, html_text: str) -> str:
         text = re.sub(r"(?is)<(script|style).*?</\1>", " ", html_text)

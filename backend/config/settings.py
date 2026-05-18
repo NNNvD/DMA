@@ -17,11 +17,22 @@ class Settings(BaseSettings):
     openai_embedding_cost_per_1m_tokens: Optional[float] = None
 
     # Database
-    database_url: str = "sqlite+aiosqlite:///./dma.db"
+    # Keep the no-.env fallback aligned with the default local vault profile.
+    database_url: str = "sqlite+aiosqlite:///./dma-abomination-vaults.db"
     obsidian_vault_path: str = "./obsidian-abomination-vaults-vault"
     reference_pdf_root: str = "./assets/imports/misc/private-local/reference/raw"
     dungeon_map_root: str = "./assets/imports/misc/private-local/media"
     dungeon_room_key_root: str = "./assets/imports/misc/private-local/room-keys"
+
+    # Text-to-speech
+    # "browser" uses the frontend Web Speech API. "piper" calls a local Piper binary.
+    tts_provider: str = "browser"
+    piper_binary_path: str = "piper"
+    piper_voice_path: Optional[str] = None
+    piper_speaker_id: Optional[int] = None
+    piper_length_scale: Optional[float] = None
+    piper_noise_scale: Optional[float] = None
+    piper_noise_w: Optional[float] = None
 
     # App & logging
     app_env: str = "development"

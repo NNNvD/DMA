@@ -86,6 +86,16 @@ Location: Greyhaven Docks
                 "active_npc_ids": [npc["id"]],
                 "notes": "Keep the pressure on the smuggler lead.",
                 "frugal_mode": True,
+                "combat_state": {
+                    "roomId": "A1",
+                    "roomTitle": "Test Skirmish",
+                    "round": 2,
+                    "activeIndex": 1,
+                    "combatants": [
+                        {"name": "Mitflit", "hpTrack": [5], "maxHp": 10},
+                        {"name": "Giant Fly", "hpTrack": [8], "maxHp": 8},
+                    ],
+                },
             },
         )
         assert save.status_code == 200
@@ -93,6 +103,9 @@ Location: Greyhaven Docks
 
         assert payload["state"]["scene_title"] == "Audience at Dock 7"
         assert payload["state"]["frugal_mode"] is True
+        assert payload["state"]["combat_state"]["roomId"] == "A1"
+        assert payload["state"]["combat_state"]["round"] == 2
+        assert payload["state"]["combat_state"]["combatants"][0]["name"] == "Mitflit"
         assert payload["current_location"]["name"] == "Greyhaven Docks"
         assert [item["name"] for item in payload["active_pcs"]] == ["Talia Stormborn"]
         assert [item["name"] for item in payload["active_npcs"]] == ["Captain Mira"]
@@ -104,6 +117,7 @@ Location: Greyhaven Docks
         assert restored.status_code == 200
         restored_payload = restored.json()
         assert restored_payload["state"]["focus"] == "triage and interrogation"
+        assert restored_payload["state"]["combat_state"]["activeIndex"] == 1
         assert (
             restored_payload["available"]["locations"][0]["name"] == "Greyhaven Docks"
         )
@@ -114,6 +128,7 @@ Location: Greyhaven Docks
         assert reset_payload["state"]["scene_title"] is None
         assert reset_payload["state"]["active_pc_ids"] == []
         assert reset_payload["state"]["frugal_mode"] is False
+        assert reset_payload["state"]["combat_state"]["combatants"] == []
     finally:
         asyncio.run(engine.dispose())
 
@@ -251,7 +266,11 @@ This text belongs to the next chapter, not A25.
         asyncio.run(engine.dispose())
 
 
-def test_live_pc_sheet_and_npc_dossier_routes():
+def test_live_pc_sheet_and_npc_dossier_routes(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "backend.api.routes.live.settings.obsidian_vault_path",
+        str(tmp_path / "missing-vault"),
+    )
     app, engine, _ = create_documents_test_app()
     client = TestClient(app)
 
@@ -330,6 +349,8 @@ Items: Longbow, Leather Armor
         assert npc_payload["name"] == "Captain Mira"
         assert npc_payload["role"] == "watch commander"
         assert npc_payload["portrait"] == "/assets/mira.png"
+        assert npc_payload["image"]["url"] == "/assets/mira.png"
+        assert npc_payload["image"]["status"] == "local"
         assert npc_payload["goals"] == ["Stabilize the harbor"]
         assert npc_payload["appearance_description"].startswith("A rain-soaked")
         assert npc_payload["gm_summary"] == "Mira is overworked but reliable."
@@ -360,6 +381,173 @@ Items: Longbow, Leather Armor
             "Harbor fire aftermath",
             "Session 13",
         ]
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_vault_image_wikilinks_become_browser_urls(tmp_path, monkeypatch):
+    vault_root = tmp_path / "vault"
+    sheet_dir = vault_root / "Sheets"
+    asset_dir = vault_root / "Library" / "Assets" / "Portraits" / "PCs"
+    sheet_dir.mkdir(parents=True)
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "Daan.png").write_bytes(b"fake portrait")
+    (sheet_dir / "Daan.md").write_text(
+        """
+---
+document_kind: "pc_sheet"
+title: "Daan"
+pc_name: "Bonesy McBoner"
+imageLink: "[[Library/Assets/Portraits/PCs/Daan.png]]"
+image_status: "confirmed"
+image_source: "player supplied"
+---
+# Daan
+""".strip(),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "backend.api.routes.live.settings.obsidian_vault_path",
+        str(vault_root),
+    )
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        sheets = client.get("/api/live/pc-sheets")
+        assert sheets.status_code == 200
+        payload = sheets.json()["items"][0]
+        assert payload["portrait"].startswith("/api/live/vault/file?path=")
+        assert payload["image"]["status"] == "confirmed"
+        assert payload["image"]["source"] == "player supplied"
+        image = client.get(payload["portrait"])
+        assert image.status_code == 200
+        assert image.content == b"fake portrait"
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_vault_pc_sheet_can_reuse_linked_local_json(tmp_path, monkeypatch):
+    vault_root = tmp_path / "vault"
+    sheet_dir = vault_root / "Sheets"
+    source_dir = tmp_path / "assets" / "imports" / "pathbuilder" / "test"
+    sheet_dir.mkdir(parents=True)
+    source_dir.mkdir(parents=True)
+    source_path = source_dir / "Max.json"
+    source_path.write_text(
+        json.dumps(
+            {
+                "success": True,
+                "build": {
+                    "name": "Shmungus",
+                    "class": "Druid",
+                    "level": 1,
+                    "ancestry": "Leshy",
+                    "heritage": "Fungus Leshy",
+                    "background": "Plant Whisperer",
+                    "abilities": {"str": 14, "dex": 14, "con": 14, "int": 8, "wis": 18, "cha": 10},
+                    "attributes": {"ancestryhp": 8, "classhp": 8, "speed": 25},
+                    "proficiencies": {"classDC": 2, "perception": 2, "fortitude": 2, "reflex": 2, "will": 4},
+                    "acTotal": {"acTotal": 16},
+                    "weapons": [{"name": "Thundermace"}],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (sheet_dir / "Max.md").write_text(
+        f"""
+---
+document_kind: "pc_sheet"
+title: "Max"
+pc_name: "Shmungus"
+source_url: "{source_path}"
+---
+# Max
+""".strip(),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "backend.api.routes.live.settings.obsidian_vault_path",
+        str(vault_root),
+    )
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        sheets = client.get("/api/live/pc-sheets")
+        assert sheets.status_code == 200
+        payload = sheets.json()["items"][0]
+        assert payload["character_name"] == "Shmungus"
+        assert payload["identity"]["class_name"] == "Druid"
+        assert payload["combat"]["ac"] == 16
+        full_sheet = client.get("/api/live/pc-sheet", params={"id": payload["id"]}).json()
+        assert full_sheet["attacks"][0]["name"] == "Thundermace"
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_pc_sheet_routes_load_obsidian_vault_sheets(tmp_path, monkeypatch):
+    vault = tmp_path / "vault"
+    sheets = vault / "Sheets"
+    sheets.mkdir(parents=True)
+    (sheets / "Yorick.md").write_text(
+        """---
+document_kind: "pc_sheet"
+doc_id: 42
+title: "Yorick"
+summary: "Imported Pathbuilder 2 sheet for Fahral at level 1."
+source_name: "pathbuilder/abomination-vaults/Yorick.json"
+pc_name: "Fahral"
+class_name: "Rogue"
+level: 1
+ancestry: "Elf"
+heritage: "Whisper Elf"
+background: "Fire Warden"
+alignment: "N"
+key_ability: "dex"
+speed: 30
+armor_class: 17
+perception: 4
+initiative: 4
+fortitude: 2
+reflex: 4
+will: 4
+stealth: 2
+thievery: 2
+special_abilities: ["Sneak Attack", "Low-Light Vision"]
+---
+# Yorick
+
+```json
+{"build":{"name":"Fahral","class":"Rogue","level":1,"ancestry":"Elf","heritage":"Whisper Elf","background":"Fire Warden","alignment":"N","keyability":"dex","abilities":{"str":14,"dex":18,"con":8,"int":12,"wis":12,"cha":14},"attributes":{"ancestryhp":6,"classhp":8,"bonushp":0,"bonushpPerLevel":0,"speed":30},"proficiencies":{"classDC":2,"perception":4,"fortitude":2,"reflex":4,"will":4,"stealth":2,"thievery":2},"acTotal":{"acTotal":17},"specials":["Sneak Attack","Low-Light Vision"],"weapons":[]}}
+```
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "backend.api.routes.live.settings.obsidian_vault_path",
+        str(vault),
+    )
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/live/pc-sheets")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["source"] == "obsidian_vault"
+        assert payload["items"][0]["id"] == 42
+        assert payload["items"][0]["player_name"] == "Yorick"
+        assert payload["items"][0]["character_name"] == "Fahral"
+        assert payload["items"][0]["identity"]["class_name"] == "Rogue"
+
+        detail = client.get("/api/live/pc-sheet", params={"id": 42})
+        assert detail.status_code == 200
+        assert detail.json()["combat"]["ac"] == 17
+        assert detail.json()["combat"]["speed"] == 30
+        assert detail.json()["specials"] == ["Sneak Attack", "Low-Light Vision"]
     finally:
         asyncio.run(engine.dispose())
 
@@ -667,6 +855,9 @@ def test_dm_panel_route_serves_browser_panel():
         assert "Dice Roller" in response.text
         assert "Session Soundboard" in response.text
         assert "Voice Reader" in response.text
+        assert "/api/live/tts/status" in response.text
+        assert "/api/live/tts/synthesize" in response.text
+        assert "Piper Local Narrator" in response.text
         assert "1d20+7" in response.text
         assert "speechSynthesis" in response.text
         assert "Session Mechanics" in response.text
@@ -679,6 +870,53 @@ def test_dm_panel_route_serves_browser_panel():
         assert "/prep" in response.text
         assert "/search" in response.text
         assert "Continuity Search" in response.text
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_tts_status_defaults_to_browser():
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/live/tts/status")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["provider"] == "browser"
+        assert payload["browser_available"] is True
+        assert payload["piper_ready"] is False
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_tts_synthesize_requires_piper(monkeypatch):
+    monkeypatch.setattr("backend.api.routes.live.settings.tts_provider", "browser")
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        response = client.post("/api/live/tts/synthesize", json={"text": "Hello"})
+        assert response.status_code == 400
+        assert "Server TTS is not enabled" in response.json()["detail"]
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_tts_status_reports_unconfigured_piper(monkeypatch):
+    monkeypatch.setattr("backend.api.routes.live.settings.tts_provider", "piper")
+    monkeypatch.setattr("backend.api.routes.live.settings.piper_voice_path", None)
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/live/tts/status")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["provider"] == "piper"
+        assert payload["piper_ready"] is False
+        assert "PIPER_VOICE_PATH" in payload["piper_detail"]
     finally:
         asyncio.run(engine.dispose())
 

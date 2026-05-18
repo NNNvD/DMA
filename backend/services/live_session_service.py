@@ -24,6 +24,13 @@ class LiveSessionService:
         "maptool_map_id": None,
         "notes": None,
         "frugal_mode": False,
+        "combat_state": {
+            "roomId": "",
+            "roomTitle": "",
+            "round": 1,
+            "activeIndex": 0,
+            "combatants": [],
+        },
     }
 
     async def load_snapshot(self, db: AsyncSession) -> dict[str, Any]:
@@ -81,6 +88,7 @@ class LiveSessionService:
         maptool_map_id: str | None = None,
         notes: str | None = None,
         frugal_mode: bool = False,
+        combat_state: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         existing_state = await self._load_state(db)
         location_id = await self._validate_location_id(db, current_location_id)
@@ -102,6 +110,11 @@ class LiveSessionService:
             "maptool_map_id": normalized_maptool_map_id,
             "notes": self._normalize_optional_text(notes),
             "frugal_mode": bool(frugal_mode),
+            "combat_state": self._normalize_combat_state(
+                combat_state
+                if combat_state is not None
+                else existing_state.get("combat_state")
+            ),
         }
         await context_service.save(LIVE_SESSION_CONTEXT_KEY, state, db)
         return await self.load_snapshot(db)
@@ -150,6 +163,9 @@ class LiveSessionService:
             state.get("current_location_id")
         )
         state["frugal_mode"] = bool(state.get("frugal_mode"))
+        state["combat_state"] = self._normalize_combat_state(
+            state.get("combat_state")
+        )
         return state
 
     async def _resolve_location(
@@ -271,6 +287,36 @@ class LiveSessionService:
             return int(value)
         except (TypeError, ValueError):
             return None
+
+    def _normalize_combat_state(self, value: Any) -> dict[str, Any]:
+        default = dict(self.default_state["combat_state"])
+        if not isinstance(value, dict):
+            return default
+
+        combatants = value.get("combatants")
+        if not isinstance(combatants, list):
+            combatants = []
+
+        try:
+            round_number = max(1, int(value.get("round") or 1))
+        except (TypeError, ValueError):
+            round_number = 1
+
+        try:
+            active_index = max(0, int(value.get("activeIndex") or 0))
+        except (TypeError, ValueError):
+            active_index = 0
+
+        if combatants and active_index >= len(combatants):
+            active_index = len(combatants) - 1
+
+        return {
+            "roomId": self._normalize_optional_text(value.get("roomId")) or "",
+            "roomTitle": self._normalize_optional_text(value.get("roomTitle")) or "",
+            "round": round_number,
+            "activeIndex": active_index,
+            "combatants": combatants,
+        }
 
 
 live_session_service = LiveSessionService()

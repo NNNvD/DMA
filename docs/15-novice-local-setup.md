@@ -189,6 +189,15 @@ EMBEDDING_PROVIDER=disabled
 OPENAI_API_KEY=
 ```
 
+Optional: keep the text-to-speech engine on browser mode unless the GM has given
+you separate Piper instructions.
+
+```env
+TTS_PROVIDER=browser
+PIPER_BINARY_PATH=piper
+PIPER_VOICE_PATH=
+```
+
 ## Step 7: Install DMA Python Packages
 
 From the repository root, run:
@@ -448,4 +457,3 @@ Do not:
 - share the private overlay publicly
 
 The public GitHub repo contains the DMA tool. The private overlay contains campaign material that must stay local.
-

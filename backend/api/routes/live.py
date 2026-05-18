@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import tempfile
 from pathlib import Path
 from time import perf_counter
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +22,7 @@ from backend.services.live_assistant_service import live_assistant_service
 from backend.services.live_maptool_service import live_maptool_service
 from backend.services.live_session_service import live_session_service
 from backend.services.metrics_service import metrics_service
+from backend.services.obsidian_markdown import split_frontmatter
 
 
 router = APIRouter()
@@ -35,6 +38,7 @@ class LiveSessionStateUpdate(BaseModel):
     maptool_map_id: Optional[str] = None
     notes: Optional[str] = None
     frugal_mode: bool = False
+    combat_state: Optional[dict[str, Any]] = None
 
 
 class LiveAssistantRequest(BaseModel):
@@ -74,6 +78,13 @@ class LivePlayerHandoutExportRequest(BaseModel):
     path: str = Field(min_length=1)
     basename: Optional[str] = None
     html_only: bool = False
+
+
+class LiveTTSRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=6000)
+    voice: Optional[str] = None
+    rate: Optional[float] = Field(default=None, ge=0.5, le=1.6)
+    pitch: Optional[float] = Field(default=None, ge=0.5, le=1.6)
 
 
 class AonCreatureSearchResponse(BaseModel):
@@ -1054,12 +1065,258 @@ def _sheet_payload(entity: dict) -> dict:
     return payload if isinstance(payload, dict) else {}
 
 
+def _extract_json_block(body: str) -> dict[str, Any]:
+    match = re.search(r"```json\s*(\{[\s\S]*?\})\s*```", body)
+    if not match:
+        return {}
+    try:
+        parsed = json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _source_json_payload(frontmatter: dict[str, Any]) -> dict[str, Any]:
+    candidates = []
+    source_url = frontmatter.get("source_url")
+    if isinstance(source_url, str) and source_url.strip():
+        candidates.append(Path(source_url.strip()))
+    source_name = frontmatter.get("source_name")
+    if isinstance(source_name, str) and source_name.strip():
+        candidates.append(Path("assets/imports") / source_name.strip())
+    for candidate in candidates:
+        if candidate.suffix.lower() != ".json" or not candidate.exists():
+            continue
+        try:
+            parsed = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    return {}
+
+
+def _int_value(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and re.fullmatch(r"-?\d+", value.strip()):
+        return int(value.strip())
+    return None
+
+
+def _vault_pc_payload(frontmatter: dict[str, Any], body: str) -> dict[str, Any]:
+    raw_sheet = _extract_json_block(body) or _source_json_payload(frontmatter)
+    build = raw_sheet.get("build") if isinstance(raw_sheet.get("build"), dict) else {}
+    abilities = build.get("abilities") if isinstance(build.get("abilities"), dict) else {}
+    attributes = (
+        build.get("attributes") if isinstance(build.get("attributes"), dict) else {}
+    )
+    ac_total = build.get("acTotal") if isinstance(build.get("acTotal"), dict) else {}
+
+    def _fm_int(key: str) -> int | None:
+        return _int_value(frontmatter.get(key))
+
+    def _first(key: str, fallback: Any = None) -> Any:
+        return build.get(key) if build.get(key) not in (None, "") else fallback
+
+    return {
+        "name": _first("name", frontmatter.get("pc_name")),
+        "class_name": _first("class", frontmatter.get("class_name")),
+        "level": _int_value(_first("level", frontmatter.get("level"))) or 1,
+        "xp": _int_value(_first("xp", frontmatter.get("xp"))),
+        "ancestry": _first("ancestry", frontmatter.get("ancestry")),
+        "heritage": _first("heritage", frontmatter.get("heritage")),
+        "background": _first("background", frontmatter.get("background")),
+        "alignment": _first("alignment", frontmatter.get("alignment")),
+        "gender": _first("gender"),
+        "age": _first("age"),
+        "deity": _first("deity"),
+        "keyability": _first("keyability", frontmatter.get("key_ability")),
+        "languages": _first("languages", frontmatter.get("languages") or []),
+        "attributes": {
+            "str": _int_value(abilities.get("str")) or _fm_int("strength"),
+            "dex": _int_value(abilities.get("dex")) or _fm_int("dexterity"),
+            "con": _int_value(abilities.get("con")) or _fm_int("constitution"),
+            "int": _int_value(abilities.get("int")) or _fm_int("intelligence"),
+            "wis": _int_value(abilities.get("wis")) or _fm_int("wisdom"),
+            "cha": _int_value(abilities.get("cha")) or _fm_int("charisma"),
+        },
+        "vitals": {
+            "ancestry_hp": _int_value(attributes.get("ancestryhp"))
+            or _fm_int("ancestry_hp"),
+            "class_hp": _int_value(attributes.get("classhp"))
+            or _fm_int("class_hp"),
+            "bonus_hp": _int_value(attributes.get("bonushp")) or 0,
+            "bonus_hp_per_level": _int_value(attributes.get("bonushpPerLevel")) or 0,
+            "speed": _int_value(attributes.get("speed")) or _fm_int("speed"),
+        },
+        "ac": {
+            "total": _int_value(ac_total.get("acTotal")) or _fm_int("armor_class"),
+            "shield_bonus": _int_value(ac_total.get("shieldBonus"))
+            or _fm_int("shield_bonus"),
+        },
+        "proficiencies": {
+            "classDC": _fm_int("class_dc"),
+            "perception": _fm_int("perception"),
+            "fortitude": _fm_int("fortitude"),
+            "reflex": _fm_int("reflex"),
+            "will": _fm_int("will"),
+            "acrobatics": _fm_int("acrobatics"),
+            "arcana": _fm_int("arcana"),
+            "athletics": _fm_int("athletics"),
+            "crafting": _fm_int("crafting"),
+            "deception": _fm_int("deception"),
+            "diplomacy": _fm_int("diplomacy"),
+            "intimidation": _fm_int("intimidation"),
+            "medicine": _fm_int("medicine"),
+            "nature": _fm_int("nature"),
+            "occultism": _fm_int("occultism"),
+            "performance": _fm_int("performance"),
+            "religion": _fm_int("religion"),
+            "society": _fm_int("society"),
+            "stealth": _fm_int("stealth"),
+            "survival": _fm_int("survival"),
+            "thievery": _fm_int("thievery"),
+        },
+        "lores": _first("lores", []),
+        "weapons": _first("weapons", []),
+        "armor": _first("armor", []),
+        "feats": _first("feats", []),
+        "specials": _first(
+            "specials",
+            frontmatter.get("special_abilities") or frontmatter.get("specials") or [],
+        ),
+        "resistances": _first("resistances", frontmatter.get("resistances") or []),
+        "items": _first("equipment", []),
+        "money": _first("money", {}),
+        "spellcasters": _first("spellCasters", []),
+        "focus_points": _first("focusPoints"),
+        "raw": raw_sheet,
+    }
+
+
+def _vault_pc_sheet_view(path: Path) -> dict[str, Any] | None:
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    frontmatter, body = split_frontmatter(content)
+    if frontmatter.get("document_kind") != "pc_sheet":
+        return None
+    doc_id = _int_value(frontmatter.get("doc_id"))
+    payload = _vault_pc_payload(frontmatter, body)
+    entity = {
+        "id": doc_id or abs(hash(path.as_posix())),
+        "stable_key": f"vault-pc-sheet-{path.stem.casefold()}",
+        "entity_type": "pc",
+        "name": frontmatter.get("pc_name") or payload.get("name") or path.stem,
+        "summary": frontmatter.get("summary"),
+        "description": body,
+        "details": {
+            "portrait": frontmatter.get("portrait")
+            or frontmatter.get("imageLink")
+            or frontmatter.get("image_link"),
+            "image_status": frontmatter.get("image_status"),
+            "image_source": frontmatter.get("image_source"),
+            "image_attribution": frontmatter.get("image_attribution"),
+            "image_notes": frontmatter.get("image_notes"),
+            "class_name": frontmatter.get("class_name"),
+            "level": frontmatter.get("level"),
+            "ancestry": frontmatter.get("ancestry"),
+            "heritage": frontmatter.get("heritage"),
+            "background": frontmatter.get("background"),
+            "alignment": frontmatter.get("alignment"),
+            "size_name": frontmatter.get("size_name"),
+            "languages": frontmatter.get("languages") or [],
+            "specials": frontmatter.get("special_abilities") or [],
+            "notable_items": frontmatter.get("related_entities") or [],
+        },
+        "latest_sheet_version": {
+            "payload": payload,
+            "source_name": frontmatter.get("source_name") or path.name,
+        },
+    }
+    sheet = _pc_sheet_view(entity)
+    sheet["id"] = entity["id"]
+    sheet["vault_path"] = path.relative_to(_vault_root()).as_posix()
+    sheet["player_name"] = str(frontmatter.get("title") or path.stem)
+    sheet["character_name"] = str(entity["name"])
+    return sheet
+
+
+def _vault_pc_sheets() -> list[dict[str, Any]]:
+    root = _vault_root() / "Sheets"
+    if not root.exists():
+        return []
+    sheets = []
+    for path in sorted(root.glob("*.md")):
+        sheet = _vault_pc_sheet_view(path)
+        if sheet:
+            sheets.append(sheet)
+    return sheets
+
+
 def _portrait_ref(details: dict) -> str | None:
-    for key in ("portrait", "portrait_url", "image", "imageLink", "image_link"):
+    for key in (
+        "portrait",
+        "portrait_url",
+        "image",
+        "imageLink",
+        "image_link",
+        "imageUrl",
+        "image_url",
+    ):
         value = details.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
+
+
+def _vault_image_url(ref: str | None) -> str | None:
+    if not ref:
+        return None
+    value = ref.strip()
+    if value.startswith(("http://", "https://", "/")):
+        return value
+    match = re.fullmatch(r"!?\[\[([^\]]+)\]\]", value)
+    if not match:
+        return None
+    target = match.group(1).split("|", 1)[0].split("#", 1)[0].strip()
+    if Path(target).suffix.lower() not in {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".gif",
+        ".svg",
+    }:
+        return None
+    return f"/api/live/vault/file?path={quote(target)}"
+
+
+def _image_view(details: dict) -> dict[str, Any]:
+    ref = _portrait_ref(details)
+    url = _vault_image_url(ref)
+    status = details.get("image_status")
+    if not status:
+        if url and ref and ref.startswith(("http://", "https://")):
+            status = "remote"
+        elif ref and re.fullmatch(r"!?\[\[[^\]]+\]\]", ref.strip()):
+            status = "needs review"
+        elif url:
+            status = "local"
+        else:
+            status = "missing"
+    return {
+        "ref": ref,
+        "url": url,
+        "status": status,
+        "source": details.get("image_source"),
+        "attribution": details.get("image_attribution"),
+        "notes": details.get("image_notes"),
+    }
 
 
 def _pc_sheet_view(entity: dict) -> dict:
@@ -1108,7 +1365,8 @@ def _pc_sheet_view(entity: dict) -> dict:
         "stable_key": entity.get("stable_key"),
         "player_name": _path_stem(source_name),
         "character_name": entity.get("name"),
-        "portrait": _portrait_ref(details),
+        "portrait": _vault_image_url(_portrait_ref(details)) or _portrait_ref(details),
+        "image": _image_view(details),
         "summary": entity.get("summary"),
         "description": entity.get("description"),
         "has_imported_sheet": bool(payload),
@@ -1198,7 +1456,8 @@ def _npc_dossier_view(entity: dict) -> dict:
         "id": entity.get("id"),
         "stable_key": entity.get("stable_key"),
         "name": entity.get("name"),
-        "portrait": _portrait_ref(details),
+        "portrait": _vault_image_url(_portrait_ref(details)) or _portrait_ref(details),
+        "image": _image_view(details),
         "summary": entity.get("summary"),
         "description": entity.get("description"),
         "role": details.get("role") or details.get("occupation"),
@@ -1246,6 +1505,7 @@ async def update_live_session_state(
             maptool_map_id=payload.maptool_map_id,
             notes=payload.notes,
             frugal_mode=payload.frugal_mode,
+            combat_state=payload.combat_state,
         )
     except ValueError as exc:
         raise _bad_request(str(exc)) from exc
@@ -1338,9 +1598,45 @@ async def list_live_pc_sheets(
     q: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
-    overview = await campaign_service.get_overview(db)
     query = (q or "").strip().casefold()
     items = []
+    vault_items = _vault_pc_sheets()
+    if vault_items:
+        for sheet in vault_items:
+            if not _text_matches(
+                query,
+                sheet.get("player_name"),
+                sheet.get("character_name"),
+                sheet.get("summary"),
+                sheet.get("identity", {}).get("class_name"),
+                sheet.get("identity", {}).get("ancestry"),
+            ):
+                continue
+            items.append(
+                {
+                    "id": sheet["id"],
+                    "player_name": sheet["player_name"],
+                    "character_name": sheet["character_name"],
+                    "summary": sheet["summary"],
+                    "portrait": sheet["portrait"],
+                    "image": sheet["image"],
+                    "has_imported_sheet": sheet["has_imported_sheet"],
+                    "class_name": sheet["identity"].get("class_name"),
+                    "level": sheet["identity"].get("level"),
+                    "identity": sheet["identity"],
+                    "combat": sheet["combat"],
+                    "abilities": sheet["abilities"],
+                    "skills": sheet["skills"],
+                    "lores": sheet["lores"],
+                    "attacks": sheet["attacks"],
+                    "armor": sheet["armor"],
+                    "specials": sheet["specials"],
+                    "resistances": sheet["resistances"],
+                }
+            )
+        return {"items": items, "total": len(items), "source": "obsidian_vault"}
+
+    overview = await campaign_service.get_overview(db)
     for entity in overview.get("pcs") or []:
         sheet = _pc_sheet_view(entity)
         if not _text_matches(
@@ -1359,6 +1655,7 @@ async def list_live_pc_sheets(
                 "character_name": sheet["character_name"],
                 "summary": sheet["summary"],
                 "portrait": sheet["portrait"],
+                "image": sheet["image"],
                 "has_imported_sheet": sheet["has_imported_sheet"],
                 "class_name": sheet["identity"].get("class_name"),
                 "level": sheet["identity"].get("level"),
@@ -1381,6 +1678,10 @@ async def get_live_pc_sheet(
     id: int = Query(gt=0),
     db: AsyncSession = Depends(get_db),
 ):
+    for sheet in _vault_pc_sheets():
+        if sheet.get("id") == id:
+            return sheet
+
     entity = await campaign_service.get_entity(id, db)
     if entity is None:
         raise _not_found("PC was not found")
@@ -1422,7 +1723,8 @@ async def list_live_npc_sheets(
                 "role": dossier.get("role"),
                 "status": dossier.get("status"),
                 "status_detail": dossier.get("status_detail"),
-                "portrait": _portrait_ref(details),
+                "portrait": dossier.get("portrait"),
+                "image": dossier.get("image"),
                 "current_location": entity.get("current_location"),
                 "appearance_description": dossier.get("appearance_description"),
                 "gm_summary": dossier.get("gm_summary"),
@@ -1864,6 +2166,103 @@ async def get_dungeon_room_key(map_id: str = Query(min_length=1)):
     raise _not_found("Dungeon room key was not found")
 
 
+def _tts_provider() -> str:
+    return str(settings.tts_provider or "browser").strip().casefold()
+
+
+def _piper_command(output_path: Path) -> list[str]:
+    binary = str(settings.piper_binary_path or "piper").strip() or "piper"
+    voice_path = str(settings.piper_voice_path or "").strip()
+    if not voice_path:
+        raise RuntimeError("PIPER_VOICE_PATH is not configured")
+    model = Path(voice_path).expanduser()
+    if not model.exists():
+        raise RuntimeError(f"Piper voice model was not found: {model}")
+
+    command = [
+        binary,
+        "--model",
+        str(model),
+        "--output_file",
+        str(output_path),
+    ]
+    if settings.piper_speaker_id is not None:
+        command.extend(["--speaker", str(settings.piper_speaker_id)])
+    if settings.piper_length_scale is not None:
+        command.extend(["--length_scale", str(settings.piper_length_scale)])
+    if settings.piper_noise_scale is not None:
+        command.extend(["--noise_scale", str(settings.piper_noise_scale)])
+    if settings.piper_noise_w is not None:
+        command.extend(["--noise_w", str(settings.piper_noise_w)])
+    return command
+
+
+def _synthesize_with_piper(text: str) -> bytes:
+    with tempfile.TemporaryDirectory(prefix="dma-piper-") as temp_dir:
+        output_path = Path(temp_dir) / "speech.wav"
+        command = _piper_command(output_path)
+        try:
+            result = subprocess.run(
+                command,
+                input=text,
+                text=True,
+                capture_output=True,
+                timeout=45,
+                check=False,
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                f"Piper binary was not found: {settings.piper_binary_path or 'piper'}"
+            ) from exc
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError("Piper synthesis timed out") from exc
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "Piper failed").strip()
+            raise RuntimeError(detail[-500:])
+        if not output_path.exists():
+            raise RuntimeError("Piper did not create an audio file")
+        return output_path.read_bytes()
+
+
+@router.get("/tts/status")
+async def get_tts_status():
+    provider = _tts_provider()
+    piper_ready = False
+    piper_detail = "Piper is not selected."
+    if provider == "piper":
+        try:
+            _piper_command(Path("dma-tts-check.wav"))
+            piper_ready = True
+            piper_detail = "Piper appears configured."
+        except RuntimeError as exc:
+            piper_detail = str(exc)
+    return {
+        "provider": provider,
+        "browser_available": True,
+        "piper_ready": piper_ready,
+        "piper_detail": piper_detail,
+    }
+
+
+@router.post("/tts/synthesize")
+async def synthesize_tts(request: LiveTTSRequest):
+    provider = _tts_provider()
+    if provider != "piper":
+        raise _bad_request("Server TTS is not enabled; use browser speech synthesis")
+    text = re.sub(r"\s+", " ", request.text).strip()
+    if not text:
+        raise _bad_request("No text was provided for synthesis")
+    try:
+        audio = _synthesize_with_piper(text)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return Response(
+        content=audio,
+        media_type="audio/wav",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 @router.get("/aon-creatures", response_model=AonCreatureSearchResponse)
 async def list_aon_creatures(
     q: Optional[str] = Query(default=None),
@@ -1910,6 +2309,7 @@ async def get_aon_creature(
             "speed": document.speed,
             "perception": document.perception,
             "attacks": document.attacks,
+            "image_url": document.image_url,
             "fetched_at": document.fetched_at,
             "ruleset": "pf2e",
         },
