@@ -336,9 +336,9 @@ For the current Abomination Vaults setup, this should load:
 In the DMA panel:
 
 1. Open `Campaign Overview`.
-2. Click the `GM Summary` and `PC Summary` tabs.
+2. Click the `GM Summary`, `PC Summary`, and `Items` tabs.
 3. Open `Session Overview`.
-4. Look for `Session 04 - Level 3 C7 Start`.
+4. Look for `Session 04 - Level 3 C9 Start`.
 5. Open `Map Room`.
 6. Check that dungeon maps appear in the dropdown.
 7. Open `PC Sheet Viewer`.

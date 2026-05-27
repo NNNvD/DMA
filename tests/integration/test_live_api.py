@@ -207,6 +207,44 @@ This text belongs to the next chapter, not A25.
         ),
         encoding="utf-8",
     )
+    bestiary_folder = tmp_path / "bestiary" / "abomination-vaults"
+    bestiary_folder.mkdir(parents=True)
+    (bestiary_folder / "level-3.json").write_text(
+        json.dumps(
+            {
+                "campaign": "Abomination Vaults",
+                "level": "Level 3 / C Rooms",
+                "entries": [
+                    {
+                        "id": "av-l3-canker-cultist",
+                        "entry_type": "creature",
+                        "name": "Canker Cultist",
+                        "level": 3,
+                        "rooms": ["C15"],
+                        "traits": ["Ghoul", "Undead"],
+                        "summary": "Custom ghoul cultist.",
+                        "combat": {"ac": "19", "hp": "45"},
+                    },
+                    {
+                        "id": "av-l3-watching-wall",
+                        "entry_type": "hazard",
+                        "name": "Watching Wall",
+                        "level": 4,
+                        "rooms": ["C4"],
+                        "summary": "Complex haunt.",
+                    },
+                    {
+                        "id": "av-l3-ghoul-fever",
+                        "entry_type": "affliction",
+                        "name": "Ghoul Fever",
+                        "rooms": ["C15"],
+                        "affliction": {"dc": "20"},
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
 
     monkeypatch.setattr(settings, "dungeon_map_root", str(map_root))
     monkeypatch.setattr(settings, "dungeon_room_key_root", str(room_key_root))
@@ -262,6 +300,36 @@ This text belongs to the next chapter, not A25.
         assert a2["general_text"] == (
             "True to appearances, the drawbridge isn't safe to cross."
         )
+
+        bestiary = client.get("/api/live/campaign-bestiary")
+        assert bestiary.status_code == 200
+        assert {item["id"] for item in bestiary.json()["items"]} == {
+            "av-l3-canker-cultist",
+            "av-l3-watching-wall",
+            "av-l3-ghoul-fever",
+        }
+
+        filtered = client.get(
+            "/api/live/campaign-bestiary",
+            params={"entry_type": "creature", "q": "canker"},
+        )
+        assert filtered.status_code == 200
+        assert [item["id"] for item in filtered.json()["items"]] == [
+            "av-l3-canker-cultist"
+        ]
+
+        detail = client.get(
+            "/api/live/campaign-bestiary-entry",
+            params={"id": "av-l3-ghoul-fever"},
+        )
+        assert detail.status_code == 200
+        assert detail.json()["entry"]["affliction"]["dc"] == "20"
+
+        missing = client.get(
+            "/api/live/campaign-bestiary-entry",
+            params={"id": "missing"},
+        )
+        assert missing.status_code == 404
     finally:
         asyncio.run(engine.dispose())
 
@@ -862,6 +930,8 @@ def test_dm_panel_route_serves_browser_panel():
         assert "speechSynthesis" in response.text
         assert "Session Mechanics" in response.text
         assert "Campaign Overview" in response.text
+        assert "Treasure Tracker" in response.text
+        assert 'data-campaign-tab="items"' in response.text
         assert "Session Overview" in response.text
         assert "Quick Rules" in response.text
         assert "/scene" in response.text

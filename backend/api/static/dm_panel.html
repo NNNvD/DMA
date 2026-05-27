@@ -455,6 +455,7 @@
     }
 
     .module-campaign-overview,
+    .module-campaign-bestiary,
     .module-pc-sheet-viewer,
     .module-npc-dossier-viewer {
       background: rgba(255, 251, 242, 0.86);
@@ -498,12 +499,16 @@
       order: -28;
     }
 
-    .module-campaign-overview {
+    .module-campaign-bestiary {
       order: -27;
     }
 
-    .module-session-overview {
+    .module-campaign-overview {
       order: -26;
+    }
+
+    .module-session-overview {
+      order: -25;
     }
 
     .panel.is-collapsed {
@@ -903,7 +908,7 @@
     }
 
     .command-note-view.markdown-render {
-      max-width: 88ch;
+      max-width: min(100%, 1120px);
     }
 
     .note-reader-grid {
@@ -1005,6 +1010,45 @@
 
     .markdown-render ul {
       padding-left: 20px;
+    }
+
+    .markdown-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      border-radius: 16px;
+      background: rgba(255, 252, 246, 0.78);
+    }
+
+    .markdown-render table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    .markdown-render th,
+    .markdown-render td {
+      padding: 9px 11px;
+      border-bottom: 1px solid rgba(90, 71, 59, 0.1);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .markdown-render th {
+      color: var(--accent);
+      background: rgba(138, 47, 29, 0.055);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .markdown-render tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .markdown-render td:first-child {
+      white-space: nowrap;
     }
 
     .vault-wikilink {
@@ -2338,6 +2382,7 @@
             <button type="button" class="session-tab active" data-campaign-tab="overview">Overview</button>
             <button type="button" class="session-tab" data-campaign-tab="gm-summary">GM Summary</button>
             <button type="button" class="session-tab" data-campaign-tab="pc-summary">PC Summary</button>
+            <button type="button" class="session-tab" data-campaign-tab="items">Items</button>
           </div>
           <div class="command-note-toolbar">
             <button type="button" id="campaign-overview-refresh">Refresh</button>
@@ -2555,6 +2600,45 @@
               <button type="submit">Send To DMA</button>
             </div>
           </form>
+        </article>
+
+        <article class="panel full-width module-campaign-bestiary" data-module-id="campaign-bestiary">
+          <h2>Campaign Bestiary</h2>
+          <div class="sheet-module-stack" id="campaign-bestiary-viewer">
+            <div class="result-box sheet-view" id="campaign-bestiary-overview">
+              <span class="empty">Campaign bestiary overview will appear here.</span>
+            </div>
+            <div class="sheet-browser">
+              <div>
+                <form id="campaign-bestiary-search-form">
+                  <label>
+                    Search Bestiary
+                    <input id="campaign-bestiary-search" placeholder="Canker, C34, ghoul fever, haunt…" />
+                  </label>
+                  <label style="margin-top: 12px;">
+                    Entry Type
+                    <select id="campaign-bestiary-type">
+                      <option value="">All entries</option>
+                      <option value="creature">Custom Creature</option>
+                      <option value="aon_reference">AoN Creature</option>
+                      <option value="hazard">Hazard</option>
+                      <option value="affliction">Affliction</option>
+                    </select>
+                  </label>
+                  <div class="actions">
+                    <button type="submit">Search Bestiary</button>
+                    <button type="button" class="ghost" id="campaign-bestiary-refresh">Refresh</button>
+                  </div>
+                </form>
+                <div class="list scroll-list" id="campaign-bestiary-list" style="margin-top: 12px;">
+                  <div class="empty">Bestiary entries will appear here.</div>
+                </div>
+              </div>
+              <div class="result-box sheet-view" id="campaign-bestiary-detail">
+                <span class="empty">Open a bestiary entry to inspect full details here.</span>
+              </div>
+            </div>
+          </div>
         </article>
 
         <article class="panel full-width module-pc-sheet-viewer" data-module-id="pc-sheet-viewer">
@@ -2843,6 +2927,8 @@
       ttsSynthesize: "/api/live/tts/synthesize",
       aonCreatures: "/api/live/aon-creatures",
       aonCreature: "/api/live/aon-creature",
+      campaignBestiary: "/api/live/campaign-bestiary",
+      campaignBestiaryEntry: "/api/live/campaign-bestiary-entry",
       pcSheets: "/api/live/pc-sheets",
       pcSheet: "/api/live/pc-sheet",
       npcSheets: "/api/live/npc-sheets",
@@ -2867,9 +2953,12 @@
       round: 1,
       activeIndex: 0,
       combatants: [],
+      afflictions: [],
     };
     let combatSaveTimer = null;
     let aonCreatures = [];
+    let campaignBestiaryEntries = [];
+    let activeBestiaryEntry = null;
     let pcSheets = [];
     let npcSheets = [];
     let campaignOverviewNote = null;
@@ -2877,9 +2966,10 @@
     let sessionOverviews = [];
     let activeSessionOverview = null;
     let activeNpcDossierId = null;
-    const launchSessionPath = "Command Center/Sessions/Session 04 - Level 3 C7 Start.md";
+    const launchSessionPath = "Command Center/Sessions/Session 04 - Level 3 C9 Start.md";
     const playerRecapPath = "Command Center/Campaign Recaps/Player Summary Through Level 3 C7.md";
     const gmRecapPath = "Command Center/Campaign Recaps/GM Summary Through Level 3 C7.md";
+    const treasureTrackerPath = "Command Center/Treasure Tracker.md";
     const campaignOverviewTabs = {
       overview: {
         label: "Overview",
@@ -2894,6 +2984,10 @@
         label: "PC Summary",
         path: playerRecapPath,
       },
+      items: {
+        label: "Items",
+        path: treasureTrackerPath,
+      },
     };
     let availableVoices = [];
     let ttsServerStatus = { provider: "browser", piper_ready: false };
@@ -2905,7 +2999,7 @@
       "Current Scene": "Use this first at the start of play and whenever the table moves to a new situation.\n\nScene Title is the short label for what is happening now. Focus tells DMA what kind of help to prioritize, such as scouting, social tension, combat, or rules friction. Current Location, Active PCs, and Active NPCs give chat, prep, sound recommendations, and continuity tools the right context. MapTool Map ID is used by Session Mechanics when you sync a map. DM Notes are for short reminders that matter right now, not full session notes. Save Live State after changing these fields.",
       "Map Room": "Use this during dungeon exploration when you want the map and room key on one screen.\n\nDungeon Map loads a local map image from the configured campaign media folder. Use the Secret, Loot, Monsters, Trap, Haunt, and NPC checkboxes when you want to surface only rooms with those features. Use Search Room Text to search room summaries and literal source text at the same time. Each room card is collapsed by default. Expand the room the party is entering to see what the PCs notice first, then GM-only contents such as monsters, NPCs, traps, haunts, loot, secret doors, visibility notes, and detection notes. The Read Aloud button speaks the player-facing boxed/read-aloud text with the configured narrator voice. This first version does not place clickable hotspots on the map yet; use the printed room labels on the image and the sidebar together.",
       "Current Combat": "Use this when initiative starts.\n\nOpen the relevant Map Room card, then press Start From Open Room. The roster adds the party PCs from the PC Sheet Viewer, pulls room creatures, enriches known monsters from the local Archives of Nethys index, and opens the active combatant while keeping everyone else compact. The initiative strip gives the full turn order at a glance. Collapsed cards show the essentials only: name, HP, AC, and current conditions. Use Add Party PCs if you started with a custom monster or want to restore missing PCs. Use Next Turn and Previous Turn to track the active combatant and round; timed conditions count down automatically when turns advance. Edit current or max HP directly if you want to tune difficulty during play. Duplicate creatures receive letter labels such as A and B so you can keep them apart. Monster cards expose Strategy, Look, Recall, and AoN detail pills when you need more context.",
-      "Campaign Overview": "Use this as the campaign-level compass.\n\nThis note is stored in the Obsidian vault at Command Center/Campaign Overview.md, so edits here remain available in Obsidian and vice versa. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, and DM notes. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
+      "Campaign Overview": "Use this as the campaign-level compass.\n\nThis module has tabs for the main campaign overview, GM-facing recap, PC-facing recap, and item/treasure tracking. The notes are stored in the Obsidian vault, so edits here remain available in Obsidian and vice versa. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, DM notes, and table-useful item reminders. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
       "Session Overview": "Use this as the immediate session command center.\n\nEach tab opens a session note from the Obsidian vault. Next Session is the working prep tab; other Session tabs can hold runbooks, recaps, or future prep. Keep each session note organized around goal, starting situation, likely scenes, important NPCs, monsters/hazards/treasure, secrets, unexpected-player contingencies, live notes, and after-session recap. Use Edit Text during or after play to keep the DMA memory fresh.",
       "Quick Rules": "Use this when you want a direct rules answer with citations rather than a conversational answer.\n\nType the rules question in plain language. Strict rules mode keeps the answer close to approved rules documents and is best during live play. Top K controls how many source chunks DMA considers; use 3 for fast focused answers and 5 or 8 when the first answer needs more context. For looser questions, the /rules button in DMA Chat is often enough.",
       "Quick Prep": "Use this to generate a structured prep brief from the current live scene, recent sessions, and campaign state.\n\nBrief Title names the generated prep document. Prep Focus can override the current scene focus if you want a more specific brief, such as Level 1 hazards or Otari social fallout. Session Count controls how much recent history DMA considers. Store as session_prep document writes the brief back into DMA so it appears later in Session Context and the Obsidian export.",
@@ -2913,6 +3007,7 @@
       "DMA Chat Workbench": "Use this as the main place to talk to DMA.\n\nAsk normal questions, or use the quick slash prompt buttons. /scene summarizes the current live situation. /rules starts a rules question. /recap asks for recent continuity. /prep asks for preparation help. /search looks up campaign memory. Chat Mode lets you steer the assistant when your request is ambiguous. Chat responses stay in this browser session and can be sent to Voice Reader with Use Assistant Reply.",
       "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. When matching player-named vault sheets exist, the viewer reads those first so the DM sees the current campaign party rather than stale database placeholders. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
       "NPC Dossier Viewer": "Use this to inspect and update NPC campaign dossiers during play.\n\nSearch by NPC name, role, status, or summary, then open the dossier. NPCs are displayed differently from PCs: the focus is portrait, appearance, role, current location, player-facing description, GM summary, whether the party has encountered them, relationship to the PCs, campaign encounter points, goals, secrets, clues, relationships, and optional combat/statblock data. Use Edit NPC Notes And Details for table notes, better status values, appearance text, and disposition changes.",
+      "Campaign Bestiary": "Use this to inspect the campaign-specific encounter library.\n\nThis is where DMA keeps custom adventure creatures, AoN-linked creatures used in the campaign, hazards, and afflictions such as diseases. Search by name, room, trait, or source. Use the type filter to focus on custom creatures, AoN references, hazards, or afflictions. Opening an entry shows GM-facing stats, strategy, appearance, first-glance information, Recall Knowledge suggestions, and source rooms. Creature entries can be added to Current Combat. Hazards and afflictions are shown as structured references; hazards are added only when you explicitly choose them, and afflictions are tracked separately rather than becoming initiative combatants.",
       "Dice Roller": "Use this for quick checks, saves, attacks, damage, and fortune or misfortune rolls.\n\nType formulas like 1d20+7, 2d6+4, 4d6kh3, or 2d20kl1+9. The die and modifier buttons help build common expressions quickly. Flat Check, Skill Check, Fortune, and Misfortune load useful templates that you can edit before rolling. Roll history keeps the latest results visible while the page stays open.",
       "Session Soundboard": "Use this for lightweight sound cues and ambience during play.\n\nThe recommended sounds are based on the saved scene title, focus, and current location, so update Current Scene first if the suggestions feel off. One-shot cues play briefly. Ambience loops until you stop it or start a different ambience. Stop All Audio cuts off all sounds started by this panel. These are browser-generated sounds, not imported audio tracks.",
       "Voice Reader": "Use this to read boxed text, NPC dialogue, recaps, or assistant answers aloud.\n\nChoose a Voice Preset for pacing and tone, then pick one of the voices installed in your browser or operating system. Rate and Pitch fine-tune the result. Use Assistant Reply loads the latest chat answer. Use Scene Notes loads the current DM notes. Paste or edit the text, then press Speak. Stop Speaking cancels the current read-aloud.",
@@ -3090,6 +3185,7 @@
       "current-combat",
       "campaign-overview",
       "session-overview",
+      "campaign-bestiary",
       "pc-sheet-viewer",
       "npc-dossier-viewer",
     ];
@@ -3576,6 +3672,100 @@
       return (noteTarget.split("/").pop() || noteTarget || target).replace(/\.md$/i, "");
     }
 
+    function splitWikilinkTarget(target) {
+      const [noteTarget, ...headingParts] = String(target || "").split("#");
+      return {
+        noteTarget: noteTarget.trim(),
+        heading: headingParts.join("#").trim(),
+      };
+    }
+
+    function normalizeMarkdownHeading(text) {
+      return String(text || "")
+        .replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (_match, target, alias) => alias || wikilinkLabel(target, ""))
+        .replace(/[`*_~]/g, "")
+        .trim()
+        .toLowerCase();
+    }
+
+    function stripFrontmatter(markdown) {
+      return String(markdown || "").replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+    }
+
+    function extractMarkdownSection(markdown, heading) {
+      const body = stripFrontmatter(markdown);
+      if (!heading) {
+        return body.trim();
+      }
+      const wanted = normalizeMarkdownHeading(heading);
+      const lines = body.split(/\r?\n/);
+      let startIndex = -1;
+      let startLevel = 0;
+      for (let index = 0; index < lines.length; index += 1) {
+        const match = lines[index].match(/^(#{1,6})\s+(.+)$/);
+        if (match && normalizeMarkdownHeading(match[2]) === wanted) {
+          startIndex = index + 1;
+          startLevel = match[1].length;
+          break;
+        }
+      }
+      if (startIndex < 0) {
+        return `**Missing embedded section:** ${heading}`;
+      }
+      const sectionLines = [];
+      for (let index = startIndex; index < lines.length; index += 1) {
+        const match = lines[index].match(/^(#{1,6})\s+(.+)$/);
+        if (match && match[1].length <= startLevel) {
+          break;
+        }
+        sectionLines.push(lines[index]);
+      }
+      return sectionLines.join("\n").trim();
+    }
+
+    async function loadVaultEmbedMarkdown(target) {
+      const resolved = await fetchJson(`${endpoints.vaultResolveLink}?target=${encodeURIComponent(target)}`);
+      const payload = await loadVaultNotePayload(resolved.path);
+      const { heading } = splitWikilinkTarget(target);
+      return extractMarkdownSection(payload.content, heading || resolved.heading || "");
+    }
+
+    async function expandVaultEmbeds(markdown) {
+      const lines = String(markdown || "").split(/\r?\n/);
+      const output = [];
+      for (let index = 0; index < lines.length; index += 1) {
+        const callout = lines[index].match(/^>\s*\[![^\]]+\][+-]?\s*(.+)?$/);
+        const followingEmbed = lines[index + 1]?.match(/^>\s*!\[\[([^\]]+)\]\]\s*$/);
+        if (callout && followingEmbed) {
+          const title = callout[1]?.trim() || wikilinkLabel(followingEmbed[1], "");
+          output.push(`### ${title}`);
+          output.push("");
+          try {
+            output.push(await loadVaultEmbedMarkdown(followingEmbed[1]));
+          } catch (error) {
+            output.push(`**Could not load embedded note:** ${followingEmbed[1]} (${error.message})`);
+          }
+          output.push("");
+          index += 1;
+          continue;
+        }
+        const embed = lines[index].match(/^!\[\[([^\]]+)\]\]\s*$/);
+        if (embed) {
+          output.push(`### ${wikilinkLabel(embed[1], "")}`);
+          output.push("");
+          try {
+            output.push(await loadVaultEmbedMarkdown(embed[1]));
+          } catch (error) {
+            output.push(`**Could not load embedded note:** ${embed[1]} (${error.message})`);
+          }
+          output.push("");
+          continue;
+        }
+        output.push(lines[index]);
+      }
+      return output.join("\n");
+    }
+
     function renderInlineMarkdown(text) {
       const source = String(text || "");
       let html = "";
@@ -3600,6 +3790,60 @@
       }
       html += escapeHtml(source.slice(cursor));
       return html;
+    }
+
+    function isMarkdownTableRow(line) {
+      const trimmed = String(line || "").trim();
+      return trimmed.includes("|") && /^\|?.+\|.+\|?$/.test(trimmed);
+    }
+
+    function isMarkdownTableSeparator(line) {
+      const trimmed = String(line || "").trim();
+      if (!trimmed.includes("|")) {
+        return false;
+      }
+      return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed);
+    }
+
+    function parseMarkdownTableRow(line) {
+      let trimmed = String(line || "").trim();
+      if (trimmed.startsWith("|")) {
+        trimmed = trimmed.slice(1);
+      }
+      if (trimmed.endsWith("|")) {
+        trimmed = trimmed.slice(0, -1);
+      }
+      return trimmed.split("|").map((cell) => cell.trim());
+    }
+
+    function renderMarkdownTable(tableLines) {
+      if (tableLines.length < 2) {
+        return "";
+      }
+      const headers = parseMarkdownTableRow(tableLines[0]);
+      const rows = tableLines.slice(2).map(parseMarkdownTableRow);
+      const columnCount = headers.length;
+      const cellsFor = (row) =>
+        Array.from({ length: columnCount }, (_unused, index) => row[index] || "");
+      return `
+        <div class="markdown-table-wrap">
+          <table>
+            <thead>
+              <tr>${headers.map((cell) => `<th>${renderInlineMarkdown(cell)}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
+              ${rows
+                .map(
+                  (row) =>
+                    `<tr>${cellsFor(row)
+                      .map((cell) => `<td>${renderInlineMarkdown(cell)}</td>`)
+                      .join("")}</tr>`,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
     }
 
     async function openWikilinkTarget(target) {
@@ -3675,12 +3919,13 @@
           listOpen = false;
         }
       };
-      lines.forEach((line) => {
+      for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
         const trimmed = line.trim();
         if (!trimmed) {
           flushParagraph();
           closeList();
-          return;
+          continue;
         }
         const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
         if (heading) {
@@ -3688,7 +3933,24 @@
           closeList();
           const level = heading[1].length;
           html.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
-          return;
+          continue;
+        }
+        if (
+          isMarkdownTableRow(trimmed) &&
+          index + 1 < lines.length &&
+          isMarkdownTableSeparator(lines[index + 1])
+        ) {
+          flushParagraph();
+          closeList();
+          const tableLines = [trimmed, lines[index + 1].trim()];
+          index += 2;
+          while (index < lines.length && isMarkdownTableRow(lines[index])) {
+            tableLines.push(lines[index].trim());
+            index += 1;
+          }
+          index -= 1;
+          html.push(renderMarkdownTable(tableLines));
+          continue;
         }
         const bullet = trimmed.match(/^[-*]\s+(.+)$/);
         if (bullet) {
@@ -3698,10 +3960,10 @@
             listOpen = true;
           }
           html.push(`<li>${renderInlineMarkdown(bullet[1])}</li>`);
-          return;
+          continue;
         }
         paragraph.push(trimmed);
-      });
+      }
       flushParagraph();
       closeList();
       return html.join("");
@@ -3756,7 +4018,7 @@
       if (!note) {
         return;
       }
-      document.getElementById("campaign-overview-view").innerHTML = markdownToHtml(note.content);
+      document.getElementById("campaign-overview-view").innerHTML = markdownToHtml(note.renderedContent || note.content);
       renderNoteToc("campaign-overview-view", "campaign-overview-toc");
       document.getElementById("campaign-overview-editor").value = note.content || "";
       document.getElementById("campaign-overview-meta").innerHTML = `
@@ -3779,6 +4041,7 @@
         campaignOverviewNote = tab.path
           ? await loadVaultNotePayload(tab.path)
           : await fetchJson(tab.endpoint);
+        campaignOverviewNote.renderedContent = await expandVaultEmbeds(stripFrontmatter(campaignOverviewNote.content));
         renderCampaignOverview();
         status.innerHTML = `<span>${escapeHtml(tab.label)} loaded.</span>`;
       } catch (error) {
@@ -3809,6 +4072,7 @@
             content: document.getElementById("campaign-overview-editor").value,
           }),
         });
+        campaignOverviewNote.renderedContent = await expandVaultEmbeds(stripFrontmatter(campaignOverviewNote.content));
         renderCampaignOverview();
         status.innerHTML = `<span>${escapeHtml(tab.label)} saved to the Obsidian vault.</span>`;
       } catch (error) {
@@ -4152,6 +4416,38 @@
       return `<ul>${values.map((value) => `<li>${escapeHtml(value)}</li>`).join("")}</ul>`;
     }
 
+    function entryTypeLabel(entryType) {
+      return {
+        creature: "Custom Creature",
+        aon_reference: "AoN Creature",
+        hazard: "Hazard",
+        affliction: "Affliction",
+      }[entryType] || titleCaseName(entryType || "Entry");
+    }
+
+    function renderEncounterRefChips(room) {
+      const refs = room.encounter_refs || [];
+      if (!refs.length) return '<span class="empty">No structured encounter references yet.</span>';
+      return `
+        <div class="small-actions">
+          ${refs.map((ref) => {
+            const entry = bestiaryEntryById(ref.id) || {};
+            const type = entry.entry_type || ref.type || "entry";
+            const count = Number.parseInt(ref.count || 1, 10) || 1;
+            const label = `${entry.name || ref.id}${count > 1 ? ` x${count}` : ""}`;
+            const canCombat = type === "creature" || type === "aon_reference" || type === "hazard";
+            const canTrack = type === "affliction";
+            return `
+              <span class="pill">${escapeHtml(entryTypeLabel(type))}: ${escapeHtml(label)}</span>
+              <button type="button" class="ghost" data-bestiary-open="${escapeHtml(ref.id)}">Open</button>
+              ${canCombat ? `<button type="button" class="ghost" data-bestiary-add-combat="${escapeHtml(ref.id)}" data-room-id="${escapeHtml(room.room_id || "")}" data-count="${escapeHtml(String(count))}">${type === "hazard" ? "Add Hazard" : "Add Creature"}</button>` : ""}
+              ${canTrack ? `<button type="button" class="ghost" data-bestiary-track-affliction="${escapeHtml(ref.id)}" data-room-id="${escapeHtml(room.room_id || "")}">Track</button>` : ""}
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
     function firstPresent(...values) {
       for (const value of values) {
         if (typeof value === "string" && value.trim()) {
@@ -4218,6 +4514,7 @@
         <div class="room-card-section"><strong>Monsters</strong>${listValues(room.monsters)}</div>
         <div class="room-card-section"><strong>NPCs</strong>${listValues(room.npcs)}</div>
         <div class="room-card-section"><strong>Traps, haunts, and hazards</strong>${listValues([...(room.traps || []), ...(room.haunts || []), ...(room.hazards || [])])}</div>
+        <div class="room-card-section"><strong>Encounter references</strong>${renderEncounterRefChips(room)}</div>
         <div class="room-card-section"><strong>Loot</strong>${listValues(room.loot)}</div>
         <div class="room-card-section"><strong>Secret doors and hidden features</strong>${listValues(room.secret_doors)}</div>
         <div class="room-card-section">
@@ -4414,8 +4711,15 @@
       return name;
     }
 
+    function bestiaryEntryById(id) {
+      const normalized = String(id || "").trim().toLowerCase();
+      return (campaignBestiaryEntries || []).find((entry) => (
+        String(entry.id || "").trim().toLowerCase() === normalized
+      )) || null;
+    }
+
     function findAonCreatureForCombatant(combatant) {
-      const lookup = normalizeCreatureLookupName(combatant.name);
+      const lookup = normalizeCreatureLookupName(combatant.aonLookupName || combatant.name);
       if (!lookup) return null;
       return aonCreatures.find((creature) => (
         normalizeCreatureLookupName(creature.name) === lookup
@@ -4423,6 +4727,100 @@
         const creatureName = normalizeCreatureLookupName(creature.name);
         return creatureName && (lookup.includes(creatureName) || creatureName.includes(lookup));
       }) || null;
+    }
+
+    function campaignBestiaryDetailText(entry) {
+      const combat = entry.combat || {};
+      const affliction = entry.affliction || {};
+      const lines = [
+        entry.summary ? `Summary: ${entry.summary}` : "",
+        entry.source ? `Source: ${entry.source}${entry.source_page ? ` (${entry.source_page})` : ""}` : "",
+        (entry.rooms || []).length ? `Rooms: ${(entry.rooms || []).join(", ")}` : "",
+        (entry.traits || []).length ? `Traits: ${(entry.traits || []).join(", ")}` : "",
+        combat.initiative ? `Initiative: ${combat.initiative}` : "",
+        combat.ac ? `AC ${combat.ac}; Fort ${combat.fort || "-"}, Ref ${combat.ref || "-"}, Will ${combat.will || "-"}` : "",
+        combat.hp ? `HP ${combat.hp}` : "",
+        combat.speed ? `Speed ${combat.speed}` : "",
+        (combat.attacks || []).length ? `Attacks:\n${(combat.attacks || []).map((line) => `- ${line}`).join("\n")}` : "",
+        (combat.abilities || []).length ? `Abilities:\n${(combat.abilities || []).map((line) => `- ${line}`).join("\n")}` : "",
+        affliction.dc ? `Affliction DC: ${affliction.dc}` : "",
+        affliction.frequency ? `Frequency: ${affliction.frequency}` : "",
+        (affliction.stages || []).length ? `Stages:\n${(affliction.stages || []).map((line) => `- ${line}`).join("\n")}` : "",
+        entry.strategy ? `Strategy: ${entry.strategy}` : "",
+        entry.first_glance ? `First glance: ${entry.first_glance}` : "",
+        entry.recall_knowledge ? `Recall Knowledge: ${entry.recall_knowledge}` : "",
+      ];
+      return lines.filter(Boolean).join("\n\n");
+    }
+
+    function combatantFromCampaignBestiaryEntry(entry, { room = {}, count = 1, forceHazard = false } = {}) {
+      const combat = entry.combat || {};
+      const entryType = entry.entry_type || "creature";
+      if (entryType === "affliction") {
+        return null;
+      }
+      if (entryType === "hazard" && !forceHazard) {
+        return null;
+      }
+      return withCombatHp({
+        id: `bestiary-${entry.id}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || (entry.rooms || [])[0] || "Bestiary",
+        roomTitle: room.title || "Campaign Bestiary",
+        name: entry.name || "Unknown Bestiary Entry",
+        count,
+        type: entryType === "hazard" ? "HAZARD" : "CREATURE",
+        level: entry.level ?? "",
+        traits: entry.traits || [],
+        source: "Campaign Bestiary",
+        sourceUrl: "",
+        imageUrl: entry.portrait || "",
+        aonLookupName: entry.aon_name || entry.name || "",
+        initiative: combat.initiative || "",
+        initiativeBonus: initiativeBonus({ initiative: combat.initiative || "" }),
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: combat.ac || "",
+        hp: combat.hp || "",
+        fort: combat.fort || "",
+        ref: combat.ref || "",
+        will: combat.will || "",
+        speed: combat.speed || "",
+        attacks: combat.attacks || [],
+        abilities: combat.abilities || [],
+        detail: campaignBestiaryDetailText(entry),
+        bestiaryId: entry.id,
+      });
+    }
+
+    function combatantFromCampaignAonReference(entry, { room = {}, count = 1 } = {}) {
+      return withCombatHp({
+        id: `bestiary-ref-${entry.id}-${Math.random().toString(36).slice(2, 8)}`,
+        roomId: room.room_id || (entry.rooms || [])[0] || "Bestiary",
+        roomTitle: room.title || "Campaign Bestiary",
+        name: entry.aon_name || entry.name || "Unknown AoN Creature",
+        count,
+        type: "CREATURE",
+        level: entry.level ?? "",
+        traits: entry.traits || [],
+        source: "Campaign Bestiary AoN reference",
+        sourceUrl: "",
+        imageUrl: "",
+        aonLookupName: entry.aon_name || entry.name || "",
+        initiative: "",
+        initiativeBonus: 0,
+        initiativeRoll: null,
+        initiativeDie: null,
+        ac: "",
+        hp: "",
+        fort: "",
+        ref: "",
+        will: "",
+        speed: "",
+        attacks: [],
+        abilities: [],
+        detail: campaignBestiaryDetailText(entry) || "AoN reference; fetch full stats through the monster picker if needed.",
+        bestiaryId: entry.id,
+      });
     }
 
     function mergeAonDetailsIntoCombatant(combatant, creature) {
@@ -4632,7 +5030,29 @@
       return blocks.length ? blocks : [text];
     }
 
+    function combatantsFromRoomRefs(room) {
+      const refs = room.encounter_refs || [];
+      if (!refs.length) return [];
+      return refs.flatMap((ref) => {
+        const entry = bestiaryEntryById(ref.id);
+        if (!entry) return [];
+        const count = Math.max(1, Number.parseInt(ref.count || 1, 10) || 1);
+        if (entry.entry_type === "creature") {
+          const combatant = combatantFromCampaignBestiaryEntry(entry, { room, count });
+          return combatant ? [combatant] : [];
+        }
+        if (entry.entry_type === "aon_reference") {
+          return [combatantFromCampaignAonReference(entry, { room, count })];
+        }
+        return [];
+      });
+    }
+
     function combatantsFromRoom(room) {
+      const referencedCombatants = combatantsFromRoomRefs(room);
+      if (referencedCombatants.length) {
+        return referencedCombatants;
+      }
       const literal = roomLiteralParts(room);
       const combatants = combatBlocksFromEncounterText(literal.gm)
         .map((block) => combatantFromBlock(block, room))
@@ -4855,6 +5275,7 @@
         round: currentCombat.round || 1,
         activeIndex: currentCombat.combatants?.length ? currentCombat.activeIndex || 0 : 0,
         combatants: labelDuplicateCombatants([...party, ...(currentCombat.combatants || [])]),
+        afflictions: currentCombat.afflictions || [],
       };
       syncActiveCombatExpansion();
       commitCombatState();
@@ -4878,6 +5299,7 @@
           round: currentCombat.round || 1,
           activeIndex: currentCombat.combatants?.length ? currentCombat.activeIndex || 0 : 0,
           combatants: labelDuplicateCombatants([...(currentCombat.combatants || []), combatant]),
+          afflictions: currentCombat.afflictions || [],
         };
         syncActiveCombatExpansion();
         commitCombatState();
@@ -4903,6 +5325,64 @@
       document.getElementById("combat-meta").innerHTML = `<span class="stat-badge">${escapeHtml(message)}</span>`;
     }
 
+    function trackBestiaryAffliction(entry, { roomId = "", target = "" } = {}) {
+      if (!entry || entry.entry_type !== "affliction") return;
+      currentCombat.afflictions = Array.isArray(currentCombat.afflictions) ? currentCombat.afflictions : [];
+      const affliction = entry.affliction || {};
+      currentCombat.afflictions.push({
+        id: `affliction-${entry.id}-${Math.random().toString(36).slice(2, 8)}`,
+        bestiaryId: entry.id,
+        name: entry.name || "Affliction",
+        target,
+        stage: "Stage 1",
+        dc: affliction.dc || "",
+        frequency: affliction.frequency || "",
+        nextCheck: "",
+        sourceRoom: roomId || (entry.rooms || [])[0] || "",
+        notes: entry.summary || "",
+      });
+      commitCombatState();
+    }
+
+    function renderAfflictionTracker() {
+      const afflictions = Array.isArray(currentCombat.afflictions) ? currentCombat.afflictions : [];
+      if (!afflictions.length) {
+        return `
+          <details class="combat-card">
+            <summary class="combat-card-summary">
+              <span class="combat-card-name"><strong>Affliction Tracker</strong><span class="subtle">No active afflictions</span></span>
+            </summary>
+          </details>
+        `;
+      }
+      return `
+        <details class="combat-card" open>
+          <summary class="combat-card-summary">
+            <span class="combat-card-name"><strong>Affliction Tracker</strong><span class="subtle">${escapeHtml(String(afflictions.length))} tracked</span></span>
+          </summary>
+          <div class="combat-card-body" style="grid-template-columns: 1fr;">
+            ${afflictions.map((affliction, index) => `
+              <div class="result-box">
+                <div class="stat-line">
+                  <span class="stat-badge">${escapeHtml(affliction.name || "Affliction")}</span>
+                  ${affliction.sourceRoom ? `<span class="stat-badge">${escapeHtml(affliction.sourceRoom)}</span>` : ""}
+                  ${affliction.dc ? `<span class="stat-badge">DC ${escapeHtml(affliction.dc)}</span>` : ""}
+                </div>
+                <div class="grid-two" style="margin-top: 10px;">
+                  <label>Target <input value="${escapeHtml(affliction.target || "")}" data-affliction-field="${index}" data-field="target" placeholder="PC or monster" /></label>
+                  <label>Stage <input value="${escapeHtml(affliction.stage || "")}" data-affliction-field="${index}" data-field="stage" placeholder="Stage 1" /></label>
+                  <label>Next Check <input value="${escapeHtml(affliction.nextCheck || "")}" data-affliction-field="${index}" data-field="nextCheck" placeholder="After daily prep, end of rest…" /></label>
+                  <label>Frequency <input value="${escapeHtml(affliction.frequency || "")}" data-affliction-field="${index}" data-field="frequency" placeholder="From stat block" /></label>
+                </div>
+                <label style="margin-top: 10px;">Notes <textarea data-affliction-field="${index}" data-field="notes">${escapeHtml(affliction.notes || "")}</textarea></label>
+                <div class="actions"><button type="button" class="ghost" data-affliction-remove="${index}">Remove Affliction</button></div>
+              </div>
+            `).join("")}
+          </div>
+        </details>
+      `;
+    }
+
     async function setCombatFromRoom(room, { append = false } = {}) {
       if (!room) {
         renderCombatStatus("Open a room card in Map Room first.");
@@ -4926,6 +5406,7 @@
         round: append ? currentCombat.round || 1 : 1,
         activeIndex: append ? currentCombat.activeIndex || 0 : 0,
         combatants: combinedCombatants,
+        afflictions: currentCombat.afflictions || [],
       };
       syncActiveCombatExpansion();
       commitCombatState();
@@ -5541,7 +6022,10 @@
       const combatants = currentCombat.combatants || [];
       if (!combatants.length) {
         meta.innerHTML = '<span class="stat-badge">No combat loaded</span>';
-        roster.innerHTML = '<div class="empty">Open a room in Map Room, then start combat from it.</div>';
+        roster.innerHTML = `
+          <div class="empty">Open a room in Map Room, then start combat from it.</div>
+          ${renderAfflictionTracker()}
+        `;
         renderCombatTurnPanel();
         return;
       }
@@ -5560,6 +6044,7 @@
       roster.innerHTML = `
         ${renderInitiativeStrip(combatants)}
         <div class="combat-card-list">${combatants.map(renderCombatantCard).join("")}</div>
+        ${renderAfflictionTracker()}
       `;
     }
 
@@ -6430,6 +6915,10 @@
         ...(room.loot || []),
         ...(room.secret_doors || []),
         ...(room.dependencies || []),
+        ...(room.encounter_refs || []).flatMap((ref) => {
+          const entry = bestiaryEntryById(ref.id) || {};
+          return [ref.id, ref.type, entry.name, entry.summary, ...(entry.traits || [])];
+        }),
       ].join(" ").toLowerCase();
     }
 
@@ -6561,6 +7050,202 @@
         list.innerHTML = `<div class="empty">Room-key JSON loaded for <code>${escapeHtml(selectedMapId)}</code>, but the sidebar could not render it: ${escapeHtml(error.message || "Unknown error")}</div>`;
         updateRoomBackButton();
       }
+    }
+
+    function renderBestiaryOverview() {
+      const host = document.getElementById("campaign-bestiary-overview");
+      if (!host) return;
+      if (!campaignBestiaryEntries.length) {
+        host.innerHTML = '<span class="empty">No campaign bestiary entries found.</span>';
+        return;
+      }
+      const counts = campaignBestiaryEntries.reduce((acc, entry) => {
+        const type = entry.entry_type || "entry";
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {});
+      host.innerHTML = `
+        <h3>Level 3 Encounter Library</h3>
+        <p class="subtle">Use this overview for custom C-room creatures, AoN-linked monsters, haunts/hazards, and afflictions. Open a row for full GM details.</p>
+        <div class="stat-line">
+          ${Object.entries(counts).map(([type, count]) => `<span class="stat-badge">${escapeHtml(entryTypeLabel(type))}: ${escapeHtml(String(count))}</span>`).join("")}
+        </div>
+        <div class="sheet-overview-table" style="margin-top: 12px;">
+          <table class="mini-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Level</th>
+                <th>Rooms</th>
+                <th>Source</th>
+                <th>Summary</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${campaignBestiaryEntries.map((entry) => `
+                <tr>
+                  <td><strong>${escapeHtml(entry.name || "Unnamed")}</strong></td>
+                  <td>${escapeHtml(entryTypeLabel(entry.entry_type))}</td>
+                  <td>${escapeHtml(formatValue(entry.level))}</td>
+                  <td>${escapeHtml((entry.rooms || []).join(", ") || "—")}</td>
+                  <td>${escapeHtml(entry.source || "—")}</td>
+                  <td>${escapeHtml(entry.summary || "—")}</td>
+                  <td><button type="button" class="ghost" data-bestiary-open="${escapeHtml(entry.id)}">Open</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderBestiaryList() {
+      const host = document.getElementById("campaign-bestiary-list");
+      if (!host) return;
+      if (!campaignBestiaryEntries.length) {
+        host.innerHTML = '<div class="empty">No campaign bestiary entries found.</div>';
+        return;
+      }
+      host.innerHTML = campaignBestiaryEntries.map((entry) => `
+        <button type="button" class="note-button" data-bestiary-open="${escapeHtml(entry.id)}">
+          <strong>${escapeHtml(entry.name || "Unnamed")}</strong>
+          <div class="subtle">${escapeHtml(entryTypeLabel(entry.entry_type))} ${entry.level !== undefined && entry.level !== null ? `Level ${escapeHtml(String(entry.level))}` : ""}</div>
+          <div class="subtle">${escapeHtml((entry.rooms || []).join(", ") || "No rooms listed")}</div>
+        </button>
+      `).join("");
+    }
+
+    function bestiaryActions(entry) {
+      if (entry.entry_type === "creature" || entry.entry_type === "aon_reference") {
+        return `<button type="button" class="ghost" data-bestiary-add-combat="${escapeHtml(entry.id)}" data-count="1">Add To Combat</button>`;
+      }
+      if (entry.entry_type === "hazard") {
+        return `<button type="button" class="ghost" data-bestiary-add-combat="${escapeHtml(entry.id)}" data-count="1">Add Hazard To Combat</button>`;
+      }
+      if (entry.entry_type === "affliction") {
+        return `<button type="button" class="ghost" data-bestiary-track-affliction="${escapeHtml(entry.id)}">Track Affliction</button>`;
+      }
+      return "";
+    }
+
+    function renderBestiaryDetail(entry) {
+      const viewer = document.getElementById("campaign-bestiary-detail");
+      if (!viewer) return;
+      const combat = entry.combat || {};
+      const affliction = entry.affliction || {};
+      viewer.innerHTML = `
+        <div class="sheet-hero">
+          ${renderPortrait(entry.portrait || "", entry.name)}
+          <div>
+            <h3 style="margin-top: 0;">${escapeHtml(entry.name || "Unnamed Entry")}</h3>
+            <div class="subtle">${escapeHtml(entryTypeLabel(entry.entry_type))}${entry.level !== undefined && entry.level !== null ? ` · Level ${escapeHtml(String(entry.level))}` : ""}</div>
+            <div class="subtle">${escapeHtml(entry.summary || "No summary listed.")}</div>
+            <div class="small-actions" style="margin-top: 10px;">${bestiaryActions(entry)}</div>
+          </div>
+        </div>
+        ${renderSheetStats([
+          { label: "Type", value: entryTypeLabel(entry.entry_type) },
+          { label: "Level", value: entry.level },
+          { label: "Rooms", value: (entry.rooms || []).join(", ") },
+          { label: "Source", value: [entry.source, entry.source_page].filter(Boolean).join(" · ") },
+          { label: "AC", value: combat.ac },
+          { label: "HP", value: combat.hp },
+        ])}
+        ${renderSheetSection("Combat", renderKeyValueTable([
+          { label: "Initiative", value: combat.initiative },
+          { label: "Speed", value: combat.speed },
+          { label: "Fortitude", value: combat.fort },
+          { label: "Reflex", value: combat.ref },
+          { label: "Will", value: combat.will },
+          { label: "Hardness", value: combat.hardness },
+          { label: "Weaknesses", value: combat.weaknesses },
+        ]), true)}
+        ${renderSheetSection("Attacks", renderSimpleList(combat.attacks || []), true)}
+        ${renderSheetSection("Abilities / Spells", renderSimpleList(combat.abilities || []), true)}
+        ${entry.entry_type === "affliction" ? renderSheetSection("Affliction Tracker Details", renderKeyValueTable([
+          { label: "DC", value: affliction.dc },
+          { label: "Onset", value: affliction.onset },
+          { label: "Frequency", value: affliction.frequency },
+          { label: "Stages", value: affliction.stages },
+        ]), true) : ""}
+        ${renderSheetSection("Skills And Languages", `${renderSimpleList([...(entry.skills || []), ...(entry.languages || []).map((item) => `Language: ${item}`)])}`, true)}
+        ${renderSheetSection("GM Use", renderKeyValueTable([
+          { label: "Strategy", value: entry.strategy },
+          { label: "Appearance", value: entry.appearance },
+          { label: "First Glance", value: entry.first_glance },
+          { label: "Recall Knowledge", value: entry.recall_knowledge },
+        ]), true)}
+      `;
+    }
+
+    async function loadCampaignBestiary(query = "", entryType = "") {
+      const list = document.getElementById("campaign-bestiary-list");
+      if (list) list.innerHTML = '<div class="empty">Loading campaign bestiary…</div>';
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      if (entryType) params.set("entry_type", entryType);
+      params.set("limit", "200");
+      try {
+        const payload = await fetchJson(`${endpoints.campaignBestiary}?${params.toString()}`);
+        campaignBestiaryEntries = payload.items || [];
+        renderBestiaryOverview();
+        renderBestiaryList();
+        if (activeRoomKey) renderRoomKey();
+      } catch (error) {
+        campaignBestiaryEntries = [];
+        renderBestiaryOverview();
+        if (list) list.innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load campaign bestiary.")}</div>`;
+      }
+    }
+
+    async function openCampaignBestiaryEntry(id) {
+      const viewer = document.getElementById("campaign-bestiary-detail");
+      if (viewer) viewer.innerHTML = '<span class="empty">Opening bestiary entry…</span>';
+      try {
+        const payload = await fetchJson(`${endpoints.campaignBestiaryEntry}?id=${encodeURIComponent(id)}`);
+        activeBestiaryEntry = payload.entry || null;
+        if (activeBestiaryEntry) renderBestiaryDetail(activeBestiaryEntry);
+      } catch (error) {
+        if (viewer) viewer.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not open bestiary entry.")}</span>`;
+      }
+    }
+
+    async function addBestiaryEntryToCombat(id, { roomId = "", count = 1 } = {}) {
+      const payload = await fetchJson(`${endpoints.campaignBestiaryEntry}?id=${encodeURIComponent(id)}`);
+      const entry = payload.entry || {};
+      const room = roomId && activeRoomKey
+        ? (activeRoomKey.rooms || []).find((item) => String(item.room_id || "").toLowerCase() === String(roomId).toLowerCase()) || {}
+        : {};
+      let combatant = null;
+      if (entry.entry_type === "creature") {
+        combatant = combatantFromCampaignBestiaryEntry(entry, { room, count });
+      } else if (entry.entry_type === "aon_reference") {
+        combatant = combatantFromCampaignAonReference(entry, { room, count });
+        const match = findAonCreatureForCombatant(combatant);
+        if (match) {
+          try {
+            const aonPayload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(match.creature_id)}`);
+            combatant = mergeAonDetailsIntoCombatant(combatant, aonPayload.creature || match);
+          } catch (_error) {
+            // Keep the campaign reference fallback.
+          }
+        }
+      } else if (entry.entry_type === "hazard") {
+        combatant = combatantFromCampaignBestiaryEntry(entry, { room, count, forceHazard: true });
+      }
+      if (!combatant) return;
+      currentCombat = {
+        roomId: currentCombat.roomId || room.room_id || "Bestiary",
+        roomTitle: currentCombat.roomTitle || room.title || "Campaign Bestiary",
+        round: currentCombat.round || 1,
+        activeIndex: currentCombat.combatants?.length ? currentCombat.activeIndex || 0 : 0,
+        combatants: labelDuplicateCombatants([...(currentCombat.combatants || []), combatant]),
+        afflictions: currentCombat.afflictions || [],
+      };
+      syncActiveCombatExpansion();
+      commitCombatState();
     }
 
     function formatValue(value) {
@@ -8002,6 +8687,7 @@
         round: 1,
         activeIndex: 0,
         combatants: [],
+        afflictions: [],
       };
     }
 
@@ -8022,6 +8708,7 @@
           ? Math.min(activeIndex, Math.max(0, combatants.length - 1))
           : 0,
         combatants,
+        afflictions: Array.isArray(value.afflictions) ? value.afflictions : [],
       };
     }
 
@@ -8301,9 +8988,27 @@
         }
         return;
       }
+      const afflictionRemove = event.target.closest("[data-affliction-remove]");
+      if (afflictionRemove) {
+        const index = Number.parseInt(afflictionRemove.dataset.afflictionRemove, 10);
+        if (Number.isFinite(index) && currentCombat.afflictions?.[index]) {
+          currentCombat.afflictions.splice(index, 1);
+          commitCombatState();
+        }
+        return;
+      }
       const initButton = event.target.closest("[data-combat-init-roll]");
       if (!initButton) return;
       rollCombatInitiative(Number.parseInt(initButton.dataset.combatInitRoll, 10));
+    });
+    document.getElementById("combat-roster").addEventListener("input", (event) => {
+      const field = event.target.closest("[data-affliction-field]");
+      if (!field) return;
+      const index = Number.parseInt(field.dataset.afflictionField, 10);
+      const key = field.dataset.field;
+      if (!Number.isFinite(index) || !key || !currentCombat.afflictions?.[index]) return;
+      currentCombat.afflictions[index][key] = field.value;
+      scheduleCombatPersist();
     });
     document.getElementById("combat-roster").addEventListener("change", (event) => {
       const currentHp = event.target.closest("[data-combat-hp-current]");
@@ -8352,6 +9057,31 @@
           String(item.room_id || "").toLowerCase() === String(roomId || "").toLowerCase()
         ));
         void setCombatFromRoom(room, { append: Boolean(currentCombat.combatants.length) });
+        return;
+      }
+      const bestiaryOpen = event.target.closest("[data-bestiary-open]");
+      if (bestiaryOpen) {
+        event.preventDefault();
+        openCampaignBestiaryEntry(bestiaryOpen.dataset.bestiaryOpen);
+        document.querySelector('[data-module-id="campaign-bestiary"]')?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      const bestiaryCombat = event.target.closest("[data-bestiary-add-combat]");
+      if (bestiaryCombat) {
+        event.preventDefault();
+        void addBestiaryEntryToCombat(bestiaryCombat.dataset.bestiaryAddCombat, {
+          roomId: bestiaryCombat.dataset.roomId || "",
+          count: Number.parseInt(bestiaryCombat.dataset.count || "1", 10) || 1,
+        });
+        return;
+      }
+      const afflictionButton = event.target.closest("[data-bestiary-track-affliction]");
+      if (afflictionButton) {
+        event.preventDefault();
+        const entry = bestiaryEntryById(afflictionButton.dataset.bestiaryTrackAffliction);
+        if (entry) {
+          trackBestiaryAffliction(entry, { roomId: afflictionButton.dataset.roomId || "" });
+        }
         return;
       }
       const readAloudButton = event.target.closest("[data-room-read-aloud]");
@@ -8409,6 +9139,25 @@
     });
     document.getElementById("npc-sheet-refresh").addEventListener("click", () => {
       loadNpcSheets(document.getElementById("npc-sheet-search").value.trim());
+    });
+    document.getElementById("campaign-bestiary-search-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadCampaignBestiary(
+        document.getElementById("campaign-bestiary-search").value.trim(),
+        document.getElementById("campaign-bestiary-type").value,
+      );
+    });
+    document.getElementById("campaign-bestiary-type").addEventListener("change", () => {
+      loadCampaignBestiary(
+        document.getElementById("campaign-bestiary-search").value.trim(),
+        document.getElementById("campaign-bestiary-type").value,
+      );
+    });
+    document.getElementById("campaign-bestiary-refresh").addEventListener("click", () => {
+      loadCampaignBestiary(
+        document.getElementById("campaign-bestiary-search").value.trim(),
+        document.getElementById("campaign-bestiary-type").value,
+      );
     });
     document.getElementById("vault-search-form").addEventListener("submit", (event) => {
       event.preventDefault();
@@ -8494,6 +9243,27 @@
       const button = event.target.closest("[data-sheet-id]");
       if (button) {
         openNpcSheet(button.dataset.sheetId);
+      }
+    });
+    document.getElementById("campaign-bestiary-viewer").addEventListener("click", (event) => {
+      const openButton = event.target.closest("[data-bestiary-open]");
+      if (openButton) {
+        openCampaignBestiaryEntry(openButton.dataset.bestiaryOpen);
+        return;
+      }
+      const combatButton = event.target.closest("[data-bestiary-add-combat]");
+      if (combatButton) {
+        void addBestiaryEntryToCombat(combatButton.dataset.bestiaryAddCombat, {
+          count: Number.parseInt(combatButton.dataset.count || "1", 10) || 1,
+        });
+        return;
+      }
+      const afflictionButton = event.target.closest("[data-bestiary-track-affliction]");
+      if (afflictionButton) {
+        const entry = activeBestiaryEntry?.id === afflictionButton.dataset.bestiaryTrackAffliction
+          ? activeBestiaryEntry
+          : bestiaryEntryById(afflictionButton.dataset.bestiaryTrackAffliction);
+        if (entry) trackBestiaryAffliction(entry);
       }
     });
     document.getElementById("npc-sheet-viewer").addEventListener("submit", (event) => {
@@ -8668,6 +9438,7 @@
     renderDiceHistory();
     renderCombatPanel();
     loadAonCreatures();
+    loadCampaignBestiary();
     loadVoices();
     loadTtsStatus();
     applyTtsPreset();
