@@ -95,6 +95,14 @@ class AonCreatureResponse(BaseModel):
     creature: dict
 
 
+class CampaignBestiarySearchResponse(BaseModel):
+    items: list[dict]
+
+
+class CampaignBestiaryEntryResponse(BaseModel):
+    entry: dict
+
+
 CAMPAIGN_OVERVIEW_PATH = "Command Center/Campaign Overview.md"
 SESSION_OVERVIEW_DIR = "Command Center/Sessions"
 HANDOUT_EXPORT_DIR = "Exports/Handouts"
@@ -306,6 +314,10 @@ def _room_key_root() -> Path:
     return _configured_path(settings.dungeon_room_key_root)
 
 
+def _bestiary_root() -> Path:
+    return (_room_key_root().parent / "bestiary").resolve()
+
+
 def _vault_root() -> Path:
     return _configured_path(settings.obsidian_vault_path)
 
@@ -362,7 +374,7 @@ def _reference_markdown_for_source(source_pdf: str | None) -> Path | None:
 def _room_heading_pattern(room_id: str, title: str | None = None) -> re.Pattern[str]:
     title_pattern = ""
     if title:
-        words = [re.escape(part) for part in re.findall(r"[A-Za-z0-9']+", title)]
+        words = [re.escape(part) for part in re.findall(r"[A-Za-z0-9]+", title)]
         if words:
             title_pattern = r"\s+" + r"[\s\W_]+".join(words[:6])
     return re.compile(
@@ -377,6 +389,16 @@ def _find_room_heading(text: str, room_id: str, title: str | None = None) -> re.
         if match:
             return match
     return _room_heading_pattern(room_id).search(text)
+
+
+def _find_titled_room_heading(
+    text: str,
+    room_id: str,
+    title: str | None = None,
+) -> re.Match[str] | None:
+    if not title:
+        return None
+    return _room_heading_pattern(room_id, title).search(text)
 
 
 def _strip_reference_markup(text: str) -> str:
@@ -731,9 +753,52 @@ ROOM_ENCOUNTER_FALLBACKS = {
 }
 
 
+ROOM_ENCOUNTER_SPLIT_MARKERS = {
+    "C34": "NHAKAZARIN",
+    "C36": "CHANDRIU INVISAR",
+}
+
+
+ROOM_ENCOUNTER_TAIL_MARKERS = {
+    "C34": "The Statue:",
+    "C36": "Treasure:",
+}
+
+
 def _trim_stat_leak(text: str, marker: str) -> str:
     index = text.find(marker)
     return text[:index].strip() if index > -1 else text
+
+
+def _split_embedded_room_encounter(
+    literal: dict[str, str],
+    *,
+    encounter_marker: str,
+    tail_marker: str | None = None,
+) -> dict[str, str]:
+    general = literal.get("general_text") or ""
+    if not general or literal.get("encounter_text"):
+        return literal
+    marker_index = general.find(encounter_marker)
+    if marker_index < 0:
+        return literal
+
+    before = general[:marker_index].strip()
+    encounter = general[marker_index:].strip()
+    tail = ""
+    if tail_marker:
+        tail_index = encounter.find(tail_marker)
+        if tail_index > -1:
+            tail = encounter[tail_index:].strip()
+            encounter = encounter[:tail_index].strip()
+
+    if before or tail:
+        literal["general_text"] = "\n\n".join(part for part in [before, tail] if part)
+    else:
+        literal.pop("general_text", None)
+    if encounter:
+        literal["encounter_text"] = _format_encounter_text(encounter)
+    return literal
 
 
 def _apply_room_literal_fixes(
@@ -744,12 +809,24 @@ def _apply_room_literal_fixes(
         return literal
     if room_id in ROOM_ENCOUNTER_FALLBACKS and not literal.get("encounter_text"):
         literal["encounter_text"] = ROOM_ENCOUNTER_FALLBACKS[room_id]
+    if room_id in ROOM_ENCOUNTER_SPLIT_MARKERS:
+        literal = _split_embedded_room_encounter(
+            literal,
+            encounter_marker=ROOM_ENCOUNTER_SPLIT_MARKERS[room_id],
+            tail_marker=ROOM_ENCOUNTER_TAIL_MARKERS.get(room_id),
+        )
     if room_id == "A10" and literal.get("general_text"):
         literal["general_text"] = _trim_stat_leak(literal["general_text"], "BITE BITE")
     if room_id == "A23" and literal.get("general_text"):
         literal["general_text"] = _trim_stat_leak(literal["general_text"], "CE elite")
     if room_id == "A24" and literal.get("general_text"):
         literal["general_text"] = _trim_stat_leak(literal["general_text"], "FLICKERWISP")
+    if room_id == "C37" and literal.get("read_aloud"):
+        literal["read_aloud"] = re.sub(
+            r"\(see cavern chamber\. The air is cold and damp, and to the east area C8\)\.",
+            "(see area C8).",
+            literal["read_aloud"],
+        )
     return literal
 
 
@@ -938,6 +1015,24 @@ def _literal_room_texts_from_reference(payload: dict) -> dict[str, dict[str, str
     if not source_path:
         return {}
     text = _linearize_pdf_pages(source_path.read_text(encoding="utf-8", errors="ignore"))
+    first_room = next(
+        (
+            room
+            for room in rooms
+            if isinstance(room, dict)
+            and str(room.get("room_id") or "").strip()
+            and str(room.get("title") or "").strip()
+        ),
+        None,
+    )
+    if first_room:
+        first_match = _find_titled_room_heading(
+            text,
+            str(first_room.get("room_id") or "").strip(),
+            str(first_room.get("title") or "").strip(),
+        )
+        if first_match:
+            text = text[first_match.start() :]
     matches: list[tuple[int, dict]] = []
     for room in rooms:
         if not isinstance(room, dict):
@@ -945,7 +1040,10 @@ def _literal_room_texts_from_reference(payload: dict) -> dict[str, dict[str, str
         room_id = str(room.get("room_id") or "").strip()
         if not room_id:
             continue
-        match = _find_room_heading(text, room_id, str(room.get("title") or ""))
+        title = str(room.get("title") or "")
+        match = _find_titled_room_heading(text, room_id, title)
+        if not match:
+            match = _find_room_heading(text, room_id, title)
         if match:
             matches.append((match.start(), room))
     matches.sort(key=lambda item: item[0])
@@ -982,6 +1080,88 @@ def _enrich_room_key_literal_text(payload: dict) -> dict:
         if literal:
             room["literal_text"] = literal
     return payload
+
+
+def _campaign_bestiary_files() -> list[Path]:
+    root = _bestiary_root()
+    if not root.exists():
+        return []
+    return sorted(root.rglob("*.json"))
+
+
+def _load_campaign_bestiary_payloads() -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
+    root = _bestiary_root()
+    for path in _campaign_bestiary_files():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(payload, dict):
+            continue
+        payload["_path"] = path.relative_to(root).as_posix()
+        payloads.append(payload)
+    return payloads
+
+
+def _campaign_bestiary_entries() -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for payload in _load_campaign_bestiary_payloads():
+        campaign = payload.get("campaign")
+        level = payload.get("level")
+        source_file = payload.get("_path")
+        for entry in payload.get("entries") or []:
+            if not isinstance(entry, dict):
+                continue
+            normalized = dict(entry)
+            normalized.setdefault("campaign", campaign)
+            normalized.setdefault("level_scope", level)
+            normalized.setdefault("source_file", source_file)
+            entries.append(normalized)
+    return entries
+
+
+def _campaign_bestiary_summary(entry: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": entry.get("id"),
+        "name": entry.get("name"),
+        "entry_type": entry.get("entry_type"),
+        "level": entry.get("level"),
+        "source": entry.get("source"),
+        "source_file": entry.get("source_file"),
+        "source_page": entry.get("source_page"),
+        "rooms": entry.get("rooms") or [],
+        "traits": entry.get("traits") or [],
+        "summary": entry.get("summary") or "",
+        "campaign": entry.get("campaign"),
+        "level_scope": entry.get("level_scope"),
+        "aon_creature_id": entry.get("aon_creature_id"),
+        "base_creature": entry.get("base_creature"),
+        "combat": entry.get("combat") or {},
+        "portrait": entry.get("portrait") or "",
+    }
+
+
+def _campaign_bestiary_search_text(entry: dict[str, Any]) -> str:
+    values = [
+        entry.get("id"),
+        entry.get("name"),
+        entry.get("entry_type"),
+        entry.get("source"),
+        entry.get("summary"),
+        entry.get("base_creature"),
+        *(entry.get("rooms") or []),
+        *(entry.get("traits") or []),
+    ]
+    return " ".join(str(value) for value in values if value).casefold()
+
+
+def _campaign_bestiary_entry(entry_id: str) -> dict[str, Any] | None:
+    normalized_id = entry_id.strip().casefold()
+    for entry in _campaign_bestiary_entries():
+        if str(entry.get("id") or "").strip().casefold() == normalized_id:
+            return entry
+    return None
 
 
 def _modifier(score: int | None) -> int | None:
@@ -1258,6 +1438,59 @@ def _vault_pc_sheets() -> list[dict[str, Any]]:
     return sheets
 
 
+def _vault_npc_frontmatter(name: str | None) -> dict[str, Any]:
+    if not name:
+        return {}
+    root = _vault_root()
+    npc_root = root / "Campaign" / "NPCs"
+    if not npc_root.exists():
+        return {}
+
+    candidates = [npc_root / f"{name}.md"]
+    normalized = name.casefold()
+    candidates.extend(
+        path
+        for path in sorted(npc_root.glob("*.md"))
+        if path.stem.casefold() == normalized and path not in candidates
+    )
+
+    for path in candidates:
+        if not path.exists() or not path.is_file():
+            continue
+        try:
+            frontmatter, _body = split_frontmatter(path.read_text(encoding="utf-8"))
+        except OSError:
+            continue
+        return frontmatter
+    return {}
+
+
+def _merge_vault_npc_image_metadata(entity: dict) -> dict:
+    frontmatter = _vault_npc_frontmatter(entity.get("name"))
+    if not frontmatter:
+        return entity
+
+    merged = dict(entity)
+    details = dict(merged.get("details") or {})
+    for key in (
+        "portrait",
+        "portrait_url",
+        "imageLink",
+        "image_link",
+        "imageUrl",
+        "image_url",
+        "image_status",
+        "image_source",
+        "image_attribution",
+        "image_notes",
+    ):
+        value = frontmatter.get(key)
+        if value:
+            details[key] = value
+    merged["details"] = details
+    return merged
+
+
 def _portrait_ref(details: dict) -> str | None:
     for key in (
         "portrait",
@@ -1303,10 +1536,10 @@ def _image_view(details: dict) -> dict[str, Any]:
     if not status:
         if url and ref and ref.startswith(("http://", "https://")):
             status = "remote"
-        elif ref and re.fullmatch(r"!?\[\[[^\]]+\]\]", ref.strip()):
-            status = "needs review"
         elif url:
             status = "local"
+        elif ref and re.fullmatch(r"!?\[\[[^\]]+\]\]", ref.strip()):
+            status = "needs review"
         else:
             status = "missing"
     return {
@@ -1444,6 +1677,7 @@ def _pc_sheet_view(entity: dict) -> dict:
 
 
 def _npc_dossier_view(entity: dict) -> dict:
+    entity = _merge_vault_npc_image_metadata(entity)
     details = entity.get("details") or {}
     relationships = entity.get("relationships") or []
     grouped_relationships: dict[str, list[dict]] = {}
@@ -2164,6 +2398,45 @@ async def get_dungeon_room_key(map_id: str = Query(min_length=1)):
             payload["path"] = path.relative_to(root).as_posix()
             return _enrich_room_key_literal_text(payload)
     raise _not_found("Dungeon room key was not found")
+
+
+@router.get("/campaign-bestiary", response_model=CampaignBestiarySearchResponse)
+async def list_campaign_bestiary(
+    q: Optional[str] = Query(default=None),
+    entry_type: Optional[str] = Query(default=None),
+    room_id: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+):
+    query = (q or "").strip().casefold()
+    type_filter = (entry_type or "").strip().casefold()
+    room_filter = (room_id or "").strip().casefold()
+    items = []
+    for entry in _campaign_bestiary_entries():
+        if type_filter and str(entry.get("entry_type") or "").casefold() != type_filter:
+            continue
+        if room_filter and room_filter not in [
+            str(room).casefold() for room in entry.get("rooms") or []
+        ]:
+            continue
+        if query and query not in _campaign_bestiary_search_text(entry):
+            continue
+        items.append(_campaign_bestiary_summary(entry))
+    items.sort(
+        key=lambda item: (
+            str(item.get("entry_type") or ""),
+            int(item.get("level") or 999),
+            str(item.get("name") or "").casefold(),
+        )
+    )
+    return {"items": items[:limit]}
+
+
+@router.get("/campaign-bestiary-entry", response_model=CampaignBestiaryEntryResponse)
+async def get_campaign_bestiary_entry(id: str = Query(min_length=1)):
+    entry = _campaign_bestiary_entry(id)
+    if entry is None:
+        raise _not_found("Campaign bestiary entry was not found")
+    return {"entry": entry}
 
 
 def _tts_provider() -> str:
