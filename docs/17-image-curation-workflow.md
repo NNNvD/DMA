@@ -68,6 +68,20 @@ image_match_basis: "same-page NPC entry and visual description"
 image_confidence: "high"
 ```
 
+The DM panel image review queue now records three separate signals for each
+extracted PDF image:
+
+- `category`: what the image appears to be, such as `portrait_npc`, `map`, `cover_or_chapter_art`, or `decorative_noise`
+- `allocation_status`: what to do next, such as `ready_for_review`, `needs_identification`, `duplicate_review`, or `ignore_candidate`
+- `visual_features`: extraction clues such as `portrait_aspect`, `wide_illustration`, `large_page_coverage`, `tiny_or_low_signal`, or `duplicate_hash`
+
+Entity matches are scored from strongest to weakest evidence:
+
+- nearby caption or label text
+- same-page text
+- adjacent-page text
+- partial-name text
+
 This gives us a useful automation path later:
 
 - generate candidate images from `source_references_*_page`

@@ -139,6 +139,9 @@ def test_live_dungeon_map_and_room_key_routes(monkeypatch, tmp_path):
     map_folder.mkdir(parents=True)
     map_file = map_folder / "Level1.jpg"
     map_file.write_bytes(b"fake image bytes")
+    portrait_folder = map_root / "abomination-vaults" / "portraits" / "NPCs"
+    portrait_folder.mkdir(parents=True)
+    (portrait_folder / "Wrin.jpg").write_bytes(b"fake portrait bytes")
 
     room_key_root = tmp_path / "room-keys"
     room_key_folder = room_key_root / "abomination-vaults"
@@ -334,7 +337,298 @@ This text belongs to the next chapter, not A25.
         asyncio.run(engine.dispose())
 
 
+def test_live_dungeon_maps_prefers_canonical_numbered_maps(monkeypatch, tmp_path):
+    map_root = tmp_path / "media"
+    canonical = map_root / "abomination-vaults" / "maps" / "BOOK 1"
+    canonical.mkdir(parents=True)
+    (canonical / "Graveyard.webp").write_bytes(b"graveyard")
+    (canonical / "Level1.jpg").write_bytes(b"numbered level 1")
+    (canonical / "level1.webp").write_bytes(b"alternate level 1")
+    old = canonical / "Old Versions"
+    old.mkdir()
+    (old / "level1.webp").write_bytes(b"old level 1")
+    no_light = map_root / "abomination-vaults" / "maps" / "NO LIGHT VERSIONS"
+    no_light.mkdir(parents=True)
+    (no_light / "Level2.webp").write_bytes(b"player version")
+
+    monkeypatch.setattr(settings, "dungeon_map_root", str(map_root))
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        maps = client.get("/api/live/dungeon-maps")
+
+        assert maps.status_code == 200
+        payload = maps.json()
+        assert payload["total"] == 2
+        assert [item["map_id"] for item in payload["items"]] == [
+            "graveyard",
+            "level1",
+        ]
+        assert payload["items"][1]["path"].endswith("BOOK 1/Level1.jpg")
+        assert all("Old Versions" not in item["path"] for item in payload["items"])
+        assert all("NO LIGHT VERSIONS" not in item["path"] for item in payload["items"])
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_import_review_routes_promote_reviewed_rooms(monkeypatch, tmp_path):
+    private_root = tmp_path / "private-local"
+    room_key_root = private_root / "room-keys" / "test-campaign"
+    room_key_root.mkdir(parents=True)
+    (room_key_root / "level-1.json").write_text(
+        json.dumps(
+            {
+                "map_id": "level1",
+                "title": "Level 1",
+                "rooms": [
+                    {
+                        "room_id": "A1",
+                        "title": "Damp Entrance",
+                        "player_visible_description": "Wet stone.",
+                        "gm_description": "A small ambush point.",
+                        "monsters": ["Mitflit"],
+                        "hazards": [],
+                        "loot": [],
+                        "literal_text": {"read_aloud": "Wet stone."},
+                    },
+                    {
+                        "room_id": "A2",
+                        "title": "Bridge",
+                        "player_visible_description": "A bridge.",
+                        "gm_description": "It creaks.",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    monkeypatch.setattr(settings, "dma_campaign_id", "test-campaign")
+    monkeypatch.setattr(settings, "dungeon_room_key_root", str(private_root / "room-keys"))
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        create = client.post("/api/live/import-runs", json={"map_id": "level1"})
+        assert create.status_code == 200
+        run_id = create.json()["run"]["run_id"]
+
+        drafts = client.get("/api/live/import-room-drafts", params={"run_id": run_id})
+        assert drafts.status_code == 200
+        assert drafts.json()["total"] == 2
+
+        update = client.patch(
+            "/api/live/import-room-draft",
+            params={"run_id": run_id, "draft_id": "level1:A1"},
+            json={"review_status": "approved", "reviewer_notes": "Approved by test."},
+        )
+        assert update.status_code == 200
+        assert update.json()["draft"]["review_status"] == "approved"
+
+        promote = client.post(
+            "/api/live/import-promote-rooms",
+            params={"run_id": run_id},
+        )
+        assert promote.status_code == 200
+        assert promote.json()["promoted_count"] == 1
+
+        room_key = client.get("/api/live/dungeon-room-key", params={"map_id": "level1"})
+        assert room_key.status_code == 200
+        rooms = {room["room_id"]: room for room in room_key.json()["rooms"]}
+        assert rooms["A1"]["review"]["review_status"] == "promoted"
+        assert "review" not in rooms["A2"]
+
+        summary = client.get("/api/live/import-audit-summary", params={"run_id": run_id})
+        assert summary.status_code == 200
+        assert summary.json()["status_counts"]["promoted"] == 1
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_private_index_and_reference_routes(monkeypatch, tmp_path):
+    private_root = tmp_path / "private-local"
+    campaign_root = private_root / "campaigns" / "test-campaign"
+    campaign_root.mkdir(parents=True)
+    (campaign_root / "sessions.json").write_text(
+        json.dumps(
+            {
+                "campaign_id": "test-campaign",
+                "items": [
+                    {
+                        "id": "session-1",
+                        "title": "Session 1",
+                        "body_markdown": "The party found a silver key.",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    room_key_root = private_root / "room-keys" / "test-campaign"
+    room_key_root.mkdir(parents=True)
+    (room_key_root / "level-1.json").write_text(
+        json.dumps(
+            {
+                "map_id": "level1",
+                "title": "Level 1",
+                "rooms": [
+                    {
+                        "room_id": "A1",
+                        "title": "Damp Entrance",
+                        "player_visible_description": "Wet stone.",
+                        "gm_description": "A mitflit hides here.",
+                        "monsters": ["Mitflit"],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    raw_creature_root = private_root / "reference" / "aon" / "creatures" / "raw"
+    raw_creature_root.mkdir(parents=True)
+    (raw_creature_root / "mitflit.json").write_text(
+        json.dumps(
+            {
+                "id": "245",
+                "name": "Mitflit",
+                "url": "https://2e.aonprd.com/Monsters.aspx?ID=245",
+                "content": "Mitflits are small gremlins.",
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    monkeypatch.setattr(settings, "dma_campaign_id", "test-campaign")
+    monkeypatch.setattr(settings, "dungeon_room_key_root", str(private_root / "room-keys"))
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        normalize = client.post("/api/live/reference-corpus/normalize")
+        assert normalize.status_code == 200
+        search = client.get(
+            "/api/live/reference-corpus/search",
+            params={"q": "Mitflit", "category": "creatures"},
+        )
+        assert search.status_code == 200
+        assert search.json()["items"][0]["name"] == "Mitflit"
+
+        rebuild = client.post("/api/live/private-index/rebuild")
+        assert rebuild.status_code == 200
+        status = client.get("/api/live/private-index/status")
+        assert status.status_code == 200
+        assert status.json()["ready"] is True
+
+        dependencies = client.get("/api/live/private-index/dependencies")
+        assert dependencies.status_code == 200
+        assert dependencies.json()["items"][0]["resolution_status"] == "aon_resolved"
+
+        audit = client.get("/api/live/private-index/audit")
+        assert audit.status_code == 200
+        assert "issues" in audit.json()
+
+        mirror = client.post("/api/live/private-index/mirror-rag")
+        assert mirror.status_code == 200
+        assert mirror.json()["status"] == "mirrored"
+        assert mirror.json()["imported"] > 0
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_image_intake_review_and_promote_routes(monkeypatch, tmp_path):
+    private_root = tmp_path / "private-local"
+    room_key_root = private_root / "room-keys" / "test-campaign"
+    room_key_root.mkdir(parents=True)
+    (room_key_root / "level-1.json").write_text(
+        json.dumps(
+            {
+                "map_id": "level1",
+                "rooms": [
+                    {
+                        "room_id": "A1",
+                        "title": "Damp Entrance",
+                        "player_visible_description": "Wet stone.",
+                        "gm_description": "Korlok waits here.",
+                        "npcs": ["Korlok"],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    source_root = private_root / "reference" / "extracted" / "test-source"
+    image_root = source_root / "images"
+    image_root.mkdir(parents=True)
+    (image_root / "page-001-image-001.png").write_bytes(b"fake")
+    (source_root / "image-candidates.json").write_text(
+        json.dumps(
+            {
+                "items": [
+                    {
+                        "id": "image:test-source:p001:i001",
+                        "source_id": "test-source",
+                        "page": 1,
+                        "private_path": "reference/extracted/test-source/images/page-001-image-001.png",
+                        "url": "/api/live/private-file?path=reference/extracted/test-source/images/page-001-image-001.png",
+                        "category": "portrait_npc",
+                        "review_status": "unreviewed",
+                        "visibility": "copyright_private",
+                        "confidence": "high",
+                        "sha256": "abc",
+                        "proposed_matches": [
+                            {
+                                "entity_type": "room",
+                                "entity_id": "room:level1:A1",
+                                "entity_name": "Korlok",
+                                "evidence": ["nearby_caption_or_label_text"],
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    monkeypatch.setattr(settings, "dma_campaign_id", "test-campaign")
+    monkeypatch.setattr(settings, "dungeon_room_key_root", str(private_root / "room-keys"))
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        candidates = client.get("/api/live/image-candidates")
+        assert candidates.status_code == 200
+        assert candidates.json()["total"] == 1
+
+        update = client.patch(
+            "/api/live/image-candidate",
+            params={"image_id": "image:test-source:p001:i001"},
+            json={
+                "review_status": "confirmed",
+                "proposed_match": candidates.json()["items"][0]["proposed_matches"][0],
+            },
+        )
+        assert update.status_code == 200
+        assert update.json()["image"]["review_status"] == "confirmed"
+
+        promote = client.post("/api/live/image-promote")
+        assert promote.status_code == 200
+        assert promote.json()["promoted_count"] == 1
+
+        audit = client.get("/api/live/image-audit")
+        assert audit.status_code == 200
+        assert "issues" in audit.json()
+    finally:
+        asyncio.run(engine.dispose())
+
+
 def test_live_pc_sheet_and_npc_dossier_routes(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "dma_private_data_root", str(tmp_path / "missing-private"))
     monkeypatch.setattr(
         "backend.api.routes.live.settings.obsidian_vault_path",
         str(tmp_path / "missing-vault"),
@@ -453,7 +747,175 @@ Items: Longbow, Leather Armor
         asyncio.run(engine.dispose())
 
 
+def test_live_npc_portrait_upload_updates_private_dossier(tmp_path, monkeypatch):
+    private_root = tmp_path / "private-local"
+    campaign_root = private_root / "campaigns" / "test-campaign"
+    campaign_root.mkdir(parents=True)
+    (campaign_root / "npcs.json").write_text(
+        json.dumps(
+            {
+                "campaign_id": "test-campaign",
+                "items": [
+                    {
+                        "id": 42,
+                        "name": "Captain Mira",
+                        "details": {},
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    monkeypatch.setattr(settings, "dma_campaign_id", "test-campaign")
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        upload = client.post(
+            "/api/live/npc-sheet/portrait",
+            params={"id": 42},
+            files={"file": ("mira.png", b"fake image bytes", "image/png")},
+        )
+
+        assert upload.status_code == 200
+        payload = upload.json()
+        assert payload["portrait"].startswith("/api/live/private-file?path=")
+        assert payload["image"]["status"] == "local"
+        assert payload["image"]["source"] == "manual upload"
+        portrait_ref = payload["image"]["ref"]
+        assert portrait_ref.endswith("captain-mira-42.png")
+        assert (private_root / portrait_ref).read_bytes() == b"fake image bytes"
+
+        view = client.get("/api/live/npc-sheet", params={"id": 42})
+        assert view.status_code == 200
+        assert view.json()["image"]["ref"] == portrait_ref
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_campaign_bestiary_portrait_upload_updates_entry(tmp_path, monkeypatch):
+    private_root = tmp_path / "private-local"
+    room_key_root = private_root / "room-keys"
+    bestiary_folder = private_root / "bestiary" / "test-campaign"
+    bestiary_folder.mkdir(parents=True)
+    bestiary_file = bestiary_folder / "level-1.json"
+    bestiary_file.write_text(
+        json.dumps(
+            {
+                "campaign": "Test Campaign",
+                "level": "Level 1",
+                "entries": [
+                    {
+                        "id": "canker-cultist",
+                        "entry_type": "creature",
+                        "name": "Canker Cultist",
+                        "level": 3,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    monkeypatch.setattr(settings, "dma_campaign_id", "test-campaign")
+    monkeypatch.setattr(settings, "dungeon_room_key_root", str(room_key_root))
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        upload = client.post(
+            "/api/live/campaign-bestiary-entry/portrait",
+            params={"id": "canker-cultist"},
+            files={"file": ("cultist.webp", b"fake bestiary portrait", "image/webp")},
+        )
+
+        assert upload.status_code == 200
+        entry = upload.json()["entry"]
+        assert entry["portrait"].startswith("/api/live/private-file?path=")
+        assert entry["image"]["source"] == "manual upload"
+        portrait_ref = entry["image"]["ref"]
+        assert portrait_ref.endswith("canker-cultist.webp")
+        assert (private_root / portrait_ref).read_bytes() == b"fake bestiary portrait"
+
+        stored = json.loads(bestiary_file.read_text(encoding="utf-8"))
+        assert stored["entries"][0]["portrait"] == portrait_ref
+
+        listing = client.get("/api/live/campaign-bestiary")
+        assert listing.status_code == 200
+        listed = listing.json()["items"][0]
+        assert listed["portrait"] == entry["portrait"]
+        assert listed["image"]["ref"] == portrait_ref
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_town_square_settlement_routes(tmp_path, monkeypatch):
+    private_root = tmp_path / "private-local"
+    campaign_root = private_root / "campaigns" / "test-campaign"
+    campaign_root.mkdir(parents=True)
+    map_path = private_root / "media" / "test-campaign" / "towns" / "otari.png"
+    map_path.parent.mkdir(parents=True)
+    map_path.write_bytes(b"fake town map")
+    (campaign_root / "settlements.json").write_text(
+        json.dumps(
+            {
+                "campaign_id": "test-campaign",
+                "items": [
+                    {
+                        "id": "otari",
+                        "name": "Otari",
+                        "summary": "Coastal home base.",
+                        "map_path": "media/test-campaign/towns/otari.png",
+                        "look_and_feel": "Sea air and sawdust.",
+                        "demographics": "Fishers, loggers, merchants.",
+                        "gather_information": ["Wrin knows occult signs."],
+                        "quest_hooks": ["Ask Wrin about Gauntlight."],
+                        "locations": [
+                            {
+                                "id": "wrins-wonders",
+                                "name": "Wrin's Wonders",
+                                "map_number": 4,
+                                "type": "shop",
+                                "npcs": ["Wrin Sivinxi"],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    monkeypatch.setattr(settings, "dma_campaign_id", "test-campaign")
+
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        listing = client.get("/api/live/town-square/settlements")
+        assert listing.status_code == 200
+        assert listing.json()["items"][0]["id"] == "otari"
+        assert listing.json()["items"][0]["location_count"] == 1
+
+        detail = client.get("/api/live/town-square/settlement", params={"id": "otari"})
+        assert detail.status_code == 200
+        settlement = detail.json()["settlement"]
+        assert settlement["name"] == "Otari"
+        assert settlement["map_url"].startswith("/api/live/private-file?path=")
+        assert settlement["locations"][0]["name"] == "Wrin's Wonders"
+
+        filtered = client.get("/api/live/town-square/settlements", params={"q": "wrin"})
+        assert filtered.status_code == 200
+        assert filtered.json()["total"] == 1
+    finally:
+        asyncio.run(engine.dispose())
+
+
 def test_live_vault_image_wikilinks_become_browser_urls(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "dma_private_data_root", str(tmp_path / "missing-private"))
     vault_root = tmp_path / "vault"
     sheet_dir = vault_root / "Sheets"
     asset_dir = vault_root / "Library" / "Assets" / "Portraits" / "PCs"
@@ -496,6 +958,7 @@ image_source: "player supplied"
 
 
 def test_live_vault_pc_sheet_can_reuse_linked_local_json(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "dma_private_data_root", str(tmp_path / "missing-private"))
     vault_root = tmp_path / "vault"
     sheet_dir = vault_root / "Sheets"
     source_dir = tmp_path / "assets" / "imports" / "pathbuilder" / "test"
@@ -556,6 +1019,7 @@ source_url: "{source_path}"
 
 
 def test_live_pc_sheet_routes_load_obsidian_vault_sheets(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "dma_private_data_root", str(tmp_path / "missing-private"))
     vault = tmp_path / "vault"
     sheets = vault / "Sheets"
     sheets.mkdir(parents=True)
@@ -620,12 +1084,15 @@ special_abilities: ["Sneak Attack", "Low-Light Vision"]
         asyncio.run(engine.dispose())
 
 
-def test_live_command_center_overview_routes_create_and_update_vault_notes(
+def test_live_command_center_overview_routes_create_and_update_private_notes(
     tmp_path,
     monkeypatch,
 ):
+    private_root = tmp_path / "private-local"
     vault = tmp_path / "vault"
     vault.mkdir()
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    monkeypatch.setattr(settings, "dma_campaign_id", "test-campaign")
     monkeypatch.setattr(
         "backend.api.routes.live.settings.obsidian_vault_path",
         str(vault),
@@ -638,16 +1105,38 @@ def test_live_command_center_overview_routes_create_and_update_vault_notes(
         campaign = client.get("/api/live/campaign-overview")
         assert campaign.status_code == 200
         campaign_payload = campaign.json()
-        assert campaign_payload["path"] == "Command Center/Campaign Overview.md"
+        assert campaign_payload["source"] == "private-local"
+        assert campaign_payload["path"] == "campaign-overview.json#overview"
         assert "## Campaign Premise" in campaign_payload["content"]
 
         updated_campaign = client.patch(
             "/api/live/campaign-overview",
+            params={"tab": "gm-summary"},
             json={"content": "# Campaign Overview\n\n## DM Notes\n\nUpdated notes."},
         )
         assert updated_campaign.status_code == 200
         assert "Updated notes." in updated_campaign.json()["content"]
+        campaign_json = private_root / "campaigns" / "test-campaign" / "campaign-overview.json"
+        assert campaign_json.exists()
 
+        sessions_json = private_root / "campaigns" / "test-campaign" / "sessions.json"
+        sessions_json.parent.mkdir(parents=True, exist_ok=True)
+        sessions_json.write_text(
+            json.dumps(
+                {
+                    "campaign_id": "test-campaign",
+                    "items": [
+                        {
+                            "id": "next-session",
+                            "path": "sessions/next-session",
+                            "title": "Next Session",
+                            "body_markdown": "# Next Session\n\n## Session Goal\n\nTest.",
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
         sessions = client.get("/api/live/session-overviews")
         assert sessions.status_code == 200
         session_items = sessions.json()["items"]
@@ -914,6 +1403,8 @@ def test_dm_panel_route_serves_browser_panel():
         assert "/api/live/reference-pdfs" in response.text
         assert "Live Assistant" not in response.text
         assert "DMA Chat Workbench" in response.text
+        assert "Town Square" in response.text
+        assert "/api/live/town-square/settlements" in response.text
         assert "Session Context" in response.text
         assert "Vault Workspace" in response.text
         assert "Export DMA To Vault" in response.text

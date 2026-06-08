@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     # Keep the no-.env fallback aligned with the default local vault profile.
     database_url: str = "sqlite+aiosqlite:///./dma-abomination-vaults.db"
     obsidian_vault_path: str = "./obsidian-abomination-vaults-vault"
+    dma_private_data_root: str = "./assets/imports/misc/private-local"
+    dma_campaign_id: str = "abomination-vaults"
     reference_pdf_root: str = "./assets/imports/misc/private-local/reference/raw"
     dungeon_map_root: str = "./assets/imports/misc/private-local/media"
     dungeon_room_key_root: str = "./assets/imports/misc/private-local/room-keys"
