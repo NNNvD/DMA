@@ -9,7 +9,7 @@ from time import perf_counter
 from typing import Any, Literal, Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Header, Query, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,11 +18,17 @@ from backend.config.settings import settings
 from backend.models.base import get_db
 from backend.services.campaign_service import campaign_service
 from backend.services.aon_creature_service import aon_creature_service
+from backend.services.ingestion_service import ingestion_service
 from backend.services.live_assistant_service import live_assistant_service
 from backend.services.live_maptool_service import live_maptool_service
 from backend.services.live_session_service import live_session_service
 from backend.services.metrics_service import metrics_service
 from backend.services.obsidian_markdown import split_frontmatter
+from backend.services.private_campaign_data_service import private_campaign_data_service
+from backend.services.private_image_intake_service import private_image_intake_service
+from backend.services.private_index_service import private_index_service
+from backend.services.private_import_audit_service import private_import_audit_service
+from backend.services.reference_corpus_service import reference_corpus_service
 
 
 router = APIRouter()
@@ -70,6 +76,14 @@ class LiveNPCDossierUpdate(BaseModel):
     vault_player_summary: Optional[str] = None
 
 
+ALLOWED_PORTRAIT_CONTENT_TYPES = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+
+
 class LiveCommandCenterNoteUpdate(BaseModel):
     content: str
 
@@ -101,6 +115,35 @@ class CampaignBestiarySearchResponse(BaseModel):
 
 class CampaignBestiaryEntryResponse(BaseModel):
     entry: dict
+
+
+class ImportRunCreateRequest(BaseModel):
+    title: Optional[str] = None
+    map_id: Optional[str] = None
+
+
+class ImportRoomDraftUpdate(BaseModel):
+    review_status: Optional[str] = None
+    reviewer_notes: Optional[str] = None
+    fields: Optional[dict[str, Any]] = None
+
+
+class DependencyReviewUpdate(BaseModel):
+    action: Literal["ignore", "mark_custom", "link_aon", "needs_review"]
+    resolved_id: Optional[str] = None
+    reviewer_notes: Optional[str] = None
+
+
+class ImageIntakeCreateRequest(BaseModel):
+    source_id: Optional[str] = None
+
+
+class ImageCandidateUpdate(BaseModel):
+    category: Optional[str] = None
+    review_status: Optional[str] = None
+    visibility: Optional[str] = None
+    proposed_match: Optional[dict[str, Any]] = None
+    reviewer_notes: Optional[str] = None
 
 
 CAMPAIGN_OVERVIEW_PATH = "Command Center/Campaign Overview.md"
@@ -318,6 +361,13 @@ def _bestiary_root() -> Path:
     return (_room_key_root().parent / "bestiary").resolve()
 
 
+def _settlements_payload() -> dict[str, Any]:
+    return private_campaign_data_service.read_json(
+        "settlements.json",
+        {"campaign_id": private_campaign_data_service.campaign_id(), "items": []},
+    )
+
+
 def _vault_root() -> Path:
     return _configured_path(settings.obsidian_vault_path)
 
@@ -331,6 +381,47 @@ def _text_matches(query: str, *values: object) -> bool:
         return True
     haystack = " ".join(str(value or "") for value in values).casefold()
     return query in haystack
+
+
+def _settlement_search_text(settlement: dict[str, Any]) -> str:
+    values = [
+        settlement.get("id"),
+        settlement.get("name"),
+        settlement.get("title"),
+        settlement.get("summary"),
+        settlement.get("look_and_feel"),
+        settlement.get("demographics"),
+        *(settlement.get("quest_hooks") or []),
+        *(settlement.get("gather_information") or []),
+    ]
+    for location in settlement.get("locations") or []:
+        if not isinstance(location, dict):
+            continue
+        values.extend(
+            [
+                location.get("id"),
+                location.get("name"),
+                location.get("type"),
+                location.get("summary"),
+                *(location.get("services") or []),
+                *(location.get("npcs") or []),
+                *(location.get("quest_hooks") or []),
+                *(location.get("gather_information") or []),
+            ]
+        )
+    return " ".join(str(value) for value in values if value).casefold()
+
+
+def _settlement_view(settlement: dict[str, Any]) -> dict[str, Any]:
+    item = dict(settlement)
+    map_path = str(item.get("map_path") or "").strip()
+    item["map_url"] = private_campaign_data_service.private_file_url(map_path)
+    item["locations"] = [
+        dict(location)
+        for location in item.get("locations") or []
+        if isinstance(location, dict)
+    ]
+    return item
 
 
 def _path_stem(value: str | None) -> str | None:
@@ -481,6 +572,64 @@ PDF_NAVIGATION_LINES = {
     "toolbox",
     "mister beak",
 }
+
+CANONICAL_DUNGEON_MAPS = [
+    {
+        "path": "abomination-vaults/maps/BOOK 1/Graveyard.webp",
+        "map_id": "graveyard",
+        "title": "Graveyard",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 1/Level1.jpg",
+        "map_id": "level1",
+        "title": "Level 1",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 1/Level2.jpg",
+        "map_id": "level2",
+        "title": "Level 2",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 1/Level3.jpg",
+        "map_id": "level3",
+        "title": "Level 3",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 1/level4.webp",
+        "map_id": "level4",
+        "title": "Level 4",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 2/level5.webp",
+        "map_id": "level5",
+        "title": "Level 5",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 2/level6.webp",
+        "map_id": "level6",
+        "title": "Level 6",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 2/level7.webp",
+        "map_id": "level7",
+        "title": "Level 7",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 3/level8.webp",
+        "map_id": "level8",
+        "title": "Level 8",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 3/level9-100px.webp",
+        "map_id": "level9",
+        "title": "Level 9",
+    },
+    {
+        "path": "abomination-vaults/maps/BOOK 3/level10.webp",
+        "map_id": "level10",
+        "title": "Level 10",
+    },
+]
 
 
 def _is_pdf_navigation_line(text: str) -> bool:
@@ -1122,6 +1271,7 @@ def _campaign_bestiary_entries() -> list[dict[str, Any]]:
 
 
 def _campaign_bestiary_summary(entry: dict[str, Any]) -> dict[str, Any]:
+    portrait = entry.get("portrait") or ""
     return {
         "id": entry.get("id"),
         "name": entry.get("name"),
@@ -1138,7 +1288,13 @@ def _campaign_bestiary_summary(entry: dict[str, Any]) -> dict[str, Any]:
         "aon_creature_id": entry.get("aon_creature_id"),
         "base_creature": entry.get("base_creature"),
         "combat": entry.get("combat") or {},
-        "portrait": entry.get("portrait") or "",
+        "portrait": _private_media_url(portrait) or portrait,
+        "image": {
+            "ref": portrait,
+            "url": _private_media_url(portrait),
+            "status": "local" if portrait else "missing",
+            "source": entry.get("image_source"),
+        },
     }
 
 
@@ -1160,7 +1316,46 @@ def _campaign_bestiary_entry(entry_id: str) -> dict[str, Any] | None:
     normalized_id = entry_id.strip().casefold()
     for entry in _campaign_bestiary_entries():
         if str(entry.get("id") or "").strip().casefold() == normalized_id:
-            return entry
+            detail = dict(entry)
+            portrait = detail.get("portrait") or ""
+            detail["portrait"] = _private_media_url(portrait) or portrait
+            detail["image"] = {
+                "ref": portrait,
+                "url": _private_media_url(portrait),
+                "status": "local" if portrait else "missing",
+                "source": detail.get("image_source"),
+            }
+            return detail
+    return None
+
+
+def _update_campaign_bestiary_entry(
+    entry_id: str,
+    updates: dict[str, Any],
+) -> dict[str, Any] | None:
+    normalized_id = entry_id.strip().casefold()
+    root = _bestiary_root()
+    for path in _campaign_bestiary_files():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        entries = payload.get("entries") if isinstance(payload.get("entries"), list) else []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            if str(entry.get("id") or "").strip().casefold() != normalized_id:
+                continue
+            entry.update(updates)
+            path.write_text(
+                json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            updated = dict(entry)
+            updated.setdefault("campaign", payload.get("campaign"))
+            updated.setdefault("level_scope", payload.get("level"))
+            updated.setdefault("source_file", path.relative_to(root).as_posix())
+            return updated
     return None
 
 
@@ -1507,12 +1702,52 @@ def _portrait_ref(details: dict) -> str | None:
     return None
 
 
+def _portrait_filename(name: str | None, npc_id: int, suffix: str) -> str:
+    stem = re.sub(r"[^a-z0-9]+", "-", str(name or "").casefold()).strip("-")
+    if not stem:
+        stem = f"npc-{npc_id}"
+    return f"{stem}-{npc_id}{suffix}"
+
+
+def _bestiary_portrait_filename(name: str | None, entry_id: str, suffix: str) -> str:
+    base = name or entry_id
+    stem = re.sub(r"[^a-z0-9]+", "-", str(base).casefold()).strip("-")
+    entry_slug = re.sub(r"[^a-z0-9]+", "-", str(entry_id).casefold()).strip("-")
+    if not stem:
+        stem = entry_slug or "bestiary-entry"
+    if entry_slug and entry_slug not in stem:
+        stem = f"{stem}-{entry_slug}"
+    return f"{stem}{suffix}"
+
+
+def _private_media_url(ref: str | None) -> str | None:
+    if not ref:
+        return None
+    value = ref.strip()
+    if value.startswith(("http://", "https://", "/")):
+        return value
+    return private_campaign_data_service.private_file_url(value)
+
+
 def _vault_image_url(ref: str | None) -> str | None:
     if not ref:
         return None
     value = ref.strip()
     if value.startswith(("http://", "https://", "/")):
         return value
+    if value.startswith("private-local:"):
+        return private_campaign_data_service.private_file_url(
+            value.split(":", 1)[1].strip()
+        )
+    if Path(value).suffix.lower() in {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".gif",
+        ".svg",
+    }:
+        return private_campaign_data_service.private_file_url(value)
     match = re.fullmatch(r"!?\[\[([^\]]+)\]\]", value)
     if not match:
         return None
@@ -1550,6 +1785,25 @@ def _image_view(details: dict) -> dict[str, Any]:
         "attribution": details.get("image_attribution"),
         "notes": details.get("image_notes"),
     }
+
+
+def _private_campaign_item_view(item: dict[str, Any]) -> dict[str, Any]:
+    """Return a private-local item with browser-ready media URLs."""
+    view = dict(item)
+    details = dict(view.get("details") or {})
+    image = {**_image_view(details), **dict(view.get("image") or {})}
+    portrait = view.get("portrait")
+    if isinstance(portrait, str) and portrait and not portrait.startswith(
+        ("http://", "https://", "/")
+    ):
+        image.setdefault("ref", portrait)
+        image["url"] = private_campaign_data_service.private_file_url(portrait)
+        view["portrait"] = image["url"]
+    elif portrait and not image.get("url"):
+        image["url"] = portrait
+    if image:
+        view["image"] = image
+    return view
 
 
 def _pc_sheet_view(entity: dict) -> dict:
@@ -1834,6 +2088,22 @@ async def list_live_pc_sheets(
 ):
     query = (q or "").strip().casefold()
     items = []
+    private_items = private_campaign_data_service.pc_items()
+    if private_items:
+        for sheet in private_items:
+            sheet = _private_campaign_item_view(sheet)
+            if not _text_matches(
+                query,
+                sheet.get("player_name"),
+                sheet.get("character_name"),
+                sheet.get("summary"),
+                sheet.get("identity", {}).get("class_name"),
+                sheet.get("identity", {}).get("ancestry"),
+            ):
+                continue
+            items.append(sheet)
+        return {"items": items, "total": len(items), "source": "private-local"}
+
     vault_items = _vault_pc_sheets()
     if vault_items:
         for sheet in vault_items:
@@ -1912,6 +2182,10 @@ async def get_live_pc_sheet(
     id: int = Query(gt=0),
     db: AsyncSession = Depends(get_db),
 ):
+    for sheet in private_campaign_data_service.pc_items():
+        if int(sheet.get("id") or 0) == id:
+            return _private_campaign_item_view(sheet)
+
     for sheet in _vault_pc_sheets():
         if sheet.get("id") == id:
             return sheet
@@ -1935,9 +2209,48 @@ async def list_live_npc_sheets(
     q: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
-    overview = await campaign_service.get_overview(db)
     query = (q or "").strip().casefold()
     items = []
+    private_items = private_campaign_data_service.npc_items()
+    if private_items:
+        for dossier in private_items:
+            dossier = _private_campaign_item_view(dossier)
+            details = dossier.get("details") or {}
+            if not _text_matches(
+                query,
+                dossier.get("name"),
+                dossier.get("summary"),
+                dossier.get("role"),
+                details.get("role"),
+                dossier.get("status"),
+            ):
+                continue
+            items.append(
+                {
+                    "id": dossier.get("id"),
+                    "name": dossier.get("name"),
+                    "summary": dossier.get("summary"),
+                    "role": dossier.get("role"),
+                    "status": dossier.get("status"),
+                    "status_detail": dossier.get("status_detail"),
+                    "portrait": dossier.get("portrait"),
+                    "image": dossier.get("image"),
+                    "current_location": dossier.get("current_location"),
+                    "appearance_description": dossier.get("appearance_description"),
+                    "gm_summary": dossier.get("gm_summary"),
+                    "pc_encountered": dossier.get("pc_encountered"),
+                    "pc_relationship_status": dossier.get("pc_relationship_status"),
+                    "campaign_encounters": dossier.get("campaign_encounters"),
+                    "player_facing": dossier.get("player_facing"),
+                    "goals": dossier.get("goals"),
+                    "secrets": dossier.get("secrets"),
+                    "clues": dossier.get("clues"),
+                    "combat": dossier.get("combat"),
+                }
+            )
+        return {"items": items, "total": len(items), "source": "private-local"}
+
+    overview = await campaign_service.get_overview(db)
     for entity in overview.get("npcs") or []:
         details = entity.get("details") or {}
         dossier = _npc_dossier_view(entity)
@@ -1980,6 +2293,10 @@ async def get_live_npc_sheet(
     id: int = Query(gt=0),
     db: AsyncSession = Depends(get_db),
 ):
+    for dossier in private_campaign_data_service.npc_items():
+        if int(dossier.get("id") or 0) == id:
+            return _private_campaign_item_view(dossier)
+
     entity = await campaign_service.get_entity(id, db)
     if entity is None:
         raise _not_found("NPC was not found")
@@ -1999,6 +2316,13 @@ async def update_live_npc_sheet(
     id: int = Query(gt=0),
     db: AsyncSession = Depends(get_db),
 ):
+    private_updated = private_campaign_data_service.update_npc(
+        id,
+        payload.model_dump(exclude_unset=True),
+    )
+    if private_updated:
+        return _private_campaign_item_view(private_updated)
+
     entity = await campaign_service.get_entity(id, db)
     if entity is None:
         raise _not_found("NPC was not found")
@@ -2036,8 +2360,87 @@ async def update_live_npc_sheet(
     )
 
 
+@router.post("/npc-sheet/portrait")
+async def upload_live_npc_portrait(
+    id: int = Query(gt=0),
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    content_type = (file.content_type or "").split(";", 1)[0].strip().lower()
+    suffix = ALLOWED_PORTRAIT_CONTENT_TYPES.get(content_type)
+    if not suffix:
+        raise _bad_request("Portrait must be a PNG, JPEG, WEBP, or GIF image.")
+    data = await file.read()
+    if not data:
+        raise _bad_request("Portrait image was empty.")
+    if len(data) > 12 * 1024 * 1024:
+        raise _bad_request("Portrait image is too large; keep it under 12 MB.")
+
+    private_dossier = None
+    for dossier in private_campaign_data_service.npc_items():
+        if int(dossier.get("id") or 0) == id:
+            private_dossier = dossier
+            break
+
+    entity = None
+    if private_dossier is None:
+        entity = await campaign_service.get_entity(id, db)
+        if entity is None:
+            raise _not_found("NPC was not found")
+        if entity.entity_type != "npc":
+            raise _bad_request("Requested entity is not an NPC")
+
+    name = (private_dossier or {}).get("name") if private_dossier else entity.name
+    relative_path = (
+        Path("media")
+        / private_campaign_data_service.campaign_id()
+        / "portraits"
+        / "NPCs"
+        / "manual"
+        / _portrait_filename(name, id, suffix)
+    )
+    target = private_campaign_data_service.private_root() / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    portrait_ref = relative_path.as_posix()
+
+    if private_dossier is not None:
+        updated = private_campaign_data_service.update_npc(
+            id,
+            {
+                "portrait": portrait_ref,
+                "image_status": "local",
+                "image_source": "manual upload",
+            },
+        )
+        return _private_campaign_item_view(updated or private_dossier)
+
+    current_details = dict(entity.details or {})
+    current_details.update(
+        {
+            "portrait": portrait_ref,
+            "image_status": "local",
+            "image_source": "manual upload",
+        }
+    )
+    updated = await campaign_service.update_entity(id, db, details=current_details)
+    return _npc_dossier_view(
+        campaign_service.entity_to_dict(
+            updated,
+            include_relationships=True,
+        )
+    )
+
+
 @router.get("/campaign-overview")
-async def get_campaign_overview():
+async def get_campaign_overview(tab: str = Query(default="overview")):
+    private_note = private_campaign_data_service.campaign_note_payload(
+        tab,
+        DEFAULT_CAMPAIGN_OVERVIEW,
+    )
+    if private_note:
+        return private_note
+
     root = _vault_root()
     note_path = _ensure_vault_note(
         CAMPAIGN_OVERVIEW_PATH,
@@ -2047,18 +2450,36 @@ async def get_campaign_overview():
 
 
 @router.patch("/campaign-overview")
-async def update_campaign_overview(payload: LiveCommandCenterNoteUpdate):
-    root = _vault_root()
-    note_path = _ensure_vault_note(
-        CAMPAIGN_OVERVIEW_PATH,
-        DEFAULT_CAMPAIGN_OVERVIEW,
+async def update_campaign_overview(
+    payload: LiveCommandCenterNoteUpdate,
+    tab: str = Query(default="overview"),
+):
+    return private_campaign_data_service.update_campaign_note(
+        tab,
+        payload.content,
+        tab.replace("-", " ").title(),
     )
-    note_path.write_text(payload.content.rstrip() + "\n", encoding="utf-8")
-    return _note_payload(root, note_path)
 
 
 @router.get("/session-overviews")
 async def list_session_overviews():
+    private_items = private_campaign_data_service.session_items()
+    if private_items:
+        return {
+            "source": "private-local",
+            "root_path": str(private_campaign_data_service.private_root()),
+            "items": [
+                {
+                    "id": item.get("id"),
+                    "path": item.get("path") or item.get("id"),
+                    "title": item.get("title") or item.get("label") or item.get("id"),
+                    "updated_at": item.get("updated_at"),
+                }
+                for item in private_items
+            ],
+            "total": len(private_items),
+        }
+
     root = _vault_root()
     _ensure_vault_note(
         f"{SESSION_OVERVIEW_DIR}/Next Session.md",
@@ -2081,6 +2502,10 @@ async def list_session_overviews():
 
 @router.get("/session-overview")
 async def get_session_overview(path: str = Query(min_length=1)):
+    private_note = private_campaign_data_service.session_payload(path)
+    if private_note:
+        return private_note
+
     root = _vault_root()
     if not root.exists():
         raise _not_found("Configured Obsidian vault was not found")
@@ -2107,6 +2532,10 @@ async def update_session_overview(
     payload: LiveCommandCenterNoteUpdate,
     path: str = Query(min_length=1),
 ):
+    private_note = private_campaign_data_service.update_session(path, payload.content)
+    if private_note:
+        return private_note
+
     root = _vault_root()
     current = await get_session_overview(path)
     note_path = _safe_child(root, current["path"])
@@ -2204,6 +2633,38 @@ async def get_vault_file(path: str = Query(min_length=1)):
         ".webp": "image/webp",
         ".gif": "image/gif",
         ".svg": "image/svg+xml",
+    }
+    return FileResponse(
+        file_path,
+        media_type=media_types.get(
+            file_path.suffix.lower(), "application/octet-stream"
+        ),
+        filename=_content_disposition_filename(file_path),
+    )
+
+
+@router.get("/private-file")
+async def get_private_file(path: str = Query(min_length=1)):
+    root = private_campaign_data_service.private_root()
+    if not root.exists():
+        raise _not_found("Configured private-local folder was not found")
+    try:
+        file_path = private_campaign_data_service.safe_child(root, path)
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    if not file_path.exists() or not file_path.is_file():
+        raise _not_found("Private-local file was not found")
+    media_types = {
+        ".pdf": "application/pdf",
+        ".html": "text/html; charset=utf-8",
+        ".htm": "text/html; charset=utf-8",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".svg": "image/svg+xml",
+        ".json": "application/json",
     }
     return FileResponse(
         file_path,
@@ -2339,28 +2800,57 @@ async def list_dungeon_maps(q: Optional[str] = Query(default=None)):
     if not root.exists():
         return {"root_path": str(root), "items": [], "total": 0}
     query = (q or "").strip().casefold()
+    canonical_items = []
+    for spec in CANONICAL_DUNGEON_MAPS:
+        path = root / spec["path"]
+        if not path.exists():
+            continue
+        item = _dungeon_map_item(root, path, spec)
+        searchable = f"{item['path']} {item['title']} {item['map_id']}".casefold()
+        if query and query not in searchable:
+            continue
+        canonical_items.append(item)
+    if canonical_items:
+        return {
+            "root_path": str(root),
+            "items": canonical_items,
+            "total": len(canonical_items),
+        }
+
     items = []
     for path in sorted(root.rglob("*")):
         if path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
+            continue
+        relative_parts = [part.casefold() for part in path.relative_to(root).parts]
+        if root.name.casefold() != "maps" and "maps" not in relative_parts:
+            continue
+        if any(part in {"portraits", "portrait", "tokens"} for part in relative_parts):
             continue
         relative = path.relative_to(root).as_posix()
         searchable = f"{relative} {path.stem}".casefold()
         if query and query not in searchable:
             continue
-        items.append(
-            {
-                "map_id": _map_id_from_path(path),
-                "path": relative,
-                "title": path.stem,
-                "folder": (
-                    path.parent.relative_to(root).as_posix()
-                    if path.parent != root
-                    else ""
-                ),
-                "url": f"/api/live/dungeon-map?path={quote(relative)}",
-            }
-        )
+        items.append(_dungeon_map_item(root, path))
     return {"root_path": str(root), "items": items, "total": len(items)}
+
+
+def _dungeon_map_item(
+    root: Path,
+    path: Path,
+    spec: dict[str, str] | None = None,
+) -> dict[str, str]:
+    relative = path.relative_to(root).as_posix()
+    return {
+        "map_id": (spec or {}).get("map_id") or _map_id_from_path(path),
+        "path": relative,
+        "title": (spec or {}).get("title") or path.stem,
+        "folder": (
+            path.parent.relative_to(root).as_posix()
+            if path.parent != root
+            else ""
+        ),
+        "url": f"/api/live/dungeon-map?path={quote(relative)}",
+    }
 
 
 @router.get("/dungeon-map")
@@ -2381,6 +2871,51 @@ async def get_dungeon_map(path: str = Query(min_length=1)):
         ".webp": "image/webp",
     }[map_path.suffix.lower()]
     return FileResponse(map_path, media_type=media_type, filename=map_path.name)
+
+
+@router.get("/town-square/settlements")
+async def list_town_square_settlements(q: Optional[str] = Query(default=None)):
+    payload = _settlements_payload()
+    query = (q or "").strip().casefold()
+    items = []
+    for settlement in payload.get("items") or []:
+        if not isinstance(settlement, dict):
+            continue
+        if query and query not in _settlement_search_text(settlement):
+            continue
+        view = _settlement_view(settlement)
+        items.append(
+            {
+                "id": view.get("id"),
+                "name": view.get("name") or view.get("title"),
+                "title": view.get("title") or view.get("name"),
+                "summary": view.get("summary") or "",
+                "map_path": view.get("map_path") or "",
+                "map_url": view.get("map_url"),
+                "location_count": len(view.get("locations") or []),
+            }
+        )
+    return {
+        "campaign_id": payload.get("campaign_id") or private_campaign_data_service.campaign_id(),
+        "items": items,
+        "total": len(items),
+    }
+
+
+@router.get("/town-square/settlement")
+async def get_town_square_settlement(id: str = Query(min_length=1)):
+    normalized = id.strip().casefold()
+    payload = _settlements_payload()
+    for settlement in payload.get("items") or []:
+        if not isinstance(settlement, dict):
+            continue
+        candidates = [settlement.get("id"), settlement.get("name"), settlement.get("title")]
+        if any(str(candidate or "").strip().casefold() == normalized for candidate in candidates):
+            return {
+                "campaign_id": payload.get("campaign_id") or private_campaign_data_service.campaign_id(),
+                "settlement": _settlement_view(settlement),
+            }
+    raise _not_found("Town Square settlement was not found")
 
 
 @router.get("/dungeon-room-key")
@@ -2437,6 +2972,302 @@ async def get_campaign_bestiary_entry(id: str = Query(min_length=1)):
     if entry is None:
         raise _not_found("Campaign bestiary entry was not found")
     return {"entry": entry}
+
+
+@router.post("/campaign-bestiary-entry/portrait", response_model=CampaignBestiaryEntryResponse)
+async def upload_campaign_bestiary_portrait(
+    id: str = Query(min_length=1),
+    file: UploadFile = File(...),
+):
+    entry = _campaign_bestiary_entry(id)
+    if entry is None:
+        raise _not_found("Campaign bestiary entry was not found")
+    content_type = (file.content_type or "").split(";", 1)[0].strip().lower()
+    suffix = ALLOWED_PORTRAIT_CONTENT_TYPES.get(content_type)
+    if not suffix:
+        raise _bad_request("Portrait must be a PNG, JPEG, WEBP, or GIF image.")
+    data = await file.read()
+    if not data:
+        raise _bad_request("Portrait image was empty.")
+    if len(data) > 12 * 1024 * 1024:
+        raise _bad_request("Portrait image is too large; keep it under 12 MB.")
+
+    relative_path = (
+        Path("media")
+        / private_campaign_data_service.campaign_id()
+        / "portraits"
+        / "Bestiary"
+        / "manual"
+        / _bestiary_portrait_filename(entry.get("name"), id, suffix)
+    )
+    target = private_campaign_data_service.private_root() / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    updated = _update_campaign_bestiary_entry(
+        id,
+        {
+            "portrait": relative_path.as_posix(),
+            "image_status": "local",
+            "image_source": "manual upload",
+        },
+    )
+    if updated is None:
+        raise _not_found("Campaign bestiary entry was not found")
+    return {"entry": _campaign_bestiary_entry(id)}
+
+
+@router.get("/import-runs")
+async def list_import_runs():
+    runs = private_import_audit_service.list_import_runs()
+    return {"items": runs, "total": len(runs)}
+
+
+@router.post("/import-runs")
+async def create_import_run(payload: ImportRunCreateRequest):
+    try:
+        run = private_import_audit_service.create_import_run(
+            title=payload.title,
+            map_id=payload.map_id,
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    return {"run": run}
+
+
+@router.get("/import-run")
+async def get_import_run(run_id: str = Query(min_length=1)):
+    run = private_import_audit_service.get_import_run(run_id)
+    if run is None:
+        raise _not_found("Import run was not found")
+    return {"run": run}
+
+
+@router.get("/import-room-drafts")
+async def list_import_room_drafts(
+    run_id: str = Query(min_length=1),
+    review_status: Optional[str] = Query(default=None),
+    q: Optional[str] = Query(default=None),
+):
+    payload = private_import_audit_service.room_drafts(
+        run_id,
+        review_status=review_status,
+        q=q,
+    )
+    if payload is None:
+        raise _not_found("Import run room drafts were not found")
+    return payload
+
+
+@router.patch("/import-room-draft")
+async def update_import_room_draft(
+    payload: ImportRoomDraftUpdate,
+    run_id: str = Query(min_length=1),
+    draft_id: str = Query(min_length=1),
+):
+    try:
+        draft = private_import_audit_service.update_room_draft(
+            run_id,
+            draft_id,
+            payload.model_dump(exclude_unset=True),
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    if draft is None:
+        raise _not_found("Import room draft was not found")
+    return {"draft": draft}
+
+
+@router.get("/import-audit-summary")
+async def get_import_audit_summary(run_id: str = Query(min_length=1)):
+    summary = private_import_audit_service.audit_summary(run_id)
+    if summary is None:
+        raise _not_found("Import audit summary was not found")
+    return summary
+
+
+@router.post("/import-promote-rooms")
+async def promote_import_rooms(run_id: str = Query(min_length=1)):
+    result = private_import_audit_service.promote_reviewed_rooms(run_id)
+    if result is None:
+        raise _not_found("Import room drafts were not found")
+    return result
+
+
+@router.get("/image-intake-runs")
+async def list_image_intake_runs():
+    runs = private_image_intake_service.list_image_runs()
+    return {"items": runs, "total": len(runs)}
+
+
+@router.post("/image-intake-runs")
+async def create_image_intake_run(payload: ImageIntakeCreateRequest):
+    try:
+        run = private_image_intake_service.create_image_intake_run(
+            source_id=payload.source_id,
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    return {"run": run}
+
+
+@router.get("/image-candidates")
+async def list_image_candidates(
+    source_id: Optional[str] = Query(default=None),
+    review_status: Optional[str] = Query(default=None),
+    category: Optional[str] = Query(default=None),
+    q: Optional[str] = Query(default=None),
+    limit: int = Query(default=300, ge=1, le=1000),
+):
+    return private_image_intake_service.image_candidates(
+        source_id=source_id,
+        review_status=review_status,
+        category=category,
+        q=q,
+        limit=limit,
+    )
+
+
+@router.patch("/image-candidate")
+async def update_image_candidate(
+    payload: ImageCandidateUpdate,
+    image_id: str = Query(min_length=1),
+):
+    try:
+        item = private_image_intake_service.update_image_candidate(
+            image_id,
+            payload.model_dump(exclude_unset=True),
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    if item is None:
+        raise _not_found("Image candidate was not found")
+    return {"image": item}
+
+
+@router.get("/image-audit")
+async def get_image_audit():
+    return private_image_intake_service.image_audit()
+
+
+@router.post("/image-promote")
+async def promote_images():
+    return private_image_intake_service.promote_confirmed_images()
+
+
+@router.get("/private-index/status")
+async def get_private_index_status():
+    return private_index_service.status()
+
+
+@router.post("/private-index/rebuild")
+async def rebuild_private_indexes():
+    reference_corpus_service.ensure_corpus_structure()
+    return {"manifest": private_index_service.build_all()}
+
+
+@router.get("/private-index/audit")
+async def get_private_index_audit():
+    return private_index_service.audit()
+
+
+@router.get("/private-index/dependencies")
+async def get_private_index_dependencies(
+    unresolved_only: bool = Query(default=False),
+):
+    if unresolved_only:
+        items = private_index_service.unresolved_dependencies()
+        return {"items": items, "total": len(items)}
+    payload = private_index_service.dependency_audit()
+    return {
+        "items": payload.get("items") or [],
+        "summary": payload.get("summary") or {},
+        "updated_at": payload.get("updated_at"),
+    }
+
+
+@router.patch("/private-index/dependency")
+async def update_private_index_dependency(
+    payload: DependencyReviewUpdate,
+    dependency_id: str = Query(min_length=1),
+):
+    try:
+        item = private_index_service.update_dependency(
+            dependency_id,
+            payload.model_dump(exclude_unset=True),
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    if item is None:
+        raise _not_found("Dependency was not found")
+    return {"dependency": item}
+
+
+@router.get("/reference-corpus/status")
+async def get_reference_corpus_status():
+    return reference_corpus_service.ensure_corpus_structure()
+
+
+@router.post("/reference-corpus/normalize")
+async def normalize_reference_corpus():
+    return reference_corpus_service.normalize_local_corpus()
+
+
+@router.get("/reference-corpus/search")
+async def search_reference_corpus(
+    q: Optional[str] = Query(default=None),
+    category: Optional[str] = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=500),
+):
+    try:
+        return {
+            "items": reference_corpus_service.search(
+                q=q or "",
+                category=category,
+                limit=limit,
+            )
+        }
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+
+
+@router.post("/private-index/mirror-rag")
+async def mirror_private_index_to_search_db(db: AsyncSession = Depends(get_db)):
+    status = private_index_service.status()
+    rag_file = next(
+        (item for item in status.get("files") or [] if item.get("name") == "rag-documents.jsonl"),
+        None,
+    )
+    if rag_file is None:
+        raise _bad_request("Build private indexes before mirroring RAG documents.")
+    rag_path = private_campaign_data_service.private_root() / str(rag_file.get("path") or "")
+    imported = 0
+    for line in rag_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        await ingestion_service.ingest_document(
+            db,
+            title=str(row.get("title") or row.get("external_id") or "Private Index Document"),
+            kind=str(row.get("kind") or "campaign_index"),
+            content=str(row.get("content") or ""),
+            summary=None,
+            source_name="private-local-index",
+            url=f"private-index:{row.get('external_id')}",
+            dedupe_on_url=True,
+            source_class="private_local",
+            privacy_scope="private_local",
+            review_status="approved",
+            visibility_scope="gm_only",
+            rag_eligible=True,
+            train_eligible=False,
+        )
+        imported += 1
+    return {
+        "status": "mirrored",
+        "message": f"Mirrored {imported} private-local RAG documents into the search database.",
+        "rag_documents_path": rag_file.get("path"),
+        "imported": imported,
+    }
 
 
 def _tts_provider() -> str:
@@ -2550,11 +3381,23 @@ async def list_aon_creatures(
 async def get_aon_creature(
     creature_id: int = Query(ge=1),
     refresh: bool = Query(default=False),
+    name: Optional[str] = Query(default=None),
+    level: Optional[int] = Query(default=None),
+    source: Optional[str] = Query(default=None),
+    traits: Optional[str] = Query(default=None),
 ):
     try:
         document = aon_creature_service.get_creature(
             creature_id,
             refresh=refresh,
+            fallback_name=name,
+            fallback_level=level,
+            fallback_source=source,
+            fallback_traits=[
+                trait.strip()
+                for trait in (traits or "").split(",")
+                if trait.strip()
+            ],
         )
     except ValueError as exc:
         raise _bad_request(str(exc)) from exc

@@ -108,3 +108,56 @@ def test_aon_creature_cache_without_image_url_backfills_when_fetch_succeeds(tmp_
     )
     document = service.get_creature(item.creature_id)
     assert document.image_url == "https://2e.aonprd.com/Images/Monsters/Mitflit.png"
+
+
+def test_aon_creature_index_contains_level_three_references():
+    service = AonCreatureService()
+    expected = {
+        110: "Barbazu",
+        218: "Ghoul",
+        227: "Gibbering Mouther",
+        684: "Wood Golem",
+        726: "Lurker In Light",
+        853: "Violet Fungus",
+        4391: "Mist Stalker",
+    }
+
+    indexed = {item.creature_id: item.name for item in service.creature_index}
+
+    for creature_id, name in expected.items():
+        assert indexed[creature_id] == name
+
+
+def test_aon_creature_get_creature_supports_fallback_items(tmp_path, monkeypatch):
+    service = AonCreatureService(project_root=tmp_path)
+
+    monkeypatch.setattr(
+        service,
+        "_fetch_text",
+        lambda *_args, **_kwargs: """
+          <div class="main" id="main">
+            Mystery Creature Creature 9
+            Source Test Source
+            AC 27
+            HP 135
+            Fort +18
+            Ref +20
+            Will +17
+            Speed 30 feet
+            Perception +19
+          <div class="clear">
+        """,
+    )
+
+    document = service.get_creature(
+        999999,
+        fallback_name="Mystery Creature",
+        fallback_level=9,
+        fallback_source="Test Source",
+        fallback_traits=["Test"],
+    )
+
+    assert document.creature_id == 999999
+    assert document.name == "Mystery Creature"
+    assert document.level == 9
+    assert document.ac == "27"

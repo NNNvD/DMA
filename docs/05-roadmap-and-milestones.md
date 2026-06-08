@@ -169,3 +169,7 @@ This roadmap is structured into five phases. Each phase has:
 - Telemetry and logging.
 - Error handling patterns.
 - Documentation build pipeline (if needed).
+
+### Deferred Follow-Up Tasks
+
+- Populate the full local AoN reference cache for the private-local index pipeline, including creatures, rules, conditions, actions, spells, feats, items/equipment/treasure, hazards, afflictions/diseases, traits, rituals, and subsystems.

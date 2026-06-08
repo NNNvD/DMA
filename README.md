@@ -80,6 +80,13 @@ This repository is designed to be compatible with human developers and coding ag
 
 ### Local setup
 
+Use the command style for the computer you are currently on. On macOS, Terminal
+usually has `python3`; on Windows, PowerShell usually has `python` or `py`.
+Keep local machine paths in `.env` rather than source files so the same repo can
+be used from both your MacBook Pro and Windows PC.
+
+macOS/Linux:
+
 ```bash
 cp .env.example .env
 make install
@@ -87,10 +94,28 @@ make db-upgrade
 make dev
 ```
 
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+python -m pip install --upgrade pip
+python -m pip install -r backend/requirements-dev.txt
+python -m alembic upgrade head
+python -m uvicorn backend.api.main:app --reload
+```
+
 Optional local embedding dependencies:
+
+macOS/Linux:
 
 ```bash
 python3 -m pip install -r backend/requirements-local.txt
+```
+
+Windows PowerShell:
+
+```powershell
+python -m pip install -r backend/requirements-local.txt
 ```
 
 ### Common development commands
@@ -114,6 +139,10 @@ make sync-obsidian-vault VAULT=/path/to/vault
 make maptool-bridge
 make push-maptool-fixture
 ```
+
+On Windows, run the same targets if GNU Make is installed. If it is not, use the
+underlying Python module commands shown in the setup guide and keep paths quoted
+when they contain spaces.
 
 Phase 1 sign-off:
 

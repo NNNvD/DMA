@@ -71,6 +71,13 @@ class AonCreatureService:
         AonCreatureIndexItem(1036, "Flickerwisp", 2, "Ruins of Gauntlight", ["Aberration", "Air"], False, True),
         AonCreatureIndexItem(3175, "Giant Scorpion", 3, "Monster Core", ["Animal"], True),
         AonCreatureIndexItem(845, "Vampiric Mist", 3, "Bestiary 2", ["Aberration"], False, True),
+        AonCreatureIndexItem(218, "Ghoul", 1, "Bestiary", ["Ghoul", "Undead"], False, True),
+        AonCreatureIndexItem(4391, "Mist Stalker", 4, "Monster Core 2", ["Aberration", "Air"], True),
+        AonCreatureIndexItem(110, "Barbazu", 5, "Bestiary", ["Devil", "Fiend"], False, True),
+        AonCreatureIndexItem(227, "Gibbering Mouther", 5, "Bestiary", ["Aberration"], False, True),
+        AonCreatureIndexItem(726, "Lurker In Light", 5, "Bestiary 2", ["Fey"], False, True),
+        AonCreatureIndexItem(684, "Wood Golem", 6, "Bestiary 2", ["Construct", "Golem"], False, True),
+        AonCreatureIndexItem(853, "Violet Fungus", 3, "Bestiary 2", ["Fungus"], False, True),
     ]
 
     def __init__(self, project_root: Optional[Path] = None) -> None:
@@ -106,8 +113,23 @@ class AonCreatureService:
         *,
         timeout_seconds: float = 20.0,
         refresh: bool = False,
+        fallback_name: str | None = None,
+        fallback_level: int | None = None,
+        fallback_source: str | None = None,
+        fallback_traits: list[str] | None = None,
     ) -> AonCreatureDocument:
-        item = self._index_item(creature_id)
+        try:
+            item = self._index_item(creature_id)
+        except ValueError:
+            if not fallback_name:
+                raise
+            item = AonCreatureIndexItem(
+                creature_id,
+                fallback_name,
+                fallback_level if fallback_level is not None else 0,
+                fallback_source or "Archives of Nethys",
+                fallback_traits or [],
+            )
         cache_path = self._cache_path(item)
         if cache_path.exists() and not refresh:
             payload = json.loads(cache_path.read_text(encoding="utf-8"))

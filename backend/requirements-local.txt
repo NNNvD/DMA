@@ -2,3 +2,6 @@
 # Local sentence-transformer stacks typically require Python <= 3.12.
 sentence-transformers==3.2.1 ; python_version < '3.13'
 torch>=2.2.0 ; python_version < '3.13'
+
+# Optional PDF layout/image extraction for private-local image intake.
+PyMuPDF==1.24.14

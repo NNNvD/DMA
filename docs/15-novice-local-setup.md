@@ -6,9 +6,31 @@ It assumes:
 
 - you have Google Chrome installed
 - you are comfortable following steps carefully, even if you have never used GitHub or Python before
-- the GM will give you a separate folder named `local-private-overlay`
+- the GM will give you a separate folder named `private-local`
 
-The `local-private-overlay` folder contains private campaign material. It is not stored on public GitHub for copyright reasons.
+The `private-local` folder contains private campaign material. It is not stored on public GitHub for copyright reasons.
+
+## Working On Both Windows And macOS
+
+You can use the same DMA repository on both a MacBook Pro and a Windows PC. The
+code and public project files should stay the same, but each computer has its
+own local setup details.
+
+Keep these local to each machine:
+
+- `.env`
+- installed Python packages or virtual environments
+- the private campaign bundle
+- absolute paths to Obsidian vaults, PDFs, maps, and Piper voices
+
+Use the command block for the computer you are currently using:
+
+- Windows: PowerShell, paths like `E:\My Drive\AI projects\DMA-main`, and usually `python` or `py`
+- macOS: Terminal, paths like `/Users/YOUR-NAME/Documents/DMA`, and usually `python3`
+
+Do not paste a Mac absolute path into the Windows `.env`, or a Windows absolute
+path into the Mac `.env`. Relative paths such as `./assets/imports/misc/private-local`
+are preferred when they work on both systems.
 
 ## What You Are Installing
 
@@ -18,7 +40,7 @@ You will install:
 - GitHub Desktop, which downloads the project from GitHub
 - Python, which runs the DMA backend
 - the DMA project files
-- the private campaign overlay from the GM
+- the private campaign bundle from the GM
 
 When finished, you will open the DMA in Chrome at:
 
@@ -174,6 +196,8 @@ For the Abomination Vaults setup, make sure these lines are present:
 
 ```env
 DATABASE_URL=sqlite+aiosqlite:///./dma-abomination-vaults.db
+DMA_PRIVATE_DATA_ROOT=./assets/imports/misc/private-local
+DMA_CAMPAIGN_ID=abomination-vaults
 OBSIDIAN_VAULT_PATH=./obsidian-abomination-vaults-vault
 REFERENCE_PDF_ROOT=./assets/imports/misc/private-local/reference/raw
 DUNGEON_MAP_ROOT=./assets/imports/misc/private-local/media
@@ -220,64 +244,61 @@ This may take a few minutes.
 
 If you get a permissions error, tell the GM. Do not randomly delete files.
 
-## Step 8: Add The Private Campaign Overlay
+## Step 8: Add The Private Campaign Bundle
 
 The public GitHub repo does not include copyrighted or private campaign files.
 
 The GM should give you a folder named:
 
-`local-private-overlay`
+`private-local`
 
-Place that folder directly inside the DMA repository root.
+Place that folder here inside the DMA repository:
+
+`assets/imports/misc/private-local`
 
 Your DMA folder should then contain:
 
 - `backend`
 - `docs`
 - `scripts`
-- `local-private-overlay`
+- `assets`
 - `README.md`
 
-Inside `local-private-overlay`, there should be:
+Inside `assets/imports/misc/private-local`, there should be private local material such as:
 
-`local-private-overlay/project-root/`
-
-That folder mirrors the DMA project structure. It contains private local material such as:
-
-- `dma-abomination-vaults.db`
-- `obsidian-abomination-vaults-vault`
+- `campaigns/abomination-vaults`
 - private reference PDFs
 - map images
 - room keys
-- campaign-specific local notes and metadata
+- campaign-specific local JSON notes, character sheets, bestiary entries, and metadata
 
-Now install the overlay.
+If your GM gives you a zip file, unzip it first. The unzipped folder should be named `private-local`.
+
+If the `assets/imports/misc` folders do not exist yet, create them.
+
+Now place or copy the folder into the right location.
 
 Windows:
 
 ```powershell
-Copy-Item -Recurse -Force .\local-private-overlay\project-root\* .
+New-Item -ItemType Directory -Force .\assets\imports\misc
+Copy-Item -Recurse -Force .\private-local .\assets\imports\misc\private-local
 ```
 
 macOS:
 
 ```bash
-scripts/install_private_overlay.sh
+mkdir -p assets/imports/misc
+cp -R private-local assets/imports/misc/private-local
 ```
 
-Alternative macOS command:
-
-```bash
-cp -R local-private-overlay/project-root/. .
-```
+If a `private-local` folder already exists there, ask the GM before replacing it unless they explicitly said this is an update.
 
 After this step, your DMA folder should contain:
 
-- `dma-abomination-vaults.db`
-- `obsidian-abomination-vaults-vault`
 - `assets/imports/misc/private-local`
 
-These are local-only files. Do not upload them to GitHub.
+This is a local-only folder. Do not upload it to GitHub.
 
 ## Step 9: Start The DMA Backend
 
@@ -346,7 +367,7 @@ In the DMA panel:
 9. Open `NPC Dossier Viewer`.
 10. Check that NPCs appear.
 
-If maps, PDFs, or vault notes are missing, the private overlay was probably not copied into the correct place.
+If maps, PDFs, campaign summaries, PC sheets, or NPC dossiers are missing, the private-local bundle was probably not copied into the correct place.
 
 ## Step 12: How To Stop DMA
 
@@ -372,18 +393,19 @@ Go back to Step 9 and start the backend again.
 
 ### The Page Opens But Looks Empty
 
-The private overlay may not be installed.
+The private-local bundle may not be installed.
 
 Check that these exist in the DMA folder:
 
-- `dma-abomination-vaults.db`
-- `obsidian-abomination-vaults-vault`
 - `assets/imports/misc/private-local`
+- `assets/imports/misc/private-local/campaigns/abomination-vaults`
 
 Also check that `.env` contains:
 
 ```env
 DATABASE_URL=sqlite+aiosqlite:///./dma-abomination-vaults.db
+DMA_PRIVATE_DATA_ROOT=./assets/imports/misc/private-local
+DMA_CAMPAIGN_ID=abomination-vaults
 ```
 
 ### Python Command Not Found On Windows
@@ -441,19 +463,19 @@ When the GM says there is an update:
 2. Open the DMA repository.
 3. Click `Fetch origin`.
 4. Click `Pull origin` if GitHub Desktop offers it.
-5. If the GM also gives you a new `local-private-overlay`, replace your old one and repeat Step 8.
+5. If the GM also gives you a new `private-local` folder, replace your old `assets/imports/misc/private-local` folder only if instructed, then repeat Step 8.
 6. Start DMA again.
 
 ## Important Copyright Reminder
 
-The private overlay is for local use by people who are allowed to use the campaign material.
+The private campaign bundle is for local use by people who are allowed to use the campaign material.
 
 Do not:
 
-- upload `local-private-overlay` to GitHub
+- upload `assets/imports/misc/private-local` to GitHub
 - upload the adventure PDFs
 - upload official map images
 - upload extracted art from PDFs
-- share the private overlay publicly
+- share the private bundle publicly
 
-The public GitHub repo contains the DMA tool. The private overlay contains campaign material that must stay local.
+The public GitHub repo contains the DMA tool. The private-local bundle contains campaign material that must stay local.

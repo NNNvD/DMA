@@ -761,6 +761,28 @@
       transform: translateY(-1px);
     }
 
+    .dice-pad {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(4, minmax(54px, 1fr));
+      margin-top: 12px;
+      max-width: 360px;
+    }
+
+    .dice-pad + .dice-pad {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(90, 71, 59, 0.14);
+    }
+
+    .dice-pad .utility-chip {
+      min-height: 40px;
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+      font-weight: 800;
+    }
+
     .stat-line {
       display: flex;
       flex-wrap: wrap;
@@ -1914,6 +1936,42 @@
       object-fit: cover;
     }
 
+    .portrait-edit-button {
+      display: inline-grid;
+      gap: 8px;
+      justify-items: center;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .portrait-edit-button:hover .portrait-frame,
+    .portrait-edit-button:focus-visible .portrait-frame {
+      border-color: rgba(138, 47, 29, 0.72);
+      box-shadow: 0 0 0 4px rgba(138, 47, 29, 0.14);
+    }
+
+    .portrait-edit-button span {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .portrait-edit-actions {
+      display: inline-grid;
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .portrait-paste-target {
+      outline: 3px solid rgba(138, 47, 29, 0.36);
+      outline-offset: 4px;
+      border-radius: 10px;
+    }
+
     .overview-name-cell {
       display: grid;
       gap: 5px;
@@ -1942,6 +2000,88 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .image-preview-button {
+      display: inline-grid;
+      gap: 6px;
+      justify-items: center;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink-soft);
+      cursor: zoom-in;
+      text-align: center;
+    }
+
+    .image-preview-button:hover .overview-portrait,
+    .image-preview-button:focus-visible .overview-portrait {
+      border-color: rgba(138, 47, 29, 0.72);
+      box-shadow: 0 0 0 3px rgba(138, 47, 29, 0.14);
+    }
+
+    .image-preview-button span {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .image-preview-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 18px;
+      background: rgba(24, 20, 17, 0.86);
+    }
+
+    .image-preview-overlay[hidden] {
+      display: none;
+    }
+
+    .image-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: rgba(255, 252, 246, 0.96);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .image-preview-header h3 {
+      margin: 0 0 4px;
+    }
+
+    .image-preview-close {
+      min-width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      padding: 0;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .image-preview-stage {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      border-radius: 8px;
+      background: rgba(255, 252, 246, 0.08);
+    }
+
+    .image-preview-stage img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      background: rgba(255, 252, 246, 0.96);
+      box-shadow: var(--shadow);
     }
 
     .image-meta {
@@ -2220,9 +2360,9 @@
       </div>
       <div class="actions">
         <button type="button" id="launch-session-button">Launch Current Session</button>
-        <button type="button" class="ghost" id="open-player-recap-button">Open Player Recap</button>
-        <button type="button" class="ghost" id="open-gm-recap-button">Open GM Recap</button>
-        <button type="button" class="secondary" id="export-player-recap-button">Export Player PDF</button>
+        <button type="button" class="ghost" id="open-player-recap-button">Open PC Summary</button>
+        <button type="button" class="ghost" id="open-gm-recap-button">Open GM Summary</button>
+        <button type="button" class="secondary" id="export-player-recap-button" hidden>Export Player PDF</button>
         <button type="button" id="refresh-button" class="ghost">Refresh Panel</button>
         <button type="button" id="reset-button" class="secondary">Reset Live State</button>
       </div>
@@ -2324,6 +2464,39 @@
           </div>
         </article>
 
+        <article class="panel full-width module-town-square" data-module-id="town-square">
+          <h2>Town Square</h2>
+          <form id="town-square-form">
+            <div class="grid-two">
+              <label>
+                Settlement
+                <select id="town-square-select">
+                  <option value="">Loading settlements...</option>
+                </select>
+              </label>
+              <label>
+                Search Town Notes
+                <input id="town-square-search" placeholder="shop, Wrin, rumor, graveyard, hook..." />
+              </label>
+            </div>
+            <div class="actions">
+              <button type="submit">Load Settlement</button>
+              <button type="button" class="ghost" id="town-square-refresh">Refresh Towns</button>
+            </div>
+          </form>
+          <div class="stat-line" id="town-square-meta">
+            <span class="stat-badge">No settlement loaded</span>
+          </div>
+          <div class="map-room-grid" style="margin-top: 12px;">
+            <div class="map-viewer" id="town-square-viewer">
+              <div class="empty" style="padding: 16px;">Choose a settlement to load its town map and overview here.</div>
+            </div>
+            <div class="list scroll-list" id="town-square-list">
+              <div class="empty">Town locations, NPCs, hooks, and rumors will appear here.</div>
+            </div>
+          </div>
+        </article>
+
         <article class="panel full-width module-current-combat" data-module-id="current-combat">
           <h2>Current Combat</h2>
           <div class="combat-layout">
@@ -2420,7 +2593,7 @@
           <details class="session-tracker" open>
             <summary>Live Session Tracker</summary>
             <p class="subtle">
-              Track the table state here during play, then write it into the active Obsidian session note.
+              Track the table state here during play, then write it into the active private-local session note.
               This is GM-facing and meant for quick continuity, not polished prose.
             </p>
             <div class="session-tracker-grid">
@@ -2466,6 +2639,79 @@
           </div>
           <textarea class="command-note-editor" id="session-overview-editor" hidden></textarea>
           <div class="result-box" id="session-overview-status"><span class="empty">No session overview edits saved yet.</span></div>
+        </article>
+
+        <article class="panel full-width module-import-review" data-module-id="import-review">
+          <h2>Import Review</h2>
+          <p class="subtle">
+            Review extracted room drafts before they become live Map Room data. V1 is rooms-first: approve room drafts here, then promote approved rooms into private-local room-key JSON.
+          </p>
+          <div class="command-note-toolbar">
+            <button type="button" id="import-run-create">Create Room Import Run</button>
+            <button type="button" class="ghost" id="import-run-refresh">Refresh Runs</button>
+            <button type="button" class="secondary" id="import-promote-rooms">Promote Reviewed Rooms</button>
+            <button type="button" class="ghost" id="private-index-rebuild">Rebuild Indexes</button>
+            <button type="button" class="ghost" id="reference-corpus-normalize">Normalize AoN Cache</button>
+            <button type="button" class="ghost" id="private-index-mirror-rag">Mirror To Search DB</button>
+            <button type="button" class="ghost" id="image-intake-create">Run Image Intake</button>
+            <button type="button" class="secondary" id="image-promote-confirmed">Promote Confirmed Images</button>
+          </div>
+          <div class="stat-line" id="import-review-meta">
+            <span class="stat-badge">No import run loaded</span>
+          </div>
+          <div class="sheet-browser">
+            <div>
+              <form id="import-review-filter-form">
+                <label>
+                  Search Room Drafts
+                  <input id="import-review-search" placeholder="C7, secret, hazard, ghoul…" />
+                </label>
+                <label style="margin-top: 12px;">
+                  Review Status
+                  <select id="import-review-status">
+                    <option value="">All statuses</option>
+                    <option value="unreviewed">Unreviewed</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="uncertain">Uncertain</option>
+                    <option value="conflict">Conflict</option>
+                    <option value="promoted">Promoted</option>
+                  </select>
+                </label>
+                <div class="actions">
+                  <button type="submit">Filter Drafts</button>
+                </div>
+              </form>
+              <div class="list scroll-list" id="import-run-list" style="margin-top: 12px;">
+                <div class="empty">Import runs will appear here.</div>
+              </div>
+            </div>
+            <div class="result-box sheet-view" id="import-review-detail">
+              <span class="empty">Create or open an import run to review room drafts.</span>
+            </div>
+          </div>
+          <div class="grid-two" style="margin-top: 16px;">
+            <div class="result-box" id="reference-audit-panel">
+              <span class="empty">Reference Audit will show unresolved rules, monsters, items, conditions, and other dependencies after indexes are built.</span>
+            </div>
+            <div class="result-box" id="index-audit-panel">
+              <span class="empty">Index Audit will show stale or missing private-local search indexes.</span>
+            </div>
+          </div>
+          <div class="result-box" id="image-review-panel" style="margin-top: 16px;">
+            <span class="empty">Image Review will show extracted campaign PDF images after image intake runs.</span>
+          </div>
+          <div class="image-preview-overlay" id="image-preview-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="image-preview-title">
+            <div class="image-preview-header">
+              <div>
+                <h3 id="image-preview-title">Image Preview</h3>
+                <div class="subtle" id="image-preview-meta"></div>
+              </div>
+              <button type="button" class="ghost image-preview-close" id="image-preview-close" aria-label="Close image preview">×</button>
+            </div>
+            <div class="image-preview-stage" id="image-preview-stage"></div>
+          </div>
+          <div class="result-box" id="import-review-status-box"><span class="empty">Import review status will appear here.</span></div>
         </article>
 
         <article class="panel">
@@ -2528,7 +2774,7 @@
           <div class="result-box" id="prep-result"><span class="empty">Live prep output will appear here.</span></div>
         </article>
 
-        <article class="panel">
+        <article class="panel" hidden>
           <h2>Vault Workspace</h2>
           <div class="workspace-grid">
             <div>
@@ -2605,6 +2851,7 @@
         <article class="panel full-width module-campaign-bestiary" data-module-id="campaign-bestiary">
           <h2>Campaign Bestiary</h2>
           <div class="sheet-module-stack" id="campaign-bestiary-viewer">
+            <input type="file" id="bestiary-portrait-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
             <div class="result-box sheet-view" id="campaign-bestiary-overview">
               <span class="empty">Campaign bestiary overview will appear here.</span>
             </div>
@@ -2673,6 +2920,7 @@
         <article class="panel full-width module-npc-dossier-viewer" data-module-id="npc-dossier-viewer">
           <h2>NPC Dossier Viewer</h2>
           <div class="sheet-module-stack" id="npc-sheet-viewer">
+            <input type="file" id="npc-portrait-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
             <div class="result-box sheet-view" id="npc-sheet-overview">
               <span class="empty">NPC overview will appear here.</span>
             </div>
@@ -2710,21 +2958,32 @@
               Roll Expression
               <input id="dice-expression" placeholder="1d20+7" value="1d20" />
             </label>
-            <div class="utility-grid">
+            <div class="dice-pad" aria-label="Dice buttons">
+              <button type="button" class="utility-chip" data-dice-fragment="d3">d3</button>
               <button type="button" class="utility-chip" data-dice-fragment="d4">d4</button>
               <button type="button" class="utility-chip" data-dice-fragment="d6">d6</button>
               <button type="button" class="utility-chip" data-dice-fragment="d8">d8</button>
               <button type="button" class="utility-chip" data-dice-fragment="d10">d10</button>
               <button type="button" class="utility-chip" data-dice-fragment="d12">d12</button>
               <button type="button" class="utility-chip" data-dice-fragment="d20">d20</button>
+              <button type="button" class="utility-chip" data-dice-fragment="d100">d100</button>
+            </div>
+            <div class="dice-pad" aria-label="Flat modifier buttons">
               <button type="button" class="utility-chip" data-dice-fragment="+1">+1</button>
+              <button type="button" class="utility-chip" data-dice-fragment="+3">+3</button>
+              <button type="button" class="utility-chip" data-dice-fragment="+5">+5</button>
+              <button type="button" class="utility-chip" data-dice-fragment="+10">+10</button>
               <button type="button" class="utility-chip" data-dice-fragment="-1">-1</button>
+              <button type="button" class="utility-chip" data-dice-fragment="-3">-3</button>
+              <button type="button" class="utility-chip" data-dice-fragment="-5">-5</button>
+              <button type="button" class="utility-chip" data-dice-fragment="-10">-10</button>
             </div>
             <div class="small-actions">
               <button type="button" class="ghost" data-dice-template="1d20">Flat Check</button>
               <button type="button" class="ghost" data-dice-template="1d20+7">Skill Check</button>
               <button type="button" class="ghost" data-dice-template="2d20kh1+7">Fortune</button>
               <button type="button" class="ghost" data-dice-template="2d20kl1+7">Misfortune</button>
+              <button type="button" class="ghost" id="dice-clear-expression">Clear Dice</button>
               <button type="button" class="ghost" id="dice-clear-history">Clear History</button>
             </div>
             <div class="actions">
@@ -2923,16 +3182,40 @@
       referencePdfs: "/api/live/reference-pdfs",
       dungeonMaps: "/api/live/dungeon-maps",
       dungeonRoomKey: "/api/live/dungeon-room-key",
+      townSquareSettlements: "/api/live/town-square/settlements",
+      townSquareSettlement: "/api/live/town-square/settlement",
       ttsStatus: "/api/live/tts/status",
       ttsSynthesize: "/api/live/tts/synthesize",
       aonCreatures: "/api/live/aon-creatures",
       aonCreature: "/api/live/aon-creature",
       campaignBestiary: "/api/live/campaign-bestiary",
       campaignBestiaryEntry: "/api/live/campaign-bestiary-entry",
+      campaignBestiaryPortrait: "/api/live/campaign-bestiary-entry/portrait",
+      importRuns: "/api/live/import-runs",
+      importRun: "/api/live/import-run",
+      importRoomDrafts: "/api/live/import-room-drafts",
+      importRoomDraft: "/api/live/import-room-draft",
+      importAuditSummary: "/api/live/import-audit-summary",
+      importPromoteRooms: "/api/live/import-promote-rooms",
+      imageIntakeRuns: "/api/live/image-intake-runs",
+      imageCandidates: "/api/live/image-candidates",
+      imageCandidate: "/api/live/image-candidate",
+      imageAudit: "/api/live/image-audit",
+      imagePromote: "/api/live/image-promote",
+      privateIndexStatus: "/api/live/private-index/status",
+      privateIndexRebuild: "/api/live/private-index/rebuild",
+      privateIndexAudit: "/api/live/private-index/audit",
+      privateIndexDependencies: "/api/live/private-index/dependencies",
+      privateIndexDependency: "/api/live/private-index/dependency",
+      privateIndexMirrorRag: "/api/live/private-index/mirror-rag",
+      referenceCorpusStatus: "/api/live/reference-corpus/status",
+      referenceCorpusNormalize: "/api/live/reference-corpus/normalize",
+      referenceCorpusSearch: "/api/live/reference-corpus/search",
       pcSheets: "/api/live/pc-sheets",
       pcSheet: "/api/live/pc-sheet",
       npcSheets: "/api/live/npc-sheets",
       npcSheet: "/api/live/npc-sheet",
+      npcPortrait: "/api/live/npc-sheet/portrait",
     };
 
     let panelSnapshot = null;
@@ -2946,6 +3229,8 @@
     let activePdfPath = "";
     let dungeonMaps = [];
     let activeRoomKey = null;
+    let townSettlements = [];
+    let activeTownSettlement = null;
     let roomNavigationStack = [];
     let currentCombat = {
       roomId: "",
@@ -2959,6 +3244,18 @@
     let aonCreatures = [];
     let campaignBestiaryEntries = [];
     let activeBestiaryEntry = null;
+    let pendingBestiaryPortraitId = null;
+    let importRuns = [];
+    let activeImportRun = null;
+    let importRoomDrafts = [];
+    let activeImportDraftId = "";
+    let activeImportAudit = null;
+    let imageCandidates = [];
+    let imageAudit = null;
+    let privateIndexStatus = null;
+    let privateIndexAudit = null;
+    let privateIndexDependencies = [];
+    let referenceCorpusStatus = null;
     let pcSheets = [];
     let npcSheets = [];
     let campaignOverviewNote = null;
@@ -2966,27 +3263,20 @@
     let sessionOverviews = [];
     let activeSessionOverview = null;
     let activeNpcDossierId = null;
+    let pendingNpcPortraitId = null;
     const launchSessionPath = "Command Center/Sessions/Session 04 - Level 3 C9 Start.md";
-    const playerRecapPath = "Command Center/Campaign Recaps/Player Summary Through Level 3 C7.md";
-    const gmRecapPath = "Command Center/Campaign Recaps/GM Summary Through Level 3 C7.md";
-    const treasureTrackerPath = "Command Center/Treasure Tracker.md";
     const campaignOverviewTabs = {
       overview: {
         label: "Overview",
-        endpoint: endpoints.campaignOverview,
-        saveEndpoint: endpoints.campaignOverview,
       },
       "gm-summary": {
         label: "GM Summary",
-        path: gmRecapPath,
       },
       "pc-summary": {
         label: "PC Summary",
-        path: playerRecapPath,
       },
       items: {
         label: "Items",
-        path: treasureTrackerPath,
       },
     };
     let availableVoices = [];
@@ -2998,14 +3288,15 @@
     const moduleInstructions = {
       "Current Scene": "Use this first at the start of play and whenever the table moves to a new situation.\n\nScene Title is the short label for what is happening now. Focus tells DMA what kind of help to prioritize, such as scouting, social tension, combat, or rules friction. Current Location, Active PCs, and Active NPCs give chat, prep, sound recommendations, and continuity tools the right context. MapTool Map ID is used by Session Mechanics when you sync a map. DM Notes are for short reminders that matter right now, not full session notes. Save Live State after changing these fields.",
       "Map Room": "Use this during dungeon exploration when you want the map and room key on one screen.\n\nDungeon Map loads a local map image from the configured campaign media folder. Use the Secret, Loot, Monsters, Trap, Haunt, and NPC checkboxes when you want to surface only rooms with those features. Use Search Room Text to search room summaries and literal source text at the same time. Each room card is collapsed by default. Expand the room the party is entering to see what the PCs notice first, then GM-only contents such as monsters, NPCs, traps, haunts, loot, secret doors, visibility notes, and detection notes. The Read Aloud button speaks the player-facing boxed/read-aloud text with the configured narrator voice. This first version does not place clickable hotspots on the map yet; use the printed room labels on the image and the sidebar together.",
+      "Town Square": "Use this when the party returns to Otari or another settlement.\n\nChoose a settlement to load its town map if one is available, then scan the settlement overview, look and feel, demographics, gather-information results, quest hooks, and location cards. Use Search Town Notes to narrow to shops, NPCs, rumors, hooks, or services. This module is for social and downtime navigation: who is where, what the town feels like, what the PCs can learn, and which hooks are available outside the dungeon.",
       "Current Combat": "Use this when initiative starts.\n\nOpen the relevant Map Room card, then press Start From Open Room. The roster adds the party PCs from the PC Sheet Viewer, pulls room creatures, enriches known monsters from the local Archives of Nethys index, and opens the active combatant while keeping everyone else compact. The initiative strip gives the full turn order at a glance. Collapsed cards show the essentials only: name, HP, AC, and current conditions. Use Add Party PCs if you started with a custom monster or want to restore missing PCs. Use Next Turn and Previous Turn to track the active combatant and round; timed conditions count down automatically when turns advance. Edit current or max HP directly if you want to tune difficulty during play. Duplicate creatures receive letter labels such as A and B so you can keep them apart. Monster cards expose Strategy, Look, Recall, and AoN detail pills when you need more context.",
-      "Campaign Overview": "Use this as the campaign-level compass.\n\nThis module has tabs for the main campaign overview, GM-facing recap, PC-facing recap, and item/treasure tracking. The notes are stored in the Obsidian vault, so edits here remain available in Obsidian and vice versa. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, DM notes, and table-useful item reminders. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
-      "Session Overview": "Use this as the immediate session command center.\n\nEach tab opens a session note from the Obsidian vault. Next Session is the working prep tab; other Session tabs can hold runbooks, recaps, or future prep. Keep each session note organized around goal, starting situation, likely scenes, important NPCs, monsters/hazards/treasure, secrets, unexpected-player contingencies, live notes, and after-session recap. Use Edit Text during or after play to keep the DMA memory fresh.",
+      "Campaign Overview": "Use this as the campaign-level compass.\n\nThis module has tabs for the main campaign overview, GM-facing recap, PC-facing recap, and Treasure Tracker / item tracking. The notes are stored in the private-local campaign JSON bundle, so edits here are part of the shareable DMA campaign data. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, DM notes, and table-useful item reminders. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
+      "Session Overview": "Use this as the immediate session command center.\n\nEach tab opens a session note from the private-local campaign JSON bundle. Next Session is the working prep tab; other Session tabs can hold runbooks, recaps, or future prep. Keep each session note organized around goal, starting situation, likely scenes, important NPCs, monsters/hazards/treasure, secrets, unexpected-player contingencies, live notes, and after-session recap. Use Edit Text during or after play to keep the DMA memory fresh.",
+      "Import Review": "Use this before new extracted PDF material becomes live campaign data.\n\nCreate a room import run, inspect the room checklist, resolve missing or uncertain fields, approve drafts that look correct, and then promote reviewed rooms into the live private-local room-key JSON. Unreviewed drafts stay quarantined here and do not appear in Map Room.",
       "Quick Rules": "Use this when you want a direct rules answer with citations rather than a conversational answer.\n\nType the rules question in plain language. Strict rules mode keeps the answer close to approved rules documents and is best during live play. Top K controls how many source chunks DMA considers; use 3 for fast focused answers and 5 or 8 when the first answer needs more context. For looser questions, the /rules button in DMA Chat is often enough.",
-      "Quick Prep": "Use this to generate a structured prep brief from the current live scene, recent sessions, and campaign state.\n\nBrief Title names the generated prep document. Prep Focus can override the current scene focus if you want a more specific brief, such as Level 1 hazards or Otari social fallout. Session Count controls how much recent history DMA considers. Store as session_prep document writes the brief back into DMA so it appears later in Session Context and the Obsidian export.",
-      "Vault Workspace": "Use this when you want to read the Obsidian campaign command center without leaving DMA.\n\nSearch Vault Notes filters note paths and titles, then the list opens notes in the viewer on the right. This is read-oriented, so it is best for consulting map keys, NPC notes, session runbooks, player handouts, and command-center pages during play. Export DMA To Vault regenerates supported vault content from DMA. Sync Vault To DMA imports supported edited vault sections back into the database. Use those sync buttons deliberately, especially after editing notes in Obsidian.",
+      "Quick Prep": "Use this to generate a structured prep brief from the current live scene, recent sessions, and campaign state.\n\nBrief Title names the generated prep document. Prep Focus can override the current scene focus if you want a more specific brief, such as Level 1 hazards or Otari social fallout. Session Count controls how much recent history DMA considers. Store as session_prep document writes the brief back into DMA so it appears later in Session Context.",
       "DMA Chat Workbench": "Use this as the main place to talk to DMA.\n\nAsk normal questions, or use the quick slash prompt buttons. /scene summarizes the current live situation. /rules starts a rules question. /recap asks for recent continuity. /prep asks for preparation help. /search looks up campaign memory. Chat Mode lets you steer the assistant when your request is ambiguous. Chat responses stay in this browser session and can be sent to Voice Reader with Use Assistant Reply.",
-      "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. When matching player-named vault sheets exist, the viewer reads those first so the DM sees the current campaign party rather than stale database placeholders. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
+      "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. The viewer reads the private-local campaign JSON bundle first so the DM sees the current campaign party. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
       "NPC Dossier Viewer": "Use this to inspect and update NPC campaign dossiers during play.\n\nSearch by NPC name, role, status, or summary, then open the dossier. NPCs are displayed differently from PCs: the focus is portrait, appearance, role, current location, player-facing description, GM summary, whether the party has encountered them, relationship to the PCs, campaign encounter points, goals, secrets, clues, relationships, and optional combat/statblock data. Use Edit NPC Notes And Details for table notes, better status values, appearance text, and disposition changes.",
       "Campaign Bestiary": "Use this to inspect the campaign-specific encounter library.\n\nThis is where DMA keeps custom adventure creatures, AoN-linked creatures used in the campaign, hazards, and afflictions such as diseases. Search by name, room, trait, or source. Use the type filter to focus on custom creatures, AoN references, hazards, or afflictions. Opening an entry shows GM-facing stats, strategy, appearance, first-glance information, Recall Knowledge suggestions, and source rooms. Creature entries can be added to Current Combat. Hazards and afflictions are shown as structured references; hazards are added only when you explicitly choose them, and afflictions are tracked separately rather than becoming initiative combatants.",
       "Dice Roller": "Use this for quick checks, saves, attacks, damage, and fortune or misfortune rolls.\n\nType formulas like 1d20+7, 2d6+4, 4d6kh3, or 2d20kl1+9. The die and modifier buttons help build common expressions quickly. Flat Check, Skill Check, Fortune, and Misfortune load useful templates that you can edit before rolling. Roll history keeps the latest results visible while the page stays open.",
@@ -3013,7 +3304,7 @@
       "Voice Reader": "Use this to read boxed text, NPC dialogue, recaps, or assistant answers aloud.\n\nChoose a Voice Preset for pacing and tone, then pick one of the voices installed in your browser or operating system. Rate and Pitch fine-tune the result. Use Assistant Reply loads the latest chat answer. Use Scene Notes loads the current DM notes. Paste or edit the text, then press Speak. Stop Speaking cancels the current read-aloud.",
       "Reference PDFs": "Use this when you need the original books beside the DMA tools.\n\nFilter narrows the configured PDF list, Source PDF chooses the book, and Open PDF Tab adds it to the in-panel reader. The PDF viewer uses Chrome's native controls, so page search, zoom, download, and page navigation behave like normal Chrome PDFs. Open multiple tabs when you want the adventure volume, player guide, and another reference available at the same time.",
       "Session Mechanics": "Use this to pull live MapTool state into DMA.\n\nSet the MapTool Map ID in Current Scene first, or type a map id there before syncing. Authorization Header is optional and only needed if the bridge requires it. Retry Limit controls how many attempts DMA makes. Sync MapTool refreshes initiative, HP pressure, and conditions from the active map. This panel shows the latest synced snapshot; it does not replace MapTool itself.",
-      "Continuity Search": "Use this for fast structured lookup when you already know the name or keyword.\n\nSearch for an NPC, PC, location, shop, faction, item, or event. Results come from DMA's campaign entity database and are intentionally concise. For a conversational explanation, use /search in DMA Chat. For reading the full human-facing note, use Vault Workspace.",
+      "Continuity Search": "Use this for fast structured lookup when you already know the name or keyword.\n\nSearch for an NPC, PC, location, shop, faction, item, or event. Results come from DMA's campaign entity database and are intentionally concise. For a conversational explanation, use /search in DMA Chat. For fuller campaign notes, use Campaign Overview, Session Overview, PC Sheet Viewer, NPC Dossier Viewer, or Campaign Bestiary.",
       "Session Context": "Use this as the small memory strip for where the campaign has recently been.\n\nRecent Sessions shows the latest imported session events or logs. Latest Prep shows the most recently stored prep brief. This is passive context: it helps orient you before asking chat for a recap, generating new prep, or checking whether the current scene follows from the last session.",
     };
 
@@ -3182,9 +3473,11 @@
     const moduleOrderKey = "dma.dmPanel.module.order";
     const defaultTopModuleIds = [
       "map-room",
+      "town-square",
       "current-combat",
       "campaign-overview",
       "session-overview",
+      "import-review",
       "campaign-bestiary",
       "pc-sheet-viewer",
       "npc-dossier-viewer",
@@ -3197,7 +3490,6 @@
       { id: "current-scene", title: "Current Scene", icon: "scene" },
       { id: "quick-rules", title: "Quick Rules", icon: "book-open" },
       { id: "quick-prep", title: "Quick Prep", icon: "sparkles" },
-      { id: "vault-workspace", title: "Vault Workspace", icon: "folder" },
       { id: "dice-roller", title: "Dice Roller", icon: "dice" },
       { id: "session-soundboard", title: "Session Soundboard", icon: "music" },
       { id: "voice-reader", title: "Voice Reader", icon: "mic" },
@@ -3723,13 +4015,6 @@
       return sectionLines.join("\n").trim();
     }
 
-    async function loadVaultEmbedMarkdown(target) {
-      const resolved = await fetchJson(`${endpoints.vaultResolveLink}?target=${encodeURIComponent(target)}`);
-      const payload = await loadVaultNotePayload(resolved.path);
-      const { heading } = splitWikilinkTarget(target);
-      return extractMarkdownSection(payload.content, heading || resolved.heading || "");
-    }
-
     async function expandVaultEmbeds(markdown) {
       const lines = String(markdown || "").split(/\r?\n/);
       const output = [];
@@ -3740,11 +4025,7 @@
           const title = callout[1]?.trim() || wikilinkLabel(followingEmbed[1], "");
           output.push(`### ${title}`);
           output.push("");
-          try {
-            output.push(await loadVaultEmbedMarkdown(followingEmbed[1]));
-          } catch (error) {
-            output.push(`**Could not load embedded note:** ${followingEmbed[1]} (${error.message})`);
-          }
+          output.push(`_Embedded Obsidian note omitted from private-local view: ${followingEmbed[1]}_`);
           output.push("");
           index += 1;
           continue;
@@ -3753,11 +4034,7 @@
         if (embed) {
           output.push(`### ${wikilinkLabel(embed[1], "")}`);
           output.push("");
-          try {
-            output.push(await loadVaultEmbedMarkdown(embed[1]));
-          } catch (error) {
-            output.push(`**Could not load embedded note:** ${embed[1]} (${error.message})`);
-          }
+          output.push(`_Embedded Obsidian note omitted from private-local view: ${embed[1]}_`);
           output.push("");
           continue;
         }
@@ -3778,14 +4055,7 @@
         const [rawTarget, rawAlias] = match[2].split("|");
         const target = rawTarget.trim();
         const label = wikilinkLabel(target, rawAlias);
-        html += `
-          <button
-            type="button"
-            class="vault-wikilink ${isEmbed ? "embed" : ""}"
-            data-wikilink-target="${escapeHtml(target)}"
-            title="Open ${escapeHtml(target)} in Vault Workspace"
-          >${isEmbed ? "Embed: " : ""}${escapeHtml(label)}</button>
-        `;
+        html += `<span class="vault-wikilink ${isEmbed ? "embed" : ""}" title="${escapeHtml(target)}">${isEmbed ? "Embed: " : ""}${escapeHtml(label)}</span>`;
         cursor = wikilinkPattern.lastIndex;
       }
       html += escapeHtml(source.slice(cursor));
@@ -4029,18 +4299,14 @@
       setCommandNoteMode("campaign-overview", false);
     }
 
-    async function loadVaultNotePayload(path) {
-      return fetchJson(`${endpoints.vaultNote}?path=${encodeURIComponent(path)}`);
-    }
-
     async function loadCampaignOverview() {
       const status = document.getElementById("campaign-overview-status");
       const tab = campaignOverviewTabs[activeCampaignOverviewTab] || campaignOverviewTabs.overview;
       status.innerHTML = `<span>Loading ${escapeHtml(tab.label.toLowerCase())}…</span>`;
       try {
-        campaignOverviewNote = tab.path
-          ? await loadVaultNotePayload(tab.path)
-          : await fetchJson(tab.endpoint);
+        campaignOverviewNote = await fetchJson(
+          `${endpoints.campaignOverview}?tab=${encodeURIComponent(activeCampaignOverviewTab)}`,
+        );
         campaignOverviewNote.renderedContent = await expandVaultEmbeds(stripFrontmatter(campaignOverviewNote.content));
         renderCampaignOverview();
         status.innerHTML = `<span>${escapeHtml(tab.label)} loaded.</span>`;
@@ -4063,10 +4329,7 @@
       const tab = campaignOverviewTabs[activeCampaignOverviewTab] || campaignOverviewTabs.overview;
       status.innerHTML = `<span>Saving ${escapeHtml(tab.label.toLowerCase())}…</span>`;
       try {
-        const url = tab.path
-          ? `${endpoints.vaultNote}?path=${encodeURIComponent(tab.path)}`
-          : tab.saveEndpoint;
-        campaignOverviewNote = await fetchJson(url, {
+        campaignOverviewNote = await fetchJson(`${endpoints.campaignOverview}?tab=${encodeURIComponent(activeCampaignOverviewTab)}`, {
           method: "PATCH",
           body: JSON.stringify({
             content: document.getElementById("campaign-overview-editor").value,
@@ -4074,7 +4337,7 @@
         });
         campaignOverviewNote.renderedContent = await expandVaultEmbeds(stripFrontmatter(campaignOverviewNote.content));
         renderCampaignOverview();
-        status.innerHTML = `<span>${escapeHtml(tab.label)} saved to the Obsidian vault.</span>`;
+        status.innerHTML = `<span>${escapeHtml(tab.label)} saved to private-local JSON.</span>`;
       } catch (error) {
         status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
       }
@@ -4160,7 +4423,7 @@
           },
         );
         renderSessionOverview();
-        status.innerHTML = "<span>Session overview saved to the Obsidian vault.</span>";
+        status.innerHTML = "<span>Session overview saved to private-local JSON.</span>";
       } catch (error) {
         status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
       }
@@ -4192,11 +4455,10 @@
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    async function openVaultPathInWorkspace(path, label) {
-      await loadVaultNotes("");
-      await openVaultNote(path);
-      setLaunchStatus(`${label} opened in Vault Workspace.`);
-      openTool("vault-workspace");
+    async function openCampaignSummaryTab(tabKey, label) {
+      await openCampaignOverviewTab(tabKey);
+      setLaunchStatus(`${label} opened in Campaign Overview.`);
+      focusModule("campaign-overview");
     }
 
     async function launchCurrentSession() {
@@ -4206,6 +4468,7 @@
           loadCampaignOverview(),
           loadSessionOverviews(),
           loadDungeonMaps(),
+          loadTownSettlements(),
           loadPcSheets(),
           loadNpcSheets(),
           loadPanel(),
@@ -4221,6 +4484,7 @@
           document.getElementById("map-room-search").value = "c7";
           await loadMapRoom(levelThreeMapId);
         }
+        await loadTownSquare();
 
         setLaunchStatus("Session Launch Mode ready: Session 04, C7 map context, party overview, NPC dossier, and campaign overview are loaded.");
         focusModule("session-overview");
@@ -4285,7 +4549,7 @@
           },
         );
         renderSessionOverview();
-        status.innerHTML = "<span>Live tracker saved into the active Obsidian session note.</span>";
+        status.innerHTML = "<span>Live tracker saved into the active private-local session note.</span>";
       } catch (error) {
         status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
       }
@@ -4305,23 +4569,558 @@
       });
     }
 
-    async function exportPlayerRecapPdf() {
-      setLaunchStatus("Exporting the player-safe recap as a styled PDF…");
+    function importStatusBadge(status) {
+      const value = status || "unreviewed";
+      return `<span class="stat-badge">${escapeHtml(value)}</span>`;
+    }
+
+    function renderImportMeta() {
+      const host = document.getElementById("import-review-meta");
+      if (!host) return;
+      if (!activeImportRun) {
+        const indexReady = privateIndexStatus?.ready ? "Indexes ready" : "Indexes need rebuild";
+        host.innerHTML = `<span class="stat-badge">No import run loaded</span><span class="stat-badge">${escapeHtml(indexReady)}</span>`;
+        return;
+      }
+      const counts = activeImportAudit?.status_counts || {};
+      host.innerHTML = `
+        <span class="stat-badge">${escapeHtml(activeImportRun.title || activeImportRun.run_id)}</span>
+        <span class="stat-badge">Rooms: ${escapeHtml(String(activeImportRun.room_draft_count || importRoomDrafts.length || 0))}</span>
+        <span class="stat-badge">Approved: ${escapeHtml(String(counts.approved || activeImportRun.approved_count || 0))}</span>
+        <span class="stat-badge">Promoted: ${escapeHtml(String(counts.promoted || activeImportRun.promoted_count || 0))}</span>
+        <span class="stat-badge">${escapeHtml(privateIndexStatus?.ready ? "Indexes ready" : "Indexes need rebuild")}</span>
+      `;
+    }
+
+    function renderReferenceAudit() {
+      const host = document.getElementById("reference-audit-panel");
+      if (!host) return;
+      const summary = privateIndexDependencies.reduce((acc, item) => {
+        const status = item.resolution_status || "missing";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {});
+      const rows = privateIndexDependencies.slice(0, 12).map((item) => `
+        <tr>
+          <td><strong>${escapeHtml(item.name || "Unnamed")}</strong><div class="subtle">${escapeHtml(item.kind || item.category || "reference")}</div></td>
+          <td>${importStatusBadge(item.resolution_status || item.review_status || "missing")}</td>
+          <td>${escapeHtml((item.sources || []).map((source) => source.entity_id || source.map_id || source.entity_type).filter(Boolean).join(", ") || "—")}</td>
+          <td>
+            <div class="small-actions">
+              <button type="button" class="ghost" data-dependency-action="ignore" data-dependency-id="${escapeHtml(item.id)}">Ignore</button>
+              <button type="button" class="ghost" data-dependency-action="mark_custom" data-dependency-id="${escapeHtml(item.id)}">Custom</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+      host.innerHTML = `
+        <h3>Reference Audit</h3>
+        <p class="subtle">Unresolved or ambiguous dependencies from promoted campaign data. Link AoN entries later when a match is not obvious.</p>
+        <div class="stat-line">
+          <span class="stat-badge">Missing: ${escapeHtml(String(summary.missing || 0))}</span>
+          <span class="stat-badge">Ambiguous: ${escapeHtml(String(summary.aon_ambiguous || 0))}</span>
+          <span class="stat-badge">Needs review: ${escapeHtml(String(summary.needs_review || 0))}</span>
+        </div>
+        ${privateIndexDependencies.length ? `
+          <div class="markdown-table-wrap">
+            <table class="mini-table">
+              <thead><tr><th>Name</th><th>Status</th><th>Sources</th><th></th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        ` : '<p class="empty">No unresolved dependencies. Nice and tidy.</p>'}
+      `;
+    }
+
+    function renderIndexAudit() {
+      const host = document.getElementById("index-audit-panel");
+      if (!host) return;
+      const missing = privateIndexStatus?.missing || [];
+      const issues = privateIndexAudit?.issues || [];
+      const corpusCategories = referenceCorpusStatus?.categories || [];
+      host.innerHTML = `
+        <h3>Index Audit</h3>
+        <p class="subtle">Private-local indexes are the fast, shareable DMA runtime layer. Rebuild after importing or editing campaign data.</p>
+        <div class="stat-line">
+          <span class="stat-badge">${escapeHtml(privateIndexStatus?.ready ? "Ready" : "Needs rebuild")}</span>
+          <span class="stat-badge">Missing files: ${escapeHtml(String(missing.length))}</span>
+          <span class="stat-badge">Issues: ${escapeHtml(String(issues.length))}</span>
+          <span class="stat-badge">AoN categories: ${escapeHtml(String(corpusCategories.length))}</span>
+        </div>
+        ${missing.length ? `<p><strong>Missing:</strong> ${escapeHtml(missing.join(", "))}</p>` : ""}
+        ${issues.length ? `
+          <ul>${issues.slice(0, 8).map((issue) => `<li><strong>${escapeHtml(issue.severity || "info")}:</strong> ${escapeHtml(issue.message || issue.code || "")}</li>`).join("")}</ul>
+        ` : '<p class="empty">No index issues found.</p>'}
+      `;
+    }
+
+    async function loadPrivateIndexAudit() {
       try {
-        const payload = await fetchJson(endpoints.playerHandoutExport, {
-          method: "POST",
-          body: JSON.stringify({
-            path: playerRecapPath,
-            basename: "player-summary-through-level-3-c7",
-          }),
+        const [status, audit, dependencies, corpus] = await Promise.all([
+          fetchJson(endpoints.privateIndexStatus),
+          fetchJson(endpoints.privateIndexAudit),
+          fetchJson(`${endpoints.privateIndexDependencies}?unresolved_only=true`),
+          fetchJson(endpoints.referenceCorpusStatus),
+        ]);
+        privateIndexStatus = status;
+        privateIndexAudit = audit;
+        privateIndexDependencies = dependencies.items || [];
+        referenceCorpusStatus = corpus;
+        renderImportMeta();
+        renderReferenceAudit();
+        renderIndexAudit();
+      } catch (error) {
+        const statusBox = document.getElementById("import-review-status-box");
+        if (statusBox) statusBox.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not load private index audit.")}</span>`;
+      }
+    }
+
+    async function rebuildPrivateIndexes() {
+      const status = document.getElementById("import-review-status-box");
+      if (status) status.innerHTML = "<span>Rebuilding private-local indexes…</span>";
+      try {
+        await fetchJson(endpoints.privateIndexRebuild, { method: "POST" });
+        await loadPrivateIndexAudit();
+        if (status) status.innerHTML = "<span>Private-local indexes rebuilt.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not rebuild indexes.")}</span>`;
+      }
+    }
+
+    async function normalizeReferenceCorpus() {
+      const status = document.getElementById("import-review-status-box");
+      if (status) status.innerHTML = "<span>Normalizing local AoN cache…</span>";
+      try {
+        await fetchJson(endpoints.referenceCorpusNormalize, { method: "POST" });
+        await loadPrivateIndexAudit();
+        if (status) status.innerHTML = "<span>Local AoN cache normalized.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not normalize AoN cache.")}</span>`;
+      }
+    }
+
+    async function mirrorPrivateIndexRag() {
+      const status = document.getElementById("import-review-status-box");
+      try {
+        const payload = await fetchJson(endpoints.privateIndexMirrorRag, { method: "POST" });
+        if (status) status.innerHTML = `<span>${escapeHtml(payload.message || "RAG mirror requested.")}</span>`;
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not mirror RAG documents.")}</span>`;
+      }
+    }
+
+    async function updateDependencyReview(dependencyId, action) {
+      const status = document.getElementById("import-review-status-box");
+      try {
+        await fetchJson(`${endpoints.privateIndexDependency}?dependency_id=${encodeURIComponent(dependencyId)}`, {
+          method: "PATCH",
+          body: JSON.stringify({ action }),
         });
-        setLaunchStatus(`Player recap PDF exported: ${payload.pdf_path || payload.html_path}`);
-        if (payload.pdf_url) {
-          window.open(payload.pdf_url, "_blank", "noopener");
+        await loadPrivateIndexAudit();
+        if (status) status.innerHTML = "<span>Dependency review updated.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not update dependency.")}</span>`;
+      }
+    }
+
+    function renderImageReview() {
+      const host = document.getElementById("image-review-panel");
+      if (!host) return;
+      const issues = imageAudit?.issues || [];
+      const rows = imageCandidates.slice(0, 24).map((item) => {
+        const match = item.confirmed_match || (item.proposed_matches || [])[0] || {};
+        const visualFlags = (item.visual_features?.flags || []).join(", ");
+        return `
+          <tr>
+            <td>
+              <button type="button" class="image-preview-button" data-image-preview-id="${escapeHtml(item.id)}" aria-label="Open large preview for ${escapeHtml(item.id || "image candidate")}">
+                <img class="overview-portrait" src="${escapeHtml(item.url || "")}" alt="${escapeHtml(item.id || "image candidate")}" loading="lazy" />
+                <span>Preview</span>
+              </button>
+              <div class="subtle">${escapeHtml(item.source_id || "")} · p.${escapeHtml(String(item.page || "?"))}</div>
+            </td>
+            <td><strong>${escapeHtml(match.entity_name || "No proposed match")}</strong><div class="subtle">${escapeHtml((match.evidence || []).join(", ") || item.nearby_text || "No nearby text")}</div><div class="subtle">${escapeHtml(visualFlags)}</div></td>
+            <td>${importStatusBadge(item.category || "unknown")} ${importStatusBadge(item.review_status || "unreviewed")} ${importStatusBadge(item.allocation_status || "needs_identification")}</td>
+            <td>${escapeHtml(item.confidence || "low")}</td>
+            <td>
+              <div class="small-actions">
+                <button type="button" class="ghost" data-image-action="confirmed" data-image-id="${escapeHtml(item.id)}">Confirm</button>
+                <button type="button" class="ghost" data-image-action="wrong_match" data-image-id="${escapeHtml(item.id)}">Wrong</button>
+                <button type="button" class="ghost" data-image-action="duplicate" data-image-id="${escapeHtml(item.id)}">Duplicate</button>
+                <button type="button" class="ghost" data-image-action="rejected" data-image-id="${escapeHtml(item.id)}">Reject</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+      host.innerHTML = `
+        <h3>Image Review</h3>
+        <p class="subtle">Extracted campaign images stay private-local. Confirmed images can be promoted into canonical image metadata and indexes.</p>
+        <div class="stat-line">
+          <span class="stat-badge">Candidates: ${escapeHtml(String(imageCandidates.length))}</span>
+          <span class="stat-badge">Image audit issues: ${escapeHtml(String(issues.length))}</span>
+        </div>
+        ${imageCandidates.length ? `
+          <div class="markdown-table-wrap">
+            <table class="mini-table">
+              <thead><tr><th>Image</th><th>Best Match / Evidence</th><th>Status</th><th>Confidence</th><th></th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        ` : '<p class="empty">No image candidates yet. Run Image Intake after reference PDFs are in private-local.</p>'}
+      `;
+    }
+
+    function openImagePreview(imageId) {
+      const candidate = imageCandidates.find((item) => item.id === imageId);
+      const overlay = document.getElementById("image-preview-overlay");
+      const stage = document.getElementById("image-preview-stage");
+      const title = document.getElementById("image-preview-title");
+      const meta = document.getElementById("image-preview-meta");
+      if (!candidate || !overlay || !stage || !title || !meta) return;
+      const match = candidate.confirmed_match || (candidate.proposed_matches || [])[0] || {};
+      title.textContent = match.entity_name || candidate.id || "Image Preview";
+      meta.textContent = [
+        candidate.source_id,
+        candidate.page ? `page ${candidate.page}` : "",
+        candidate.category,
+        candidate.review_status,
+        candidate.confidence ? `${candidate.confidence} confidence` : "",
+      ].filter(Boolean).join(" · ");
+      stage.innerHTML = `<img src="${escapeHtml(candidate.url || "")}" alt="${escapeHtml(match.entity_name || candidate.id || "Image preview")}" />`;
+      overlay.hidden = false;
+      document.body.style.overflow = "hidden";
+      document.getElementById("image-preview-close")?.focus();
+    }
+
+    function closeImagePreview() {
+      const overlay = document.getElementById("image-preview-overlay");
+      const stage = document.getElementById("image-preview-stage");
+      if (!overlay) return;
+      overlay.hidden = true;
+      if (stage) stage.innerHTML = "";
+      document.body.style.overflow = "";
+    }
+
+    async function loadImageReview() {
+      try {
+        const [candidatePayload, auditPayload] = await Promise.all([
+          fetchJson(`${endpoints.imageCandidates}?limit=200`),
+          fetchJson(endpoints.imageAudit),
+        ]);
+        imageCandidates = candidatePayload.items || [];
+        imageAudit = auditPayload;
+        renderImageReview();
+      } catch (error) {
+        const host = document.getElementById("image-review-panel");
+        if (host) host.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not load image review.")}</span>`;
+      }
+    }
+
+    async function createImageIntakeRun() {
+      const status = document.getElementById("import-review-status-box");
+      if (status) status.innerHTML = "<span>Running image intake from private-local reference PDFs…</span>";
+      try {
+        const payload = await fetchJson(endpoints.imageIntakeRuns, {
+          method: "POST",
+          body: JSON.stringify({}),
+        });
+        await loadImageReview();
+        if (status) {
+          const totals = payload.run?.totals || {};
+          status.innerHTML = `<span>Image intake complete: ${escapeHtml(String(totals.images || 0))} images, ${escapeHtml(String(totals.candidates || 0))} candidates.</span>`;
         }
       } catch (error) {
-        setLaunchStatus(error.message || "Could not export player recap PDF.", true);
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not run image intake.")}</span>`;
       }
+    }
+
+    async function updateImageCandidateReview(imageId, reviewStatus) {
+      const candidate = imageCandidates.find((item) => item.id === imageId);
+      const proposed = (candidate?.proposed_matches || [])[0] || null;
+      try {
+        await fetchJson(`${endpoints.imageCandidate}?image_id=${encodeURIComponent(imageId)}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            review_status: reviewStatus,
+            proposed_match: reviewStatus === "confirmed" ? proposed : undefined,
+          }),
+        });
+        await loadImageReview();
+      } catch (error) {
+        const status = document.getElementById("import-review-status-box");
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not update image candidate.")}</span>`;
+      }
+    }
+
+    async function promoteConfirmedImages() {
+      const status = document.getElementById("import-review-status-box");
+      if (status) status.innerHTML = "<span>Promoting confirmed images…</span>";
+      try {
+        const payload = await fetchJson(endpoints.imagePromote, { method: "POST" });
+        await Promise.all([loadImageReview(), loadPrivateIndexAudit()]);
+        if (status) status.innerHTML = `<span>Promoted ${escapeHtml(String(payload.promoted_count || 0))} confirmed images.</span>`;
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not promote images.")}</span>`;
+      }
+    }
+
+    function renderImportRunList() {
+      const host = document.getElementById("import-run-list");
+      if (!host) return;
+      if (!importRuns.length) {
+        host.innerHTML = '<div class="empty">No import runs yet. Create a room import run to start review.</div>';
+        return;
+      }
+      host.innerHTML = importRuns.map((run) => `
+        <button type="button" class="note-button ${activeImportRun?.run_id === run.run_id ? "selected" : ""}" data-import-run-open="${escapeHtml(run.run_id)}">
+          <strong>${escapeHtml(run.title || run.run_id)}</strong>
+          <div class="subtle">${escapeHtml(run.scope || "rooms-first")} · ${escapeHtml(run.status || "draft")}</div>
+          <div class="subtle">${escapeHtml(String(run.room_draft_count || 0))} rooms · ${escapeHtml(String(run.approved_count || 0))} approved · ${escapeHtml(String(run.promoted_count || 0))} promoted</div>
+        </button>
+      `).join("");
+    }
+
+    function importDraftIssues(draft) {
+      const issues = activeImportAudit?.field_issues || [];
+      return issues.filter((issue) => issue.draft_id === draft.draft_id);
+    }
+
+    function renderImportDraftTable() {
+      const host = document.getElementById("import-review-detail");
+      if (!host) return;
+      if (!activeImportRun) {
+        host.innerHTML = '<span class="empty">Create or open an import run to review room drafts.</span>';
+        return;
+      }
+      if (!importRoomDrafts.length) {
+        host.innerHTML = '<span class="empty">No room drafts match the current filter.</span>';
+        return;
+      }
+      const rows = importRoomDrafts.map((draft) => {
+        const fields = draft.fields || {};
+        const flags = draft.content_flags || {};
+        const issueCount = importDraftIssues(draft).length;
+        const flagLabels = Object.entries(flags)
+          .filter(([_key, value]) => value)
+          .map(([key]) => key)
+          .join(", ");
+        return `
+          <tr class="${activeImportDraftId === draft.draft_id ? "selected-row" : ""}">
+            <td><strong>${escapeHtml(draft.room_id || "—")}</strong><div class="subtle">${escapeHtml(draft.title || "")}</div></td>
+            <td>${importStatusBadge(draft.review_status)}</td>
+            <td>${escapeHtml(draft.confidence || "—")}</td>
+            <td>${escapeHtml(flagLabels || "—")}</td>
+            <td>${issueCount ? `<span class="error">${escapeHtml(String(issueCount))}</span>` : "0"}</td>
+            <td><button type="button" class="ghost" data-import-draft-open="${escapeHtml(draft.draft_id)}">Open</button></td>
+          </tr>
+        `;
+      }).join("");
+      const activeDraft = importRoomDrafts.find((draft) => draft.draft_id === activeImportDraftId) || importRoomDrafts[0];
+      host.innerHTML = `
+        <h3>Room Draft Checklist</h3>
+        <p class="subtle">Approve only rooms that are ready to become live Map Room data. Unreviewed drafts stay out of live play.</p>
+        <div class="markdown-table-wrap">
+          <table class="mini-table">
+            <thead>
+              <tr>
+                <th>Room</th>
+                <th>Status</th>
+                <th>Confidence</th>
+                <th>Detected</th>
+                <th>Issues</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        ${renderImportDraftDetail(activeDraft)}
+      `;
+    }
+
+    function renderImportDraftDetail(draft) {
+      if (!draft) return "";
+      const fields = draft.fields || {};
+      const issues = importDraftIssues(draft);
+      return `
+        <div class="result-box" style="margin-top: 14px;">
+          <h3>${escapeHtml(draft.room_id || "Room")} · ${escapeHtml(draft.title || "Untitled")}</h3>
+          <div class="stat-line">
+            ${importStatusBadge(draft.review_status)}
+            <span class="stat-badge">Confidence: ${escapeHtml(draft.confidence || "—")}</span>
+            <span class="stat-badge">${escapeHtml(draft.source_room_key_path || "No source path")}</span>
+          </div>
+          ${issues.length ? `
+            <h4>Audit Warnings</h4>
+            <ul>${issues.map((issue) => `<li><strong>${escapeHtml(issue.severity || "info")}:</strong> ${escapeHtml(issue.message || issue.field || "")}</li>`).join("")}</ul>
+          ` : '<p class="subtle">No audit warnings for this draft.</p>'}
+          ${renderSheetSection("Player-Facing Text", escapeHtml(fields.player_visible_description || fields.read_aloud || "Missing."), true)}
+          ${renderSheetSection("GM / General Text", escapeHtml(fields.gm_description || fields.general_text || "Missing."), true)}
+          ${renderSheetSection("Encounter Text", escapeHtml(fields.encounter_text || "No encounter/stat text captured."), true)}
+          ${renderSheetSection("Detected Contents", renderKeyValueTable([
+            { label: "Monsters", value: fields.monsters },
+            { label: "NPCs", value: fields.npcs },
+            { label: "Traps", value: fields.traps },
+            { label: "Hazards", value: fields.hazards },
+            { label: "Haunts", value: fields.haunts },
+            { label: "Afflictions", value: fields.afflictions },
+            { label: "Loot", value: fields.loot },
+            { label: "Quest Items", value: fields.quest_items },
+            { label: "Secret Doors", value: fields.secret_doors },
+            { label: "Detection", value: fields.detection_notes },
+          ]), true)}
+          <label style="margin-top: 12px;">
+            Reviewer Notes
+            <textarea id="import-reviewer-notes">${escapeHtml(draft.reviewer_notes || "")}</textarea>
+          </label>
+          <div class="small-actions">
+            <button type="button" data-import-review-status="approved" data-draft-id="${escapeHtml(draft.draft_id)}">Approve</button>
+            <button type="button" class="ghost" data-import-review-status="uncertain" data-draft-id="${escapeHtml(draft.draft_id)}">Mark Uncertain</button>
+            <button type="button" class="secondary" data-import-review-status="rejected" data-draft-id="${escapeHtml(draft.draft_id)}">Reject</button>
+            <button type="button" class="ghost" data-import-save-notes="${escapeHtml(draft.draft_id)}">Save Notes</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadImportRuns() {
+      const status = document.getElementById("import-review-status-box");
+      if (status) status.innerHTML = "<span>Loading import runs…</span>";
+      try {
+        const payload = await fetchJson(endpoints.importRuns);
+        importRuns = payload.items || [];
+        if (!activeImportRun && importRuns.length) {
+          activeImportRun = importRuns[0];
+          await openImportRun(activeImportRun.run_id);
+          return;
+        }
+        renderImportRunList();
+        renderImportMeta();
+        if (status) status.innerHTML = "<span>Import runs loaded.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not load import runs.")}</span>`;
+      }
+    }
+
+    async function createImportRun() {
+      const status = document.getElementById("import-review-status-box");
+      if (status) status.innerHTML = "<span>Creating room import run…</span>";
+      try {
+        const selectedMap = document.getElementById("map-room-select")?.value || "";
+        const payload = await fetchJson(endpoints.importRuns, {
+          method: "POST",
+          body: JSON.stringify({
+            title: selectedMap ? `Room Import Review ${selectedMap}` : "Room Import Review",
+            map_id: selectedMap || null,
+          }),
+        });
+        activeImportRun = payload.run;
+        activeImportDraftId = "";
+        await loadImportRuns();
+        await openImportRun(activeImportRun.run_id);
+        if (status) status.innerHTML = "<span>Import run created. Review room drafts before promotion.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not create import run.")}</span>`;
+      }
+    }
+
+    async function openImportRun(runId) {
+      const status = document.getElementById("import-review-status-box");
+      if (status) status.innerHTML = "<span>Opening import run…</span>";
+      try {
+        const [runPayload, auditPayload] = await Promise.all([
+          fetchJson(`${endpoints.importRun}?run_id=${encodeURIComponent(runId)}`),
+          fetchJson(`${endpoints.importAuditSummary}?run_id=${encodeURIComponent(runId)}`),
+        ]);
+        activeImportRun = runPayload.run;
+        activeImportAudit = auditPayload;
+        await loadImportRoomDrafts();
+        renderImportRunList();
+        renderImportMeta();
+        if (status) status.innerHTML = "<span>Import run loaded.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not open import run.")}</span>`;
+      }
+    }
+
+    async function loadImportRoomDrafts() {
+      if (!activeImportRun) return;
+      const params = new URLSearchParams({ run_id: activeImportRun.run_id });
+      const query = document.getElementById("import-review-search")?.value.trim();
+      const statusFilter = document.getElementById("import-review-status")?.value;
+      if (query) params.set("q", query);
+      if (statusFilter) params.set("review_status", statusFilter);
+      const payload = await fetchJson(`${endpoints.importRoomDrafts}?${params.toString()}`);
+      importRoomDrafts = payload.items || [];
+      if (!activeImportDraftId && importRoomDrafts.length) {
+        activeImportDraftId = importRoomDrafts[0].draft_id;
+      }
+      if (activeImportDraftId && !importRoomDrafts.some((draft) => draft.draft_id === activeImportDraftId)) {
+        activeImportDraftId = importRoomDrafts[0]?.draft_id || "";
+      }
+      renderImportDraftTable();
+    }
+
+    function nextUnreviewedImportDraftId(currentDraftId) {
+      if (!importRoomDrafts.length) return "";
+      const currentIndex = importRoomDrafts.findIndex((draft) => draft.draft_id === currentDraftId);
+      const orderedDrafts = [
+        ...importRoomDrafts.slice(Math.max(currentIndex + 1, 0)),
+        ...importRoomDrafts.slice(0, Math.max(currentIndex, 0)),
+      ];
+      const nextDraft = orderedDrafts.find((draft) => (draft.review_status || "unreviewed") === "unreviewed");
+      return nextDraft?.draft_id || "";
+    }
+
+    async function updateImportDraft(draftId, reviewStatus = null) {
+      if (!activeImportRun) return;
+      const notes = document.getElementById("import-reviewer-notes")?.value || "";
+      const body = { reviewer_notes: notes };
+      if (reviewStatus) body.review_status = reviewStatus;
+      const status = document.getElementById("import-review-status-box");
+      try {
+        const nextDraftId = reviewStatus ? nextUnreviewedImportDraftId(draftId) : "";
+        await fetchJson(`${endpoints.importRoomDraft}?run_id=${encodeURIComponent(activeImportRun.run_id)}&draft_id=${encodeURIComponent(draftId)}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        });
+        activeImportDraftId = nextDraftId || draftId;
+        const auditPayload = await fetchJson(`${endpoints.importAuditSummary}?run_id=${encodeURIComponent(activeImportRun.run_id)}`);
+        activeImportAudit = auditPayload;
+        activeImportRun = auditPayload.run;
+        await loadImportRoomDrafts();
+        renderImportRunList();
+        renderImportMeta();
+        if (status) status.innerHTML = "<span>Room draft review saved.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not update draft.")}</span>`;
+      }
+    }
+
+    async function promoteImportRooms() {
+      const status = document.getElementById("import-review-status-box");
+      if (!activeImportRun) {
+        if (status) status.innerHTML = '<span class="error">Open an import run before promoting rooms.</span>';
+        return;
+      }
+      if (status) status.innerHTML = "<span>Promoting approved rooms…</span>";
+      try {
+        const payload = await fetchJson(`${endpoints.importPromoteRooms}?run_id=${encodeURIComponent(activeImportRun.run_id)}`, {
+          method: "POST",
+        });
+        await openImportRun(activeImportRun.run_id);
+        if (selectedMapId) {
+          await loadMapRoom(selectedMapId);
+        }
+        if (status) status.innerHTML = `<span>Promoted ${escapeHtml(String(payload.promoted_count || 0))} approved room drafts.</span>`;
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not promote rooms.")}</span>`;
+      }
+    }
+
+    async function exportPlayerRecapPdf() {
+      setLaunchStatus("PDF export now uses the private-local handout workflow and will be reconnected in a follow-up pass.", true);
     }
 
     function renderPdfSelect() {
@@ -4404,6 +5203,36 @@
         );
         dungeonMaps = payload.items || [];
         renderMapSelect();
+      } catch (error) {
+        select.innerHTML = `<option value="">${escapeHtml(error.message)}</option>`;
+      }
+    }
+
+    function renderTownSelect() {
+      const select = document.getElementById("town-square-select");
+      if (!townSettlements.length) {
+        select.innerHTML = '<option value="">No settlements found</option>';
+        return;
+      }
+      select.innerHTML = townSettlements.map((item) => `
+        <option value="${escapeHtml(item.id)}">${escapeHtml(item.title || item.name || item.id)}${item.location_count ? ` - ${escapeHtml(String(item.location_count))} locations` : ""}</option>
+      `).join("");
+      const preferred = townSettlements.find((item) => String(item.id || "").toLowerCase() === "otari")
+        || townSettlements[0];
+      if (preferred) {
+        select.value = preferred.id;
+      }
+    }
+
+    async function loadTownSettlements(query = "") {
+      const select = document.getElementById("town-square-select");
+      select.innerHTML = '<option value="">Loading settlements...</option>';
+      try {
+        const payload = await fetchJson(
+          `${endpoints.townSquareSettlements}?q=${encodeURIComponent(query)}`,
+        );
+        townSettlements = payload.items || [];
+        renderTownSelect();
       } catch (error) {
         select.innerHTML = `<option value="">${escapeHtml(error.message)}</option>`;
       }
@@ -4719,6 +5548,16 @@
     }
 
     function findAonCreatureForCombatant(combatant) {
+      const explicitId = Number.parseInt(combatant.aonCreatureId || combatant.aon_creature_id || "", 10);
+      if (Number.isFinite(explicitId) && explicitId > 0) {
+        return {
+          creature_id: explicitId,
+          name: combatant.aonLookupName || combatant.name || `AoN Creature ${explicitId}`,
+          level: combatant.level ?? "",
+          source: combatant.source || "Archives of Nethys",
+          traits: combatant.traits || [],
+        };
+      }
       const lookup = normalizeCreatureLookupName(combatant.aonLookupName || combatant.name);
       if (!lookup) return null;
       return aonCreatures.find((creature) => (
@@ -4774,6 +5613,7 @@
         source: "Campaign Bestiary",
         sourceUrl: "",
         imageUrl: entry.portrait || "",
+        aonCreatureId: entry.aon_creature_id || null,
         aonLookupName: entry.aon_name || entry.name || "",
         initiative: combat.initiative || "",
         initiativeBonus: initiativeBonus({ initiative: combat.initiative || "" }),
@@ -4805,6 +5645,7 @@
         source: "Campaign Bestiary AoN reference",
         sourceUrl: "",
         imageUrl: "",
+        aonCreatureId: entry.aon_creature_id || null,
         aonLookupName: entry.aon_name || entry.name || "",
         initiative: "",
         initiativeBonus: 0,
@@ -4848,6 +5689,20 @@
       });
     }
 
+    function aonCreatureUrlForMatch(match) {
+      const params = new URLSearchParams();
+      params.set("creature_id", String(match.creature_id));
+      if (match.name) params.set("name", match.name);
+      if (match.level !== undefined && match.level !== null && match.level !== "") {
+        params.set("level", String(match.level));
+      }
+      if (match.source) params.set("source", match.source);
+      if (Array.isArray(match.traits) && match.traits.length) {
+        params.set("traits", match.traits.join(","));
+      }
+      return `${endpoints.aonCreature}?${params.toString()}`;
+    }
+
     async function enrichCombatantsFromAon(combatants) {
       const enriched = [];
       for (const combatant of combatants) {
@@ -4857,7 +5712,7 @@
           continue;
         }
         try {
-          const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(match.creature_id)}`);
+          const payload = await fetchJson(aonCreatureUrlForMatch(match));
           enriched.push(mergeAonDetailsIntoCombatant(combatant, payload.creature || match));
         } catch (_error) {
           enriched.push({
@@ -4887,7 +5742,7 @@
           continue;
         }
         try {
-          const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(match.creature_id)}`);
+          const payload = await fetchJson(aonCreatureUrlForMatch(match));
           const merged = mergeAonDetailsIntoCombatant(combatant, payload.creature || match);
           refreshed.push(merged);
           changed = changed || Boolean(merged.imageUrl);
@@ -5291,7 +6146,10 @@
       }
       if (note) note.textContent = "Fetching PF2e stat block from Archives of Nethys...";
       try {
-        const payload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(creatureId)}`);
+        const selected = aonCreatures.find((creature) => String(creature.creature_id) === String(creatureId)) || {
+          creature_id: creatureId,
+        };
+        const payload = await fetchJson(aonCreatureUrlForMatch(selected));
         const combatant = combatantFromAonCreature(payload.creature || {});
         currentCombat = {
           roomId: currentCombat.roomId || "Custom combat",
@@ -7007,6 +7865,117 @@
       updateRoomBackButton();
     }
 
+    function townLocationSearchText(location) {
+      return [
+        location.id,
+        location.name,
+        location.type,
+        location.summary,
+        ...(location.services || []),
+        ...(location.npcs || []),
+        ...(location.quest_hooks || []),
+        ...(location.gather_information || []),
+      ].join(" ").toLowerCase();
+    }
+
+    function townSettlementSearchText(settlement) {
+      return [
+        settlement.id,
+        settlement.name,
+        settlement.title,
+        settlement.summary,
+        settlement.look_and_feel,
+        settlement.demographics,
+        ...(settlement.quest_hooks || []),
+        ...(settlement.gather_information || []),
+        ...((settlement.locations || []).map(townLocationSearchText)),
+      ].join(" ").toLowerCase();
+    }
+
+    function renderTownSquare() {
+      const viewer = document.getElementById("town-square-viewer");
+      const list = document.getElementById("town-square-list");
+      const meta = document.getElementById("town-square-meta");
+      if (!activeTownSettlement) {
+        meta.innerHTML = '<span class="stat-badge">No settlement loaded</span>';
+        viewer.innerHTML = '<div class="empty" style="padding: 16px;">Choose a settlement to load its town map and overview here.</div>';
+        list.innerHTML = '<div class="empty">Town locations, NPCs, hooks, and rumors will appear here.</div>';
+        return;
+      }
+      const query = document.getElementById("town-square-search").value.trim().toLowerCase();
+      const locations = (activeTownSettlement.locations || [])
+        .filter((location) => (!query || townLocationSearchText(location).includes(query)))
+        .sort((left, right) => {
+          const leftNumber = Number.parseInt(left.map_number || "9999", 10);
+          const rightNumber = Number.parseInt(right.map_number || "9999", 10);
+          if (leftNumber !== rightNumber) return leftNumber - rightNumber;
+          return String(left.name || "").localeCompare(String(right.name || ""));
+        });
+      const settlementMatches = !query || townSettlementSearchText(activeTownSettlement).includes(query);
+      meta.innerHTML = `
+        <span class="stat-badge">${escapeHtml(activeTownSettlement.title || activeTownSettlement.name || "Settlement")}</span>
+        <span class="stat-badge">${locations.length} location${locations.length === 1 ? "" : "s"}</span>
+        ${query ? `<span class="stat-badge">Search: ${escapeHtml(query)}</span>` : ""}
+      `;
+      viewer.innerHTML = activeTownSettlement.map_url
+        ? `<img src="${escapeHtml(activeTownSettlement.map_url)}" alt="${escapeHtml(activeTownSettlement.title || activeTownSettlement.name || "Town map")}" />`
+        : `
+          <div style="padding: 16px;">
+            <h3>${escapeHtml(activeTownSettlement.title || activeTownSettlement.name || "Settlement")}</h3>
+            <p>${escapeHtml(activeTownSettlement.summary || "No settlement summary listed yet.")}</p>
+            <div class="subtle">No town map image is configured yet. Add a local image path to <code>map_path</code> in private-local settlements data.</div>
+          </div>
+        `;
+      if (!settlementMatches) {
+        list.innerHTML = '<div class="empty">No town notes match that search.</div>';
+        return;
+      }
+      list.innerHTML = `
+        <details class="room-card" open>
+          <summary>${escapeHtml(activeTownSettlement.title || activeTownSettlement.name || "Settlement")} Overview</summary>
+          <div class="room-card-body">
+            ${renderSheetSection("Look And Feel", `<p>${escapeHtml(activeTownSettlement.look_and_feel || "No look-and-feel notes yet.")}</p>`, true)}
+            ${renderSheetSection("Town Demographics", `<p>${escapeHtml(activeTownSettlement.demographics || "No demographics notes yet.")}</p>`, true)}
+            ${renderSheetSection("Gather Information", renderSimpleList(activeTownSettlement.gather_information || []), true)}
+            ${renderSheetSection("Quest Hooks", renderSimpleList(activeTownSettlement.quest_hooks || []), true)}
+          </div>
+        </details>
+        ${locations.length ? locations.map((location) => `
+          <details class="room-card">
+            <summary>${location.map_number ? `${escapeHtml(String(location.map_number))}. ` : ""}${escapeHtml(location.name || location.id || "Location")} ${location.type ? `<span class="subtle">- ${escapeHtml(location.type)}</span>` : ""}</summary>
+            <div class="room-card-body">
+              <p>${escapeHtml(location.summary || "No location summary listed yet.")}</p>
+              ${renderSheetSection("Services / Use At Table", renderSimpleList(location.services || []), true)}
+              ${renderSheetSection("NPCs Here", renderSimpleList(location.npcs || []), true)}
+              ${renderSheetSection("Quest Hooks", renderSimpleList(location.quest_hooks || []), true)}
+              ${renderSheetSection("Gather Information", renderSimpleList(location.gather_information || []), true)}
+            </div>
+          </details>
+        `).join("") : '<div class="empty">No locations match that search.</div>'}
+      `;
+    }
+
+    async function loadTownSquare(settlementId = null) {
+      const selectedId = settlementId || document.getElementById("town-square-select").value;
+      if (!selectedId) {
+        activeTownSettlement = null;
+        renderTownSquare();
+        return;
+      }
+      document.getElementById("town-square-list").innerHTML = '<div class="empty">Loading settlement...</div>';
+      try {
+        const payload = await fetchJson(
+          `${endpoints.townSquareSettlement}?id=${encodeURIComponent(selectedId)}`,
+        );
+        activeTownSettlement = payload.settlement || null;
+        renderTownSquare();
+      } catch (error) {
+        activeTownSettlement = null;
+        document.getElementById("town-square-meta").innerHTML = '<span class="stat-badge">Town Square error</span>';
+        document.getElementById("town-square-list").innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load settlement.")}</div>`;
+      }
+    }
+
     async function loadMapRoom(mapId = null) {
       const selectedMapId = mapId || document.getElementById("map-room-select").value;
       const viewer = document.getElementById("map-room-viewer");
@@ -7086,7 +8055,12 @@
             <tbody>
               ${campaignBestiaryEntries.map((entry) => `
                 <tr>
-                  <td><strong>${escapeHtml(entry.name || "Unnamed")}</strong></td>
+                  <td>
+                    <div class="overview-name-cell">
+                      ${renderOverviewPortrait(entry.portrait, entry.name, entry.image)}
+                      <strong>${escapeHtml(entry.name || "Unnamed")}</strong>
+                    </div>
+                  </td>
                   <td>${escapeHtml(entryTypeLabel(entry.entry_type))}</td>
                   <td>${escapeHtml(formatValue(entry.level))}</td>
                   <td>${escapeHtml((entry.rooms || []).join(", ") || "—")}</td>
@@ -7137,12 +8111,13 @@
       const affliction = entry.affliction || {};
       viewer.innerHTML = `
         <div class="sheet-hero">
-          ${renderPortrait(entry.portrait || "", entry.name)}
+          ${renderEditableBestiaryPortrait(entry)}
           <div>
             <h3 style="margin-top: 0;">${escapeHtml(entry.name || "Unnamed Entry")}</h3>
             <div class="subtle">${escapeHtml(entryTypeLabel(entry.entry_type))}${entry.level !== undefined && entry.level !== null ? ` · Level ${escapeHtml(String(entry.level))}` : ""}</div>
             <div class="subtle">${escapeHtml(entry.summary || "No summary listed.")}</div>
             <div class="small-actions" style="margin-top: 10px;">${bestiaryActions(entry)}</div>
+            <div class="subtle" data-bestiary-portrait-status></div>
           </div>
         </div>
         ${renderSheetStats([
@@ -7212,6 +8187,59 @@
       }
     }
 
+    function setBestiaryPortraitTarget(entryId) {
+      pendingBestiaryPortraitId = entryId;
+      pendingNpcPortraitId = null;
+      document.querySelectorAll("[data-bestiary-portrait-edit]").forEach((button) => {
+        button.classList.toggle("portrait-paste-target", button.dataset.bestiaryPortraitEdit === String(entryId));
+      });
+      document.querySelectorAll("[data-npc-portrait-edit]").forEach((button) => {
+        button.classList.remove("portrait-paste-target");
+      });
+      const viewer = document.getElementById("campaign-bestiary-detail");
+      const status = viewer?.querySelector("[data-bestiary-portrait-status]");
+      if (status) {
+        status.innerHTML = "<span>Choose an image file, or paste a copied image with Ctrl+V.</span>";
+      }
+    }
+
+    async function uploadBestiaryPortrait(entryId, file) {
+      if (!entryId || !file) return;
+      const viewer = document.getElementById("campaign-bestiary-detail");
+      const status = viewer?.querySelector("[data-bestiary-portrait-status]");
+      if (status) status.innerHTML = "<span>Saving bestiary portrait...</span>";
+      const formData = new FormData();
+      formData.append("file", file, file.name || `${entryId}-portrait.png`);
+      try {
+        const response = await fetch(`${endpoints.campaignBestiaryPortrait}?id=${encodeURIComponent(entryId)}`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) {
+          let detail = response.statusText;
+          try {
+            const payload = await response.json();
+            detail = payload.detail || JSON.stringify(payload);
+          } catch (_error) {
+            detail = await response.text();
+          }
+          throw new Error(detail || "Could not save portrait.");
+        }
+        const payload = await response.json();
+        pendingBestiaryPortraitId = null;
+        await loadCampaignBestiary(
+          document.getElementById("campaign-bestiary-search").value.trim(),
+          document.getElementById("campaign-bestiary-type").value,
+        );
+        await openCampaignBestiaryEntry(payload.entry?.id || entryId);
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not save portrait.")}</span>`;
+      } finally {
+        const input = document.getElementById("bestiary-portrait-file");
+        if (input) input.value = "";
+      }
+    }
+
     async function addBestiaryEntryToCombat(id, { roomId = "", count = 1 } = {}) {
       const payload = await fetchJson(`${endpoints.campaignBestiaryEntry}?id=${encodeURIComponent(id)}`);
       const entry = payload.entry || {};
@@ -7226,7 +8254,7 @@
         const match = findAonCreatureForCombatant(combatant);
         if (match) {
           try {
-            const aonPayload = await fetchJson(`${endpoints.aonCreature}?creature_id=${encodeURIComponent(match.creature_id)}`);
+            const aonPayload = await fetchJson(aonCreatureUrlForMatch(match));
             combatant = mergeAonDetailsIntoCombatant(combatant, aonPayload.creature || match);
           } catch (_error) {
             // Keep the campaign reference fallback.
@@ -7274,6 +8302,32 @@
         return `<div class="portrait-frame has-image"><img src="${escapeHtml(ref)}" alt="${escapeHtml(label || "Portrait")}" /></div>`;
       }
       return `<div class="portrait-frame">${escapeHtml(ref)}</div>`;
+    }
+
+    function renderEditableNpcPortrait(dossier) {
+      const portrait = renderPortrait(dossier.portrait, dossier.name, dossier.image);
+      return `
+        <div class="portrait-edit-actions">
+          <button type="button" class="portrait-edit-button" data-npc-portrait-edit="${escapeHtml(dossier.id)}">
+            ${portrait}
+            <span>Paste target</span>
+          </button>
+          <button type="button" class="ghost" data-npc-portrait-browse="${escapeHtml(dossier.id)}">Browse image</button>
+        </div>
+      `;
+    }
+
+    function renderEditableBestiaryPortrait(entry) {
+      const portrait = renderPortrait(entry.portrait, entry.name, entry.image);
+      return `
+        <div class="portrait-edit-actions">
+          <button type="button" class="portrait-edit-button" data-bestiary-portrait-edit="${escapeHtml(entry.id)}">
+            ${portrait}
+            <span>Paste target</span>
+          </button>
+          <button type="button" class="ghost" data-bestiary-portrait-browse="${escapeHtml(entry.id)}">Browse image</button>
+        </div>
+      `;
     }
 
     function renderOverviewPortrait(ref, label, image = null) {
@@ -7823,7 +8877,7 @@
         const details = dossier.details || {};
         viewer.innerHTML = `
           <div class="sheet-hero">
-            ${renderPortrait(dossier.portrait, dossier.name, dossier.image)}
+            ${renderEditableNpcPortrait(dossier)}
             <div>
               <h3 style="margin-top: 0;">${escapeHtml(dossier.name || "Unnamed NPC")}</h3>
               <div class="subtle">${escapeHtml(dossier.role || dossier.status || "No role/status listed.")}</div>
@@ -7909,6 +8963,64 @@
       } catch (error) {
         statusHost.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
       }
+    }
+
+    function setNpcPortraitTarget(npcId) {
+      pendingNpcPortraitId = npcId;
+      pendingBestiaryPortraitId = null;
+      document.querySelectorAll("[data-npc-portrait-edit]").forEach((button) => {
+        button.classList.toggle("portrait-paste-target", button.dataset.npcPortraitEdit === String(npcId));
+      });
+      document.querySelectorAll("[data-bestiary-portrait-edit]").forEach((button) => {
+        button.classList.remove("portrait-paste-target");
+      });
+      const statusHost = document.getElementById("npc-dossier-save-status");
+      if (statusHost) {
+        statusHost.innerHTML = "<span>Choose an image file, or paste a copied image with Ctrl+V.</span>";
+      }
+    }
+
+    async function uploadNpcPortrait(npcId, file) {
+      if (!npcId || !file) return;
+      const statusHost = document.getElementById("npc-dossier-save-status");
+      if (statusHost) statusHost.innerHTML = "<span>Saving NPC portrait...</span>";
+      const formData = new FormData();
+      formData.append("file", file, file.name || `npc-${npcId}-portrait.png`);
+      try {
+        const response = await fetch(`${endpoints.npcPortrait}?id=${encodeURIComponent(npcId)}`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) {
+          let detail = response.statusText;
+          try {
+            const payload = await response.json();
+            detail = payload.detail || JSON.stringify(payload);
+          } catch (_error) {
+            detail = await response.text();
+          }
+          throw new Error(detail || "Could not save portrait.");
+        }
+        const dossier = await response.json();
+        pendingNpcPortraitId = null;
+        await loadNpcSheets(document.getElementById("npc-sheet-search").value.trim());
+        await openNpcSheet(dossier.id);
+      } catch (error) {
+        if (statusHost) statusHost.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not save portrait.")}</span>`;
+      } finally {
+        const input = document.getElementById("npc-portrait-file");
+        if (input) input.value = "";
+      }
+    }
+
+    function fileFromPasteEvent(event) {
+      const items = Array.from(event.clipboardData?.items || []);
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          return item.getAsFile();
+        }
+      }
+      return null;
     }
 
     function renderSummary(snapshot) {
@@ -8193,18 +9305,73 @@
       }
     }
 
+    function diceTermText(term, isFirst = false) {
+      const sign = term.sign < 0 ? "-" : (isFirst ? "" : "+");
+      if (term.kind === "dice") {
+        return `${sign}${term.count}d${term.sides}${term.keepMode ? `k${term.keepMode}${term.keepCount}` : ""}`;
+      }
+      return `${sign}${term.value}`;
+    }
+
+    function formatDiceBuilderTerms(terms) {
+      const filtered = terms.filter((term) => term.kind !== "flat" || term.value !== 0);
+      if (!filtered.length) return "0";
+      return filtered.map((term, index) => diceTermText(term, index === 0)).join("");
+    }
+
+    function parsedDiceBuilderTerms(expression) {
+      try {
+        return parseDiceExpression(expression);
+      } catch (_error) {
+        const trimmed = String(expression || "").trim();
+        return trimmed ? [{ kind: "raw", text: trimmed }] : [];
+      }
+    }
+
     function appendDiceFragment(fragment) {
       const input = document.getElementById("dice-expression");
-      const current = input.value.trim();
-      if (!current) {
-        input.value = fragment.startsWith("d") ? `1${fragment}` : fragment;
+      const terms = parsedDiceBuilderTerms(input.value);
+      if (terms.some((term) => term.kind === "raw")) {
+        input.value = `${input.value.trim()}${fragment}`;
         return;
       }
-      if (fragment.startsWith("d") && /(^|[+\-])\d*$/.test(current)) {
-        input.value = `${current}${fragment}`;
+
+      const diceMatch = String(fragment || "").match(/^d(\d+)$/i);
+      if (diceMatch) {
+        const sides = Number.parseInt(diceMatch[1], 10);
+        const existing = terms.find((term) => (
+          term.kind === "dice"
+          && term.sign > 0
+          && term.sides === sides
+          && !term.keepMode
+        ));
+        if (existing) {
+          existing.count += 1;
+        } else {
+          terms.push({ kind: "dice", sign: 1, count: 1, sides, keepMode: null, keepCount: null });
+        }
+        input.value = formatDiceBuilderTerms(terms);
         return;
       }
-      input.value = `${current}${fragment}`;
+
+      const modifier = Number.parseInt(fragment, 10);
+      if (Number.isFinite(modifier)) {
+        const flatTerms = terms.filter((term) => term.kind === "flat");
+        const diceTerms = terms.filter((term) => term.kind !== "flat");
+        const currentFlat = flatTerms.reduce((sum, term) => sum + (term.sign * term.value), 0);
+        const nextFlat = currentFlat + modifier;
+        if (nextFlat !== 0) {
+          diceTerms.push({
+            kind: "flat",
+            sign: nextFlat < 0 ? -1 : 1,
+            value: Math.abs(nextFlat),
+          });
+        }
+        input.value = formatDiceBuilderTerms(diceTerms);
+        return;
+      }
+
+      input.value = `${input.value.trim()}${fragment}`;
     }
 
     function ensureAudioContext() {
@@ -8928,6 +10095,15 @@
     });
     document.getElementById("map-room-back").addEventListener("click", navigateBackRoom);
     document.getElementById("map-room-search").addEventListener("input", renderRoomKey);
+    document.getElementById("town-square-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadTownSquare();
+    });
+    document.getElementById("town-square-refresh").addEventListener("click", async () => {
+      await loadTownSettlements();
+      await loadTownSquare();
+    });
+    document.getElementById("town-square-search").addEventListener("input", renderTownSquare);
     document.querySelectorAll(".map-room-filters input[type='checkbox']").forEach((checkbox) => {
       checkbox.addEventListener("change", renderRoomKey);
     });
@@ -9159,6 +10335,45 @@
         document.getElementById("campaign-bestiary-type").value,
       );
     });
+    document.getElementById("import-run-create").addEventListener("click", createImportRun);
+    document.getElementById("import-run-refresh").addEventListener("click", loadImportRuns);
+    document.getElementById("import-promote-rooms").addEventListener("click", promoteImportRooms);
+    document.getElementById("private-index-rebuild").addEventListener("click", rebuildPrivateIndexes);
+    document.getElementById("reference-corpus-normalize").addEventListener("click", normalizeReferenceCorpus);
+    document.getElementById("private-index-mirror-rag").addEventListener("click", mirrorPrivateIndexRag);
+    document.getElementById("image-intake-create").addEventListener("click", createImageIntakeRun);
+    document.getElementById("image-promote-confirmed").addEventListener("click", promoteConfirmedImages);
+    document.getElementById("import-review-filter-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadImportRoomDrafts();
+    });
+    document.getElementById("import-review-status").addEventListener("change", loadImportRoomDrafts);
+    document.getElementById("reference-audit-panel").addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-dependency-action]");
+      if (!actionButton) return;
+      updateDependencyReview(actionButton.dataset.dependencyId, actionButton.dataset.dependencyAction);
+    });
+    document.getElementById("image-review-panel").addEventListener("click", (event) => {
+      const previewButton = event.target.closest("[data-image-preview-id]");
+      if (previewButton) {
+        openImagePreview(previewButton.dataset.imagePreviewId);
+        return;
+      }
+      const actionButton = event.target.closest("[data-image-action]");
+      if (!actionButton) return;
+      updateImageCandidateReview(actionButton.dataset.imageId, actionButton.dataset.imageAction);
+    });
+    document.getElementById("image-preview-close").addEventListener("click", closeImagePreview);
+    document.getElementById("image-preview-overlay").addEventListener("click", (event) => {
+      if (event.target.id === "image-preview-overlay") {
+        closeImagePreview();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !document.getElementById("image-preview-overlay")?.hidden) {
+        closeImagePreview();
+      }
+    });
     document.getElementById("vault-search-form").addEventListener("submit", (event) => {
       event.preventDefault();
       loadVaultNotes(document.getElementById("vault-search").value.trim());
@@ -9170,10 +10385,10 @@
     document.getElementById("tts-form").addEventListener("submit", speakText);
     document.getElementById("launch-session-button").addEventListener("click", launchCurrentSession);
     document.getElementById("open-player-recap-button").addEventListener("click", () => {
-      openVaultPathInWorkspace(playerRecapPath, "Player-safe recap");
+      openCampaignSummaryTab("pc-summary", "PC summary");
     });
     document.getElementById("open-gm-recap-button").addEventListener("click", () => {
-      openVaultPathInWorkspace(gmRecapPath, "GM-only recap");
+      openCampaignSummaryTab("gm-summary", "GM summary");
     });
     document.getElementById("export-player-recap-button").addEventListener("click", exportPlayerRecapPdf);
     document.getElementById("session-track-save").addEventListener("click", saveSessionTrackerToNote);
@@ -9215,12 +10430,6 @@
         openVaultNote(button.dataset.vaultPath);
       }
     });
-    document.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-wikilink-target]");
-      if (button) {
-        openWikilinkTarget(button.dataset.wikilinkTarget);
-      }
-    });
     document.getElementById("pc-sheet-list").addEventListener("click", (event) => {
       const button = event.target.closest("[data-sheet-id]");
       if (button) {
@@ -9240,12 +10449,34 @@
       }
     });
     document.getElementById("npc-sheet-viewer").addEventListener("click", (event) => {
+      const browseButton = event.target.closest("[data-npc-portrait-browse]");
+      if (browseButton) {
+        setNpcPortraitTarget(browseButton.dataset.npcPortraitBrowse);
+        document.getElementById("npc-portrait-file")?.click();
+        return;
+      }
+      const portraitButton = event.target.closest("[data-npc-portrait-edit]");
+      if (portraitButton) {
+        setNpcPortraitTarget(portraitButton.dataset.npcPortraitEdit);
+        return;
+      }
       const button = event.target.closest("[data-sheet-id]");
       if (button) {
         openNpcSheet(button.dataset.sheetId);
       }
     });
     document.getElementById("campaign-bestiary-viewer").addEventListener("click", (event) => {
+      const browseButton = event.target.closest("[data-bestiary-portrait-browse]");
+      if (browseButton) {
+        setBestiaryPortraitTarget(browseButton.dataset.bestiaryPortraitBrowse);
+        document.getElementById("bestiary-portrait-file")?.click();
+        return;
+      }
+      const portraitButton = event.target.closest("[data-bestiary-portrait-edit]");
+      if (portraitButton) {
+        setBestiaryPortraitTarget(portraitButton.dataset.bestiaryPortraitEdit);
+        return;
+      }
       const openButton = event.target.closest("[data-bestiary-open]");
       if (openButton) {
         openCampaignBestiaryEntry(openButton.dataset.bestiaryOpen);
@@ -9266,9 +10497,56 @@
         if (entry) trackBestiaryAffliction(entry);
       }
     });
+    document.getElementById("import-review-detail").addEventListener("click", (event) => {
+      const openButton = event.target.closest("[data-import-draft-open]");
+      if (openButton) {
+        activeImportDraftId = openButton.dataset.importDraftOpen;
+        renderImportDraftTable();
+        return;
+      }
+      const reviewButton = event.target.closest("[data-import-review-status]");
+      if (reviewButton) {
+        updateImportDraft(reviewButton.dataset.draftId, reviewButton.dataset.importReviewStatus);
+        return;
+      }
+      const notesButton = event.target.closest("[data-import-save-notes]");
+      if (notesButton) {
+        updateImportDraft(notesButton.dataset.importSaveNotes);
+      }
+    });
+    document.getElementById("import-run-list").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-import-run-open]");
+      if (button) {
+        activeImportDraftId = "";
+        openImportRun(button.dataset.importRunOpen);
+      }
+    });
     document.getElementById("npc-sheet-viewer").addEventListener("submit", (event) => {
       if (event.target.matches("#npc-dossier-edit-form")) {
         saveNpcDossier(event);
+      }
+    });
+    document.getElementById("npc-portrait-file").addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (file && pendingNpcPortraitId) {
+        uploadNpcPortrait(pendingNpcPortraitId, file);
+      }
+    });
+    document.getElementById("bestiary-portrait-file").addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (file && pendingBestiaryPortraitId) {
+        uploadBestiaryPortrait(pendingBestiaryPortraitId, file);
+      }
+    });
+    document.addEventListener("paste", (event) => {
+      if (!pendingNpcPortraitId && !pendingBestiaryPortraitId) return;
+      const file = fileFromPasteEvent(event);
+      if (!file) return;
+      event.preventDefault();
+      if (pendingNpcPortraitId) {
+        uploadNpcPortrait(pendingNpcPortraitId, file);
+      } else if (pendingBestiaryPortraitId) {
+        uploadBestiaryPortrait(pendingBestiaryPortraitId, file);
       }
     });
     document.getElementById("pdf-tabs").addEventListener("click", (event) => {
@@ -9318,6 +10596,10 @@
       button.addEventListener("click", () => {
         document.getElementById("dice-expression").value = button.dataset.diceTemplate;
       });
+    });
+    document.getElementById("dice-clear-expression").addEventListener("click", () => {
+      document.getElementById("dice-expression").value = "";
+      document.getElementById("dice-expression").focus();
     });
     document.getElementById("dice-clear-history").addEventListener("click", () => {
       diceHistory = [];
@@ -9439,6 +10721,9 @@
     renderCombatPanel();
     loadAonCreatures();
     loadCampaignBestiary();
+    loadImportRuns();
+    loadPrivateIndexAudit();
+    loadImageReview();
     loadVoices();
     loadTtsStatus();
     applyTtsPreset();
@@ -9446,11 +10731,11 @@
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
-    loadVaultNotes();
     loadCampaignOverview();
     loadSessionOverviews();
     loadReferencePdfs();
     loadDungeonMaps().then(() => loadMapRoom());
+    loadTownSettlements().then(() => loadTownSquare());
     loadPcSheets();
     loadNpcSheets();
     loadPanel();
