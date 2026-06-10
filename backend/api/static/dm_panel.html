@@ -327,6 +327,12 @@
       color: #fff8ef;
     }
 
+    .tool-dock-button.is-play-jump {
+      font-weight: 900;
+      font-size: 0.82rem;
+      letter-spacing: 0;
+    }
+
     .tool-drawer {
       pointer-events: auto;
       position: fixed;
@@ -1420,6 +1426,13 @@
       align-items: start;
     }
 
+    .combat-body {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
     .combat-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -1430,18 +1443,25 @@
     .combat-turn-panel {
       display: grid;
       gap: 10px;
-      margin-top: 12px;
+      position: sticky;
+      top: 88px;
+      margin-top: 0;
       padding: 12px;
       border: 1px solid rgba(90, 71, 59, 0.14);
       border-radius: 16px;
       background: rgba(255, 252, 246, 0.82);
+      max-height: calc(100vh - 110px);
     }
 
     .combat-turn-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
+      display: grid;
+      gap: 7px;
+    }
+
+    .combat-turn-actions button {
+      width: 100%;
+      min-height: 38px;
+      padding-inline: 8px;
     }
 
     .combat-roster {
@@ -1451,6 +1471,52 @@
       background: rgba(255, 252, 246, 0.92);
       max-height: min(78vh, 920px);
       padding: 10px;
+    }
+
+    .combat-table {
+      width: 100%;
+      min-width: 1120px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .combat-table th,
+    .combat-table td {
+      padding: 7px 7px;
+      border-bottom: 1px solid rgba(90, 71, 59, 0.12);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .combat-table th {
+      color: var(--accent);
+      font-size: 0.76rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .combat-table .combat-col-enemy {
+      width: 18%;
+    }
+
+    .combat-table .combat-col-init {
+      width: 8%;
+    }
+
+    .combat-table .combat-col-hp {
+      width: 15%;
+    }
+
+    .combat-table .combat-col-speed {
+      width: 7%;
+    }
+
+    .combat-table .combat-col-attacks {
+      width: 23%;
+    }
+
+    .combat-table .combat-col-abilities {
+      width: 29%;
     }
 
     .combat-initiative-strip {
@@ -1504,7 +1570,7 @@
     .combat-card-summary {
       width: 100%;
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) auto auto minmax(120px, auto);
+      grid-template-columns: 44px minmax(180px, 1fr) auto auto minmax(120px, auto);
       gap: 10px;
       align-items: center;
       min-height: 52px;
@@ -1550,6 +1616,38 @@
       flex-wrap: wrap;
       justify-content: flex-end;
       gap: 5px;
+    }
+
+    .combat-summary-portrait,
+    .combat-summary-portrait-placeholder {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(90, 71, 59, 0.16);
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: inset 0 0 0 1px rgba(255, 248, 239, 0.75);
+    }
+
+    .combat-summary-portrait {
+      display: block;
+      object-fit: cover;
+    }
+
+    .combat-summary-portrait.is-monster {
+      object-fit: contain;
+    }
+
+    .combat-summary-portrait-placeholder {
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-weight: 900;
+      font-size: 0.76rem;
+      letter-spacing: 0.02em;
+      background:
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.92), transparent 44%),
+        linear-gradient(145deg, rgba(142, 52, 29, 0.18), rgba(217, 192, 145, 0.38));
     }
 
     .combat-card-body {
@@ -1672,16 +1770,15 @@
 
     .combat-hp-line {
       display: grid;
-      grid-template-columns: auto minmax(58px, 1fr) auto minmax(58px, 1fr);
-      gap: 5px;
+      grid-template-columns: 1fr;
+      gap: 4px;
       align-items: center;
     }
 
     .combat-hp-buttons {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 30px);
       gap: 3px;
-      grid-column: 1 / -1;
     }
 
     .combat-hp-value {
@@ -1697,10 +1794,12 @@
     }
 
     .combat-hp-btn {
-      min-height: 26px;
-      padding: 3px 5px;
+      min-width: 30px;
+      min-height: 24px;
+      padding: 2px 0;
       border-radius: 7px;
-      font-size: 0.76rem;
+      font-size: 0.72rem;
+      text-align: center;
     }
 
     .combat-defense-line {
@@ -1717,6 +1816,45 @@
       color: var(--ink-soft);
       font-size: 0.86rem;
       line-height: 1.45;
+    }
+
+    .combat-table-identity {
+      display: grid;
+      grid-template-columns: 46px minmax(120px, 1fr);
+      gap: 9px;
+      align-items: center;
+      min-width: 180px;
+    }
+
+    .combat-table-portrait,
+    .combat-table-portrait-placeholder {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(90, 71, 59, 0.16);
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: inset 0 0 0 1px rgba(255, 248, 239, 0.75);
+    }
+
+    .combat-table-portrait {
+      display: block;
+      object-fit: cover;
+    }
+
+    .combat-table-portrait.is-monster {
+      object-fit: contain;
+    }
+
+    .combat-table-portrait-placeholder {
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      background:
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.92), transparent 44%),
+        linear-gradient(145deg, rgba(142, 52, 29, 0.18), rgba(217, 192, 145, 0.38));
     }
 
     .combat-init-cell {
@@ -1737,7 +1875,7 @@
 
     .combat-action-list {
       display: grid;
-      gap: 8px;
+      gap: 6px;
     }
 
     .combat-action-group {
@@ -1757,6 +1895,53 @@
       color: var(--ink-soft);
       font-size: 0.86rem;
       line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .combat-ability-hint {
+      position: relative;
+      border: 0;
+      border-bottom: 1px dotted rgba(138, 47, 29, 0.55);
+      border-radius: 0;
+      padding: 0;
+      background: transparent;
+      color: var(--accent);
+      cursor: help;
+      font: inherit;
+      font-weight: 800;
+      text-align: left;
+    }
+
+    .combat-ability-tooltip {
+      position: absolute;
+      z-index: 45;
+      left: 0;
+      bottom: calc(100% + 8px);
+      display: none;
+      width: min(340px, 72vw);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(90, 71, 59, 0.18);
+      background: rgba(33, 24, 20, 0.96);
+      color: #fff8ef;
+      box-shadow: 0 14px 30px rgba(44, 27, 17, 0.24);
+      font-size: 0.82rem;
+      font-weight: 500;
+      line-height: 1.45;
+      text-align: left;
+      white-space: normal;
+    }
+
+    .combat-ability-hint:hover .combat-ability-tooltip,
+    .combat-ability-hint:focus-visible .combat-ability-tooltip {
+      display: block;
+    }
+
+    .combat-speed-cell {
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
     }
 
     .combat-condition-stack {
@@ -2206,6 +2391,20 @@
         grid-template-columns: 1fr;
       }
 
+      .combat-body {
+        grid-template-columns: 1fr;
+      }
+
+      .combat-turn-panel {
+        position: sticky;
+        top: 12px;
+        z-index: 5;
+      }
+
+      .combat-turn-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
       .combat-picker {
         grid-template-columns: 1fr;
       }
@@ -2500,7 +2699,7 @@
         <article class="panel full-width module-current-combat" data-module-id="current-combat">
           <h2>Current Combat</h2>
           <div class="combat-layout">
-            <div>
+            <div class="combat-controls">
               <p class="subtle">
                 Run a PF2e encounter from a Map Room card or selected AoN creature: initiative, turns, HP, conditions, tactics, and knowledge prompts in one place.
               </p>
@@ -2511,17 +2710,6 @@
                 <button type="button" class="ghost" id="combat-roll-all">Roll All Initiative</button>
                 <button type="button" class="ghost" id="combat-sort-initiative">Order By Initiative</button>
                 <button type="button" class="secondary" id="combat-clear">Clear Combat</button>
-              </div>
-              <div class="combat-turn-panel" id="combat-turn-panel">
-                <div class="stat-line" id="combat-turn-meta">
-                  <span class="stat-badge">Round 1</span>
-                  <span class="stat-badge">No active turn</span>
-                </div>
-                <div class="combat-turn-actions">
-                  <button type="button" class="ghost" id="combat-prev-turn">Previous Turn</button>
-                  <button type="button" id="combat-next-turn">Next Turn</button>
-                  <button type="button" class="ghost" id="combat-reset-round">Reset Round</button>
-                </div>
               </div>
               <div class="combat-picker">
                 <label>
@@ -2543,8 +2731,21 @@
                 <span class="stat-badge">No combat loaded</span>
               </div>
             </div>
-            <div class="combat-roster" id="combat-roster">
-              <div class="empty">Open a room in Map Room, then start combat from it.</div>
+            <div class="combat-body">
+              <div class="combat-turn-panel" id="combat-turn-panel">
+                <div class="stat-line" id="combat-turn-meta">
+                  <span class="stat-badge">Round 1</span>
+                  <span class="stat-badge">No active turn</span>
+                </div>
+                <div class="combat-turn-actions">
+                  <button type="button" class="ghost" id="combat-prev-turn">Previous Turn</button>
+                  <button type="button" id="combat-next-turn">Next Turn</button>
+                  <button type="button" class="ghost" id="combat-reset-round">Reset Round</button>
+                </div>
+              </div>
+              <div class="combat-roster" id="combat-roster">
+                <div class="empty">Open a room in Map Room, then start combat from it.</div>
+              </div>
             </div>
           </div>
         </article>
@@ -3562,14 +3763,24 @@
     function renderToolChrome() {
       const pinned = loadPinnedToolIds();
       const dock = document.getElementById("tool-dock");
-      dock.innerHTML = pinned.map((id) => {
+      const dockButtons = pinned.flatMap((id) => {
         const tool = toolDefinition(id);
-        return `
+        const buttons = [`
           <button type="button" class="tool-dock-button ${activeToolId === id ? "is-active" : ""}" data-label="${escapeHtml(tool.title)}" data-open-tool="${tool.id}" title="${escapeHtml(tool.title)}" aria-label="Open ${escapeHtml(tool.title)}">
             ${iconSvg(tool.icon)}
           </button>
-        `;
-      }).join("");
+        `];
+        if (id === "dice-roller") {
+          buttons.push(`
+            <button type="button" class="tool-dock-button is-play-jump" data-label="Map Room" data-focus-module="map-room" title="Go to Map Room" aria-label="Go to Map Room">Map</button>
+          `);
+          buttons.push(`
+            <button type="button" class="tool-dock-button is-play-jump" data-label="Current Combat" data-focus-module="current-combat" title="Go to Current Combat" aria-label="Go to Current Combat">Combat</button>
+          `);
+        }
+        return buttons;
+      });
+      dock.innerHTML = dockButtons.join("");
       document.getElementById("tool-menu-list").innerHTML = toolDefinitions.map((tool) => {
         const isPinned = pinned.includes(tool.id);
         const pinIndex = pinned.indexOf(tool.id);
@@ -5357,7 +5568,7 @@
 
     function renderLiteralRoomSections(room) {
       const literal = roomLiteralParts(room);
-      if (!literal.player && !literal.gm) {
+      if (!literal.player && !literal.additional && !literal.gm) {
         return `
           <div class="room-card-section">
             <strong>Literal PDF text</strong>
@@ -5366,25 +5577,27 @@
         `;
       }
       return `
-        <div class="room-card-section">
-          <strong>Read-aloud text</strong>
-          ${literal.player ? `
+        ${literal.player ? `
+          <div class="room-card-section">
+            <strong>Read-aloud text</strong>
             <div class="room-readaloud-toolbar">
               <button type="button" class="ghost" data-room-read-aloud="${escapeHtml(room.room_id || "")}">Read Aloud</button>
             </div>
-          ` : ""}
-          <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player || "No read-aloud text stored for this room.", "readaloud")}</div>
-        </div>
+            <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player, "readaloud")}</div>
+          </div>
+        ` : ""}
         ${literal.additional ? `
           <div class="room-card-section">
             <strong>General room text</strong>
             <div class="room-literal-text room-literal-block room-literal-general">${formatLiteralText(literal.additional, "general")}</div>
           </div>
         ` : ""}
-        <div class="room-card-section">
-          <strong>Encounter text</strong>
-          <div class="room-literal-text room-literal-block room-literal-encounter">${formatLiteralText(literal.gm || "No encounter text stored for this room.", "encounter")}</div>
-        </div>
+        ${literal.gm ? `
+          <div class="room-card-section">
+            <strong>Encounter text</strong>
+            <div class="room-literal-text room-literal-block room-literal-encounter">${formatLiteralText(literal.gm, "encounter")}</div>
+          </div>
+        ` : ""}
       `;
     }
 
@@ -5595,6 +5808,7 @@
     function combatantFromCampaignBestiaryEntry(entry, { room = {}, count = 1, forceHazard = false } = {}) {
       const combat = entry.combat || {};
       const entryType = entry.entry_type || "creature";
+      const roomEncounterText = roomLiteralParts(room).gm || "";
       if (entryType === "affliction") {
         return null;
       }
@@ -5627,7 +5841,7 @@
         speed: combat.speed || "",
         attacks: combat.attacks || [],
         abilities: combat.abilities || [],
-        detail: campaignBestiaryDetailText(entry),
+        detail: roomEncounterText || campaignBestiaryDetailText(entry),
         bestiaryId: entry.id,
       });
     }
@@ -5644,7 +5858,7 @@
         traits: entry.traits || [],
         source: "Campaign Bestiary AoN reference",
         sourceUrl: "",
-        imageUrl: "",
+        imageUrl: entry.portrait || "",
         aonCreatureId: entry.aon_creature_id || null,
         aonLookupName: entry.aon_name || entry.name || "",
         initiative: "",
@@ -5754,6 +5968,33 @@
       currentCombat.combatants = labelDuplicateCombatants(refreshed);
       syncActiveCombatExpansion();
       commitCombatState();
+    }
+
+    function refreshCombatantImagesFromBestiary({ commit = true } = {}) {
+      if (!currentCombat.combatants?.length || !campaignBestiaryEntries.length) return false;
+      let changed = false;
+      currentCombat.combatants = currentCombat.combatants.map((combatant) => {
+        if (combatant.kind === "pc" || combatant.imageUrl || !combatant.bestiaryId) {
+          return combatant;
+        }
+        const entry = bestiaryEntryById(combatant.bestiaryId);
+        const imageUrl = entry?.portrait || entry?.image?.url || "";
+        if (!imageUrl) {
+          return combatant;
+        }
+        changed = true;
+        return {
+          ...combatant,
+          imageUrl,
+        };
+      });
+      if (!changed) return false;
+      currentCombat.combatants = labelDuplicateCombatants(currentCombat.combatants);
+      syncActiveCombatExpansion();
+      if (commit) {
+        commitCombatState();
+      }
+      return true;
     }
 
     function withCombatHp(combatant) {
@@ -6529,6 +6770,96 @@
       return combatant.abilities || [];
     }
 
+    const combatAbilityFallbacks = {
+      "attack of opportunity": "Reaction to strike a creature that creates an opening, such as moving away or using certain manipulate actions. In remastered rules this is usually called Reactive Strike.",
+      "reactive strike": "Reaction to strike a creature that creates an opening, such as moving away or using certain manipulate actions.",
+      constrict: "After grabbing or restraining a target, the creature deals listed damage, usually with a basic Fortitude save if specified.",
+      "consume flesh": "The creature eats flesh from a nearby corpse or victim to regain Hit Points, if its stat block allows it.",
+      darkvision: "A creature with darkvision can see in total darkness, usually to a range of 60 feet. Within this range, the creature can see as clearly as a sighted creature could see in an area of bright light. Darkvision is black and white only but otherwise like normal sight.",
+      "death throes": "An effect that happens when the creature is destroyed or dies. Check the stat block for area, damage, and saves.",
+      "ghoul fever": "Disease delivered by some ghoul attacks. It usually involves Fortitude saves over time and can lead toward paralysis, death, or rising as a ghoul depending on the stat block.",
+      grab: "Requirements: The creature's last action was a successful Strike that lists Grab in its damage entry, or it has a creature grabbed using this action. Effect: The target becomes grabbed until the end of the creature's next turn.",
+      "greater darkvision": "A creature with greater darkvision can see perfectly well in areas of darkness and dim light, though such vision is in black and white only. Greater darkvision can see through even forms of magical darkness.",
+      "light blindness": "When first exposed to bright light, the creature is blinded until the end of its next turn. After this exposure, light does not blind the creature again until after it spends 1 hour in darkness. However, as long as the creature is in an area of bright light, it is dazzled.",
+      "negative healing": "A creature with negative healing draws health from negative energy rather than positive energy. It is damaged by positive damage and not healed by positive healing effects; negative effects heal it if they would heal undead.",
+      paralysis: "Can make a target paralyzed, usually after a failed Fortitude save. Paralyzed creatures are off-guard and can barely act.",
+      pounce: "Usually lets the creature Stride and then Strike, often with an extra benefit if the Strike hits.",
+      poison: "A toxin delivered by an attack or effect. Use the stat block for DC, onset, stages, duration, and damage.",
+      rend: "If the creature hit the same target with the required attacks this turn, it deals extra listed damage.",
+      "sneak attack": "Deals extra precision damage to off-guard targets or targets otherwise vulnerable to the creature's precision damage.",
+      "swallow whole": "After grabbing a smaller target with jaws or a similar attack, the creature can swallow it, dealing ongoing internal damage until the target escapes.",
+      "undead immunities": "Undead creatures are generally immune to death effects, disease, paralyzed, poison, sleep, and unconscious. Use the creature's Immunities line if it lists a more specific set.",
+    };
+
+    function normalizeAbilityName(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\[[^\]]+\]/g, "")
+        .replace(/\([^)]*\)/g, "")
+        .replace(/[^a-z0-9\s'-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function abilityExplanationFromDetail(ability, combatant) {
+      const name = normalizeAbilityName(ability);
+      if (!name) return "";
+      const detail = normalizedCombatText(combatant.detail || combatant.content || "");
+      if (!detail) return "";
+      const words = name.split(/\s+/).filter(Boolean).map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      if (words.length) {
+        const startPattern = new RegExp(`\\b${words.join("\\s+")}\\b`, "i");
+        const startMatch = startPattern.exec(detail);
+        if (startMatch) {
+          const rest = detail.slice(startMatch.index);
+          const headingPattern = /\n(?=[A-Z][A-Za-z' -]{2,}(?:\s+\[[^\]]+\])?(?:\s+\([^)]+\))?(?:\s+(?:Requirements|Trigger|Frequency|Effect|Saving Throw)\b|\s*$))/g;
+          const next = headingPattern.exec(rest.slice(Math.max(24, startMatch[0].length + 8)));
+          const block = (next ? rest.slice(0, Math.max(24, startMatch[0].length + 8) + next.index) : rest.slice(0, 900))
+            .replace(/\s*\n\s*/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          if (block.length > String(ability).length + 12) {
+            return block;
+          }
+        }
+      }
+      const lines = detail.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      const direct = lines.find((line) => normalizeAbilityName(line).startsWith(name));
+      if (direct && direct.length > String(ability).length + 8) {
+        return direct;
+      }
+      const inline = lines.find((line) => {
+        const normalized = normalizeAbilityName(line);
+        return normalized.includes(`${name} `) && line.length > String(ability).length + 20;
+      });
+      return inline || "";
+    }
+
+    function abilityExplanation(ability, combatant) {
+      return abilityExplanationFromDetail(ability, combatant)
+        || combatAbilityFallbacks[normalizeAbilityName(ability)]
+        || "";
+    }
+
+    function renderAbilityLines(combatant) {
+      const lines = combatAbilityList(combatant);
+      if (!lines?.length) return '<div class="combat-action-line">-</div>';
+      return lines.map((line) => {
+        const explanation = abilityExplanation(line, combatant);
+        if (!explanation) {
+          return `<div class="combat-action-line">${escapeHtml(line)}</div>`;
+        }
+        return `
+          <div class="combat-action-line">
+            <button type="button" class="combat-ability-hint" title="${escapeHtml(explanation)}">
+              ${escapeHtml(line)}
+              <span class="combat-ability-tooltip" role="tooltip">${escapeHtml(explanation)}</span>
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+
     function renderCombatInitiative(combatant, combatantIndex) {
       const bonus = initiativeBonus(combatant);
       combatant.initiativeBonus = bonus;
@@ -6776,6 +7107,7 @@
       return `
         <article class="combat-card ${active ? "is-active" : ""}">
           <button type="button" class="combat-card-summary" data-combat-toggle="${combatantIndex}">
+            ${renderCombatSummaryPortrait(combatant)}
             <span class="combat-card-name">
               ${duplicateBadge}
               <strong>${escapeHtml(displayName)}</strong>
@@ -6797,6 +7129,34 @@
         .slice(0, 2)
         .map((part) => part[0]?.toUpperCase() || "")
         .join("") || "?";
+    }
+
+    function renderCombatSummaryPortrait(combatant) {
+      const imageUrl = combatant.kind === "pc"
+        ? combatant.portraitUrl
+        : combatant.imageUrl;
+      const displayName = combatantDisplayName(combatant);
+      if (!imageUrl) {
+        return `<span class="combat-summary-portrait-placeholder" aria-label="No portrait for ${escapeHtml(displayName)}">${escapeHtml(combatantInitials(combatant))}</span>`;
+      }
+      const className = combatant.kind === "pc"
+        ? "combat-summary-portrait"
+        : "combat-summary-portrait is-monster";
+      return `<img class="${className}" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(displayName)} portrait" loading="lazy" />`;
+    }
+
+    function renderCombatTablePortrait(combatant) {
+      const imageUrl = combatant.kind === "pc"
+        ? combatant.portraitUrl
+        : combatant.imageUrl;
+      const displayName = combatantDisplayName(combatant);
+      if (!imageUrl) {
+        return `<span class="combat-table-portrait-placeholder" aria-label="No portrait for ${escapeHtml(displayName)}">${escapeHtml(combatantInitials(combatant))}</span>`;
+      }
+      const className = combatant.kind === "pc"
+        ? "combat-table-portrait"
+        : "combat-table-portrait is-monster";
+      return `<img class="${className}" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(displayName)} portrait" loading="lazy" />`;
     }
 
     function renderCombatPortrait(combatant) {
@@ -7119,7 +7479,7 @@
 
     function renderLiteralRoomSections(room) {
       const literal = roomLiteralParts(room);
-      if (!literal.player && !literal.gm) {
+      if (!literal.player && !literal.additional && !literal.gm) {
         return `
           <div class="room-card-section">
             <strong>Literal PDF text</strong>
@@ -7128,20 +7488,24 @@
         `;
       }
       return `
-        <div class="room-card-section">
-          <strong>Read-aloud text</strong>
-          <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player || "No read-aloud text stored for this room.", "readaloud")}</div>
-        </div>
+        ${literal.player ? `
+          <div class="room-card-section">
+            <strong>Read-aloud text</strong>
+            <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player, "readaloud")}</div>
+          </div>
+        ` : ""}
         ${literal.additional ? `
           <div class="room-card-section">
             <strong>General room text</strong>
             <div class="room-literal-text room-literal-block room-literal-general">${formatLiteralText(literal.additional, "general")}</div>
           </div>
         ` : ""}
-        <div class="room-card-section">
-          <strong>Encounter text</strong>
-          <div class="room-literal-text room-literal-block room-literal-encounter">${formatLiteralText(literal.gm || "No encounter text stored for this room.", "encounter")}</div>
-        </div>
+        ${literal.gm ? `
+          <div class="room-card-section">
+            <strong>Encounter text</strong>
+            <div class="room-literal-text room-literal-block room-literal-encounter">${formatLiteralText(literal.gm, "encounter")}</div>
+          </div>
+        ` : ""}
       `;
     }
 
@@ -7269,6 +7633,10 @@
     }
 
     function combatantsFromRoom(room) {
+      const referencedCombatants = combatantsFromRoomRefs(room);
+      if (referencedCombatants.length) {
+        return referencedCombatants;
+      }
       const literal = roomLiteralParts(room);
       const combatants = combatBlocksFromEncounterText(literal.gm)
         .map((block) => combatantFromBlock(block, room))
@@ -7462,10 +7830,12 @@
         return `
           <div class="combat-hp-line">
             <span class="combat-hp-value">${escapeHtml(label + hpText)}</span>
-            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-1">-1</button>
-            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-5">-5</button>
-            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-10">-10</button>
-            <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="1">+1</button>
+            <div class="combat-hp-buttons">
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-1">-1</button>
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-5">-5</button>
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-10">-10</button>
+              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="1">+1</button>
+            </div>
           </div>
         `;
       }).join("");
@@ -7578,14 +7948,19 @@
       return `
         <tr>
           <td>
-            <div class="combat-name">${escapeHtml(combatant.name)}</div>
-            <div class="combat-quickline">${escapeHtml(levelLabel)}</div>
+            <div class="combat-table-identity">
+              ${renderCombatTablePortrait(combatant)}
+              <div>
+                <div class="combat-name">${escapeHtml(combatantDisplayName(combatant))}</div>
+                <div class="combat-quickline">${escapeHtml(levelLabel)}</div>
+              </div>
+            </div>
           </td>
           <td>${renderCombatInitiative(combatant, combatantIndex)}</td>
           <td>${renderCombatHp(combatant, combatantIndex)}</td>
-          <td>${escapeHtml(combatant.speed || "-")}</td>
-          <td><div class="combat-action-list">${renderActionLines(combatAttackList(combatant))}</div></td>
-          <td><div class="combat-action-list">${renderActionLines(combatAbilityList(combatant))}</div></td>
+          <td class="combat-speed-cell">${escapeHtml(combatant.speed || "-")}</td>
+          <td class="combat-attacks-cell"><div class="combat-action-list">${renderActionLines(combatAttackList(combatant))}</div></td>
+          <td class="combat-abilities-cell"><div class="combat-action-list">${renderAbilityLines(combatant)}</div></td>
         </tr>
       `;
     }
@@ -7607,6 +7982,14 @@
       `;
       roster.innerHTML = `
         <table class="combat-table">
+          <colgroup>
+            <col class="combat-col-enemy" />
+            <col class="combat-col-init" />
+            <col class="combat-col-hp" />
+            <col class="combat-col-speed" />
+            <col class="combat-col-attacks" />
+            <col class="combat-col-abilities" />
+          </colgroup>
           <thead>
             <tr>
               <th class="combat-col-enemy">Enemy</th>
@@ -8168,6 +8551,9 @@
         campaignBestiaryEntries = payload.items || [];
         renderBestiaryOverview();
         renderBestiaryList();
+        if (refreshCombatantImagesFromBestiary({ commit: false })) {
+          commitCombatState();
+        }
         if (activeRoomKey) renderRoomKey();
       } catch (error) {
         campaignBestiaryEntries = [];
@@ -9883,6 +10269,7 @@
     function hydrateCombatState(snapshot) {
       currentCombat = normalizedCombatState(snapshot?.state?.combat_state);
       refreshPartyCombatantsFromSheets();
+      refreshCombatantImagesFromBestiary({ commit: false });
       void refreshMonsterCombatantsFromAon();
       renderCombatPanel();
     }
@@ -10655,6 +11042,11 @@
       }
     });
     document.getElementById("tool-dock").addEventListener("click", (event) => {
+      const focusButton = event.target.closest("[data-focus-module]");
+      if (focusButton) {
+        focusModule(focusButton.dataset.focusModule);
+        return;
+      }
       const button = event.target.closest("[data-open-tool]");
       if (button) {
         openTool(button.dataset.openTool);
