@@ -51,3 +51,11 @@
 ## Agent-Specific Instructions
 - Start by reading `README.md` and `docs/` files; implement by roadmap phase.
 - Make small, verifiable PRs; add tests first. Prefer deterministic fixtures for LLM/RAG behaviors.
+- Private campaign data now uses the root overlay: `local-private-overlay/project-root/`.
+  When default paths are configured, code should prefer that overlay in place
+  and must not require copying/unpacking it into `assets/imports/...`.
+  Collaborators must manually obtain the latest ignored `local-private-overlay/`
+  bundle outside GitHub whenever updating local DMA data.
+- Current Combat must remain the richer card-based module. Do not reintroduce,
+  resurrect, or route to the older table-based combat UI; move any needed
+  functionality into the card-based module instead.

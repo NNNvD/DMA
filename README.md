@@ -85,6 +85,27 @@ usually has `python3`; on Windows, PowerShell usually has `python` or `py`.
 Keep local machine paths in `.env` rather than source files so the same repo can
 be used from both your MacBook Pro and Windows PC.
 
+### Private campaign overlay: required manual step
+
+The GitHub repository does **not** contain private campaign assets. Collaborators
+must manually acquire the latest `local-private-overlay/` bundle from the GM or
+the approved private distribution channel after pulling GitHub updates.
+
+Place it at the repository root:
+
+```text
+DMA-main/local-private-overlay/project-root/
+```
+
+Do **not** copy or unpack this overlay into `assets/imports/...`. When `.env`
+uses the default local paths, DMA automatically prefers the root overlay for the
+private data, Obsidian vault, maps, PDFs, room keys, and bestiary images. If
+anything looks stale, update GitHub **and** manually refresh
+`local-private-overlay/`.
+
+Current Combat is the card-based combat module only. Do not restore the older
+table-based combat UI when updating or resolving conflicts.
+
 macOS/Linux:
 
 ```bash

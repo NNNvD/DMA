@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config.settings import settings
+from backend.config.local_paths import private_child_root, project_path, vault_root
 from backend.models.base import get_db
 from backend.services.campaign_service import campaign_service
 from backend.services.aon_creature_service import aon_creature_service
@@ -245,10 +246,7 @@ def _project_root() -> Path:
 
 
 def _configured_path(value: str) -> Path:
-    path = Path(value).expanduser()
-    if not path.is_absolute():
-        path = _project_root() / path
-    return path.resolve()
+    return project_path(_project_root(), value)
 
 
 def _safe_child(root: Path, relative_path: str) -> Path:
@@ -262,7 +260,7 @@ def _safe_child(root: Path, relative_path: str) -> Path:
 
 
 def _vault_root() -> Path:
-    return _configured_path(settings.obsidian_vault_path)
+    return vault_root(_project_root(), settings.obsidian_vault_path)
 
 
 def _ensure_vault_note(relative_path: str, default_content: str) -> Path:
@@ -346,15 +344,27 @@ def _resolve_vault_note(root: Path, target: str) -> Path | None:
 
 
 def _pdf_root() -> Path:
-    return _configured_path(settings.reference_pdf_root)
+    return private_child_root(
+        project_root=_project_root(),
+        configured=settings.reference_pdf_root,
+        legacy_child=Path("reference/raw"),
+    )
 
 
 def _map_root() -> Path:
-    return _configured_path(settings.dungeon_map_root)
+    return private_child_root(
+        project_root=_project_root(),
+        configured=settings.dungeon_map_root,
+        legacy_child=Path("media"),
+    )
 
 
 def _room_key_root() -> Path:
-    return _configured_path(settings.dungeon_room_key_root)
+    return private_child_root(
+        project_root=_project_root(),
+        configured=settings.dungeon_room_key_root,
+        legacy_child=Path("room-keys"),
+    )
 
 
 def _bestiary_root() -> Path:
@@ -369,7 +379,7 @@ def _settlements_payload() -> dict[str, Any]:
 
 
 def _vault_root() -> Path:
-    return _configured_path(settings.obsidian_vault_path)
+    return vault_root(_project_root(), settings.obsidian_vault_path)
 
 
 def _map_id_from_path(path: Path) -> str:
@@ -1403,14 +1413,33 @@ def _class_dc(payload: dict) -> int | None:
 
 def _pc_hit_points(payload: dict) -> int | None:
     vitals = payload.get("vitals") or {}
-    level = payload.get("level")
-    ancestry_hp = vitals.get("ancestry_hp")
-    class_hp = vitals.get("class_hp")
-    bonus_hp = vitals.get("bonus_hp") or 0
-    bonus_per_level = vitals.get("bonus_hp_per_level") or 0
+    return _pc_hit_points_from_parts(
+        level=payload.get("level"),
+        ancestry_hp=vitals.get("ancestry_hp"),
+        class_hp=vitals.get("class_hp"),
+        con_score=_score(payload, "con"),
+        bonus_hp=vitals.get("bonus_hp") or 0,
+        bonus_hp_per_level=vitals.get("bonus_hp_per_level") or 0,
+    )
+
+
+def _pc_hit_points_from_parts(
+    *,
+    level: int | None,
+    ancestry_hp: int | None,
+    class_hp: int | None,
+    con_score: int | None,
+    bonus_hp: int = 0,
+    bonus_hp_per_level: int = 0,
+) -> int | None:
     if not all(isinstance(value, int) for value in [level, ancestry_hp, class_hp]):
         return None
-    return ancestry_hp + (class_hp * level) + bonus_hp + (bonus_per_level * level)
+    con_modifier = _modifier(con_score) or 0
+    return (
+        ancestry_hp
+        + ((class_hp + con_modifier + bonus_hp_per_level) * level)
+        + bonus_hp
+    )
 
 
 def _skill_ability(skill_key: str) -> str:
@@ -1803,7 +1832,43 @@ def _private_campaign_item_view(item: dict[str, Any]) -> dict[str, Any]:
         image["url"] = portrait
     if image:
         view["image"] = image
+    _normalize_private_pc_hit_points(view)
     return view
+
+
+def _normalize_private_pc_hit_points(view: dict[str, Any]) -> None:
+    identity = view.get("identity") if isinstance(view.get("identity"), dict) else {}
+    combat = view.get("combat") if isinstance(view.get("combat"), dict) else {}
+    raw = view.get("raw") if isinstance(view.get("raw"), dict) else {}
+    vitals = raw.get("vitals") if isinstance(raw.get("vitals"), dict) else {}
+    level = _int_value(identity.get("level") or raw.get("level"))
+    ancestry_hp = _int_value(vitals.get("ancestry_hp"))
+    class_hp = _int_value(vitals.get("class_hp"))
+    if not all(isinstance(value, int) for value in [level, ancestry_hp, class_hp]):
+        return
+    bonus_hp = _int_value(vitals.get("bonus_hp")) or 0
+    bonus_per_level = _int_value(vitals.get("bonus_hp_per_level")) or 0
+    abilities = view.get("abilities") if isinstance(view.get("abilities"), list) else []
+    con_score = next(
+        (
+            _int_value(ability.get("score"))
+            for ability in abilities
+            if isinstance(ability, dict) and str(ability.get("key") or "").casefold() == "con"
+        ),
+        None,
+    )
+    current_hp = _int_value(combat.get("hp"))
+    corrected_hp = _pc_hit_points_from_parts(
+        level=level,
+        ancestry_hp=ancestry_hp,
+        class_hp=class_hp,
+        con_score=con_score,
+        bonus_hp=bonus_hp,
+        bonus_hp_per_level=bonus_per_level,
+    )
+    if corrected_hp is not None and current_hp != corrected_hp:
+        combat["hp"] = corrected_hp
+        view["combat"] = combat
 
 
 def _pc_sheet_view(entity: dict) -> dict:

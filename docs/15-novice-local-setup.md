@@ -204,6 +204,15 @@ DUNGEON_MAP_ROOT=./assets/imports/misc/private-local/media
 DUNGEON_ROOM_KEY_ROOT=./assets/imports/misc/private-local/room-keys
 ```
 
+If the private bundle is present at `./local-private-overlay/project-root/`, the
+backend automatically prefers that root overlay for the default private data,
+vault, map, PDF, and room-key paths. Keep custom `.env` paths only when you want
+to override the local overlay.
+
+For collaborators: manually obtain the latest `local-private-overlay/` folder
+from the GM or approved private distribution channel and place it at the repo
+root. Do not copy it into `assets/imports/...`; DMA reads it in place.
+
 If `DATABASE_URL` says `./dma.db`, change it to `./dma-abomination-vaults.db`.
 
 You do not need an OpenAI API key for the basic local panel to open. Leave:
@@ -463,8 +472,12 @@ When the GM says there is an update:
 2. Open the DMA repository.
 3. Click `Fetch origin`.
 4. Click `Pull origin` if GitHub Desktop offers it.
-5. If the GM also gives you a new `private-local` folder, replace your old `assets/imports/misc/private-local` folder only if instructed, then repeat Step 8.
-6. Start DMA again.
+5. Ask whether there is a new private overlay. If there is, manually replace
+   your ignored root `local-private-overlay/` folder with the latest version from
+   the GM or approved private distribution channel.
+6. Do not copy the overlay into `assets/imports/...`; leave it at
+   `DMA-main/local-private-overlay/project-root/`.
+7. Start DMA again.
 
 ## Important Copyright Reminder
 

@@ -333,6 +333,11 @@
       letter-spacing: 0;
     }
 
+    .tool-dock-button.is-play-jump .shell-icon {
+      width: 24px;
+      height: 24px;
+    }
+
     .tool-drawer {
       pointer-events: auto;
       position: fixed;
@@ -1473,52 +1478,6 @@
       padding: 10px;
     }
 
-    .combat-table {
-      width: 100%;
-      min-width: 1120px;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-    .combat-table th,
-    .combat-table td {
-      padding: 7px 7px;
-      border-bottom: 1px solid rgba(90, 71, 59, 0.12);
-      text-align: left;
-      vertical-align: top;
-    }
-
-    .combat-table th {
-      color: var(--accent);
-      font-size: 0.76rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .combat-table .combat-col-enemy {
-      width: 18%;
-    }
-
-    .combat-table .combat-col-init {
-      width: 8%;
-    }
-
-    .combat-table .combat-col-hp {
-      width: 15%;
-    }
-
-    .combat-table .combat-col-speed {
-      width: 7%;
-    }
-
-    .combat-table .combat-col-attacks {
-      width: 23%;
-    }
-
-    .combat-table .combat-col-abilities {
-      width: 29%;
-    }
-
     .combat-initiative-strip {
       display: flex;
       gap: 7px;
@@ -1635,7 +1594,7 @@
     }
 
     .combat-summary-portrait.is-monster {
-      object-fit: contain;
+      object-fit: cover;
     }
 
     .combat-summary-portrait-placeholder {
@@ -1652,14 +1611,14 @@
 
     .combat-card-body {
       display: grid;
-      grid-template-columns: 92px 120px 250px 100px minmax(220px, 1fr) minmax(220px, 1fr);
+      grid-template-columns: 92px 130px minmax(190px, 210px) 100px minmax(220px, 1fr) minmax(220px, 1fr);
       gap: 12px;
       padding: 0 12px 12px;
       align-items: start;
     }
 
     .combat-card-body.is-pc {
-      grid-template-columns: 92px 120px 230px 80px minmax(260px, 1fr);
+      grid-template-columns: 92px 130px minmax(190px, 210px) 80px minmax(260px, 1fr);
     }
 
     .combat-card-reference {
@@ -1677,7 +1636,7 @@
     }
 
     .combat-portrait.is-monster {
-      object-fit: contain;
+      object-fit: cover;
       background: rgba(255, 255, 255, 0.72);
     }
 
@@ -1770,15 +1729,17 @@
 
     .combat-hp-line {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: max-content 52px max-content 52px;
       gap: 4px;
       align-items: center;
+      justify-content: start;
     }
 
     .combat-hp-buttons {
       display: grid;
       grid-template-columns: repeat(4, 30px);
       gap: 3px;
+      grid-column: 1 / -1;
     }
 
     .combat-hp-value {
@@ -1790,7 +1751,8 @@
     .combat-hp-input {
       min-height: 30px;
       padding: 4px 6px;
-      width: 100%;
+      width: 52px;
+      max-width: 52px;
     }
 
     .combat-hp-btn {
@@ -1818,48 +1780,16 @@
       line-height: 1.45;
     }
 
-    .combat-table-identity {
-      display: grid;
-      grid-template-columns: 46px minmax(120px, 1fr);
-      gap: 9px;
-      align-items: center;
-      min-width: 180px;
-    }
-
-    .combat-table-portrait,
-    .combat-table-portrait-placeholder {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      border: 1px solid rgba(90, 71, 59, 0.16);
-      background: rgba(255, 255, 255, 0.72);
-      box-shadow: inset 0 0 0 1px rgba(255, 248, 239, 0.75);
-    }
-
-    .combat-table-portrait {
-      display: block;
-      object-fit: cover;
-    }
-
-    .combat-table-portrait.is-monster {
-      object-fit: contain;
-    }
-
-    .combat-table-portrait-placeholder {
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-      font-size: 0.76rem;
-      font-weight: 900;
-      letter-spacing: 0.02em;
-      background:
-        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.92), transparent 44%),
-        linear-gradient(145deg, rgba(142, 52, 29, 0.18), rgba(217, 192, 145, 0.38));
-    }
-
     .combat-init-cell {
       display: grid;
       gap: 5px;
+    }
+
+    .combat-init-select {
+      width: 100%;
+      min-height: 30px;
+      padding: 4px 6px;
+      font-size: 0.78rem;
     }
 
     .combat-init-roll {
@@ -1898,28 +1828,100 @@
       overflow-wrap: anywhere;
     }
 
+    .combat-action-subhead {
+      margin: 10px 0 5px;
+      color: var(--ink-soft);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .combat-attack-card {
+      display: grid;
+      gap: 4px;
+      padding: 8px 9px;
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 248, 239, 0.48);
+    }
+
+    .combat-attack-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      color: var(--ink);
+      font-size: 0.88rem;
+      font-weight: 900;
+    }
+
+    .combat-action-glyph {
+      display: inline-grid;
+      min-width: 22px;
+      min-height: 22px;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(138, 47, 29, 0.12);
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .combat-attack-meta,
+    .combat-attack-damage {
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .combat-attack-details {
+      display: grid;
+      gap: 4px;
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .combat-attack-details summary {
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .combat-attack-damage strong,
+    .combat-attack-meta strong,
+    .combat-attack-details strong {
+      color: var(--ink);
+    }
+
     .combat-ability-hint {
-      position: relative;
       border: 0;
       border-bottom: 1px dotted rgba(138, 47, 29, 0.55);
       border-radius: 0;
       padding: 0;
       background: transparent;
       color: var(--accent);
-      cursor: help;
+      cursor: pointer;
       font: inherit;
       font-weight: 800;
       text-align: left;
     }
 
-    .combat-ability-tooltip {
-      position: absolute;
-      z-index: 45;
-      left: 0;
-      bottom: calc(100% + 8px);
-      display: none;
+    .combat-ability-hint:hover,
+    .combat-ability-hint:focus-visible {
+      color: #6f271a;
+    }
+
+    .combat-ability-popover {
+      position: fixed;
+      z-index: 80;
+      display: grid;
+      gap: 8px;
       width: min(340px, 72vw);
-      padding: 10px 12px;
+      max-height: min(420px, 72vh);
+      overflow: auto;
+      padding: 12px 14px;
       border-radius: 12px;
       border: 1px solid rgba(90, 71, 59, 0.18);
       background: rgba(33, 24, 20, 0.96);
@@ -1932,9 +1934,57 @@
       white-space: normal;
     }
 
-    .combat-ability-hint:hover .combat-ability-tooltip,
-    .combat-ability-hint:focus-visible .combat-ability-tooltip {
-      display: block;
+    .combat-ability-popover[hidden] {
+      display: none;
+    }
+
+    .combat-ability-popover strong {
+      color: #fff8ef;
+      font-size: 0.9rem;
+    }
+
+    .combat-ability-popover .source {
+      color: #f2d6b4;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .combat-ability-popover .body {
+      white-space: pre-line;
+    }
+
+    .combat-ability-popover a {
+      color: #ffd9aa;
+      font-weight: 800;
+    }
+
+    .combat-active-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      grid-column: 1 / -1;
+      padding: 8px 0 2px;
+      border-bottom: 1px solid rgba(90, 71, 59, 0.12);
+    }
+
+    .combat-stat-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .combat-stat-block {
+      display: grid;
+      gap: 4px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+
+    .combat-stat-block strong {
+      color: var(--ink);
+      font-size: 0.76rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     .combat-speed-cell {
@@ -3442,6 +3492,7 @@
       afflictions: [],
     };
     let combatSaveTimer = null;
+    let abilityPopoverPinned = false;
     let aonCreatures = [];
     let campaignBestiaryEntries = [];
     let activeBestiaryEntry = null;
@@ -3714,6 +3765,8 @@
         sliders: '<path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path>',
         search: '<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>',
         layers: '<path d="m12 2 9 5-9 5-9-5z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path>',
+        map: '<path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path>',
+        sword: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6"></path><path d="m16 16 4 4"></path><path d="m19 21 2-2"></path>',
       };
       return `<svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.scene}</svg>`;
     }
@@ -3772,10 +3825,10 @@
         `];
         if (id === "dice-roller") {
           buttons.push(`
-            <button type="button" class="tool-dock-button is-play-jump" data-label="Map Room" data-focus-module="map-room" title="Go to Map Room" aria-label="Go to Map Room">Map</button>
+            <button type="button" class="tool-dock-button is-play-jump" data-label="Map Room" data-focus-module="map-room" title="Go to Map Room" aria-label="Go to Map Room">${iconSvg("map")}</button>
           `);
           buttons.push(`
-            <button type="button" class="tool-dock-button is-play-jump" data-label="Current Combat" data-focus-module="current-combat" title="Go to Current Combat" aria-label="Go to Current Combat">Combat</button>
+            <button type="button" class="tool-dock-button is-play-jump" data-label="Current Combat" data-focus-module="current-combat" title="Go to Current Combat" aria-label="Go to Current Combat">${iconSvg("sword")}</button>
           `);
         }
         return buttons;
@@ -5627,6 +5680,10 @@
     }
 
     function initiativeBonus(combatant) {
+      if (combatant.initiativeSkill && combatant.initiativeSkills) {
+        const selected = combatant.initiativeSkills.find((skill) => skill.key === combatant.initiativeSkill);
+        if (selected && Number.isFinite(selected.total)) return selected.total;
+      }
       const value = String(combatant.initiative || "");
       const signed = value.match(/[+-]\d+/);
       if (signed) return Number.parseInt(signed[0], 10);
@@ -5642,7 +5699,8 @@
       if (Number.isFinite(combatant.initiativeRoll)) {
         return `Total ${combatant.initiativeRoll}`;
       }
-      return `Bonus ${signedNumber(bonus)}`;
+      const skill = initiativeSkillLabel(combatant);
+      return `${skill} ${signedNumber(bonus)}`;
     }
 
     function combatAttackLines(text) {
@@ -5657,8 +5715,16 @@
       return text
         .split(/\n+/)
         .map((line) => line.trim())
-        .filter((line) => /^(Primal|Occult|Arcane|Divine|Spell|Reactive|Free|Frequency|Trigger|Effect|Vengeful|Self-|Baffling|Claim|Consume|Flicker|Blood|Death|Breath|Poison|Grab|Constrict|Rend|Pounce)/i.test(line))
+        .filter((line) => /^(Reactive|Free|Frequency|Trigger|Effect|Vengeful|Self-|Baffling|Claim|Consume|Flicker|Blood|Death|Breath|Poison|Grab|Constrict|Rend|Pounce)/i.test(line))
         .slice(0, 6);
+    }
+
+    function combatSpellLines(text) {
+      return text
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter((line) => /^(Primal|Occult|Arcane|Divine|Spell|Cantrips?|Constant|Focus|Rituals?)/i.test(line))
+        .slice(0, 8);
     }
 
     const pf2eConditions = [
@@ -5720,6 +5786,87 @@
       stunned: "1",
       stupefied: "1",
       wounded: "1",
+    };
+
+    const combatAbilityGlossary = {
+      darkvision: {
+        title: "Darkvision",
+        source: "Monster Core pg. 359",
+        url: "https://2e.aonprd.com/MonsterAbilities.aspx?ID=59",
+        text: "A monster with darkvision can see perfectly well in areas of darkness and dim light, though such vision is in black and white only. Some forms of magical darkness, such as a 4th-level darkness spell, block normal darkvision. A monster with greater darkvision, however, can see through even these forms of magical darkness.",
+      },
+      "greater darkvision": {
+        title: "Greater Darkvision",
+        source: "Monster Core pg. 359",
+        url: "https://2e.aonprd.com/MonsterAbilities.aspx?ID=59",
+        text: "Greater darkvision works like darkvision and can also see through forms of magical darkness that block normal darkvision.",
+      },
+      "negative healing": {
+        title: "Negative Healing",
+        source: "PF2e creature ability summary",
+        url: "https://2e.aonprd.com/MonsterAbilities.aspx",
+        text: "A creature with negative healing is healed by void/negative healing effects that heal undead and is harmed by vitality/positive healing effects that damage undead. Use the creature stat block for any exceptions.",
+      },
+      "light blindness": {
+        title: "Light Blindness",
+        source: "PF2e creature ability summary",
+        url: "https://2e.aonprd.com/MonsterAbilities.aspx",
+        text: "When first exposed to bright light, the creature is blinded until the end of its next turn. After that exposure, bright light dazzles it until it spends enough time in darkness to reset the weakness.",
+      },
+      "consume flesh": {
+        title: "Consume Flesh",
+        source: "Creature stat block ability",
+        url: "",
+        text: "The creature eats flesh from a nearby corpse or qualifying target to regain Hit Points. Use the creature's stat block for the exact requirement, action count, amount healed, and whether each corpse can be used only once.",
+      },
+      "consuming flesh": {
+        title: "Consuming Flesh",
+        source: "Creature stat block ability",
+        url: "",
+        text: "The creature consumes flesh to regain Hit Points or trigger a listed benefit. Use the creature's stat block for the exact requirement, action count, amount healed, and limitations.",
+      },
+      grab: {
+        title: "Grab",
+        source: "PF2e creature ability summary",
+        url: "https://2e.aonprd.com/MonsterAbilities.aspx",
+        text: "After a successful Strike that lists Grab, the creature can use Grab to make the target grabbed until the end of the creature's next turn. Use the stat block for the exact action economy and any improved version.",
+      },
+      "reactive strike": {
+        title: "Reactive Strike",
+        source: "PF2e reaction summary",
+        url: "https://2e.aonprd.com/Actions.aspx",
+        text: "A reaction that lets the creature Strike when a nearby creature creates an opening, such as moving away or using certain manipulate actions. Use the creature stat block for the exact trigger.",
+      },
+      "attack of opportunity": {
+        title: "Attack of Opportunity",
+        source: "Legacy PF2e reaction summary",
+        url: "https://2e.aonprd.com/Actions.aspx",
+        text: "Legacy name for a reaction much like Reactive Strike: the creature Strikes when a nearby creature creates an opening. Use the creature stat block for the exact trigger.",
+      },
+      paralysis: {
+        title: "Paralysis",
+        source: "PF2e affliction/ability summary",
+        url: "https://2e.aonprd.com/MonsterAbilities.aspx",
+        text: "Paralysis can make a target paralyzed, often after a failed Fortitude save. A paralyzed creature is off-guard, cannot act except to Recall Knowledge or use actions requiring only the mind, and has severe movement restrictions.",
+      },
+      "ghoul fever": {
+        title: "Ghoul Fever",
+        source: "Creature stat block affliction",
+        url: "https://2e.aonprd.com/MonsterAbilities.aspx",
+        text: "A disease carried by some ghouls. Track the save DC, onset, stages, and frequency from the exact creature stat block; it can lead to worsening sickness and, in some versions, death or rising as undead.",
+      },
+      poison: {
+        title: "Poison",
+        source: "PF2e affliction summary",
+        url: "https://2e.aonprd.com/Afflictions.aspx",
+        text: "A poison usually uses Fortitude saves and staged effects. Use the exact stat block or affliction entry for DC, onset, maximum duration, stage effects, and recovery rules.",
+      },
+      "undead immunities": {
+        title: "Undead Immunities",
+        source: "PF2e trait summary",
+        url: "https://2e.aonprd.com/Traits.aspx?ID=722",
+        text: "Undead creatures commonly have immunity to death effects, disease, paralyzed, poison, sleep, and unconscious, though exact immunities are listed in the stat block.",
+      },
     };
 
     function conditionOptions() {
@@ -5794,6 +5941,7 @@
         combat.hp ? `HP ${combat.hp}` : "",
         combat.speed ? `Speed ${combat.speed}` : "",
         (combat.attacks || []).length ? `Attacks:\n${(combat.attacks || []).map((line) => `- ${line}`).join("\n")}` : "",
+        (combat.spells || []).length ? `Spells:\n${(combat.spells || []).map((line) => `- ${line}`).join("\n")}` : "",
         (combat.abilities || []).length ? `Abilities:\n${(combat.abilities || []).map((line) => `- ${line}`).join("\n")}` : "",
         affliction.dc ? `Affliction DC: ${affliction.dc}` : "",
         affliction.frequency ? `Frequency: ${affliction.frequency}` : "",
@@ -5839,8 +5987,16 @@
         ref: combat.ref || "",
         will: combat.will || "",
         speed: combat.speed || "",
+        senses: entry.senses || "",
+        languages: (entry.languages || []).join(", "),
+        skills: entry.skills || [],
+        abilityMods: entry.ability_mods || {},
+        immunities: combat.immunities || "",
+        weaknesses: combat.weaknesses || "",
+        resistances: combat.resistances || "",
         attacks: combat.attacks || [],
         abilities: combat.abilities || [],
+        spells: combat.spells || [],
         detail: roomEncounterText || campaignBestiaryDetailText(entry),
         bestiaryId: entry.id,
       });
@@ -5871,8 +6027,16 @@
         ref: "",
         will: "",
         speed: "",
+        senses: "",
+        languages: "",
+        skills: [],
+        abilityMods: {},
+        immunities: "",
+        weaknesses: "",
+        resistances: "",
         attacks: [],
         abilities: [],
+        spells: [],
         detail: campaignBestiaryDetailText(entry) || "AoN reference; fetch full stats through the monster picker if needed.",
         bestiaryId: entry.id,
       });
@@ -5895,10 +6059,18 @@
         ref: enriched.ref || combatant.ref,
         will: enriched.will || combatant.will,
         speed: enriched.speed || combatant.speed,
+        senses: enriched.senses || combatant.senses || "",
+        languages: enriched.languages || combatant.languages || "",
+        skills: enriched.skills?.length ? enriched.skills : combatant.skills || [],
+        abilityMods: Object.keys(enriched.abilityMods || {}).length ? enriched.abilityMods : combatant.abilityMods || {},
+        immunities: enriched.immunities || combatant.immunities || "",
+        weaknesses: enriched.weaknesses || combatant.weaknesses || "",
+        resistances: enriched.resistances || combatant.resistances || "",
         attacks: enriched.attacks?.length ? enriched.attacks : combatant.attacks,
         abilities: enriched.abilities?.length ? enriched.abilities : combatant.abilities,
+        spells: enriched.spells?.length ? enriched.spells : combatant.spells || [],
         detail: enriched.detail || combatant.detail,
-        imageUrl: enriched.imageUrl || combatant.imageUrl || "",
+        imageUrl: combatant.imageUrl || enriched.imageUrl || "",
         aonName: creature.name || combatant.name,
       });
     }
@@ -5946,7 +6118,7 @@
       let changed = false;
       const refreshed = [];
       for (const combatant of currentCombat.combatants) {
-        if (combatant.kind === "pc" || combatant.imageUrl) {
+        if (combatant.kind === "pc") {
           refreshed.push(combatant);
           continue;
         }
@@ -6108,8 +6280,16 @@
         ref: combatStatValue(text, "Ref"),
         will: combatStatValue(text, "Will"),
         speed: combatStatValue(text, "Speed"),
+        senses: "",
+        languages: "",
+        skills: [],
+        abilityMods: {},
+        immunities: "",
+        weaknesses: "",
+        resistances: "",
         attacks: combatAttackLines(text),
         abilities: combatAbilityLines(text),
+        spells: combatSpellLines(text),
         detail: text,
       };
       return withCombatHp(combatant);
@@ -6174,8 +6354,16 @@
         ref: "",
         will: "",
         speed: "",
+        senses: "",
+        languages: "",
+        skills: [],
+        abilityMods: {},
+        immunities: "",
+        weaknesses: "",
+        resistances: "",
         attacks: [],
         abilities: [],
+        spells: [],
         traits: [],
         content: "",
         sourceUrl: "",
@@ -6225,7 +6413,7 @@
     function combatantFromAonCreature(creature) {
       const traits = (creature.traits || []).join(", ");
       const attackLines = (creature.attacks || []).filter((line) => /^(Melee|Ranged|Damage)/i.test(line));
-      const abilityLines = (creature.attacks || []).filter((line) => !/^(Melee|Ranged|Damage)/i.test(line));
+      const abilityLines = (creature.actions || creature.attacks || []).filter((line) => !/^(Melee|Ranged|Damage)/i.test(line));
       const sourceFlags = [
         creature.remastered ? "Remastered" : "",
         creature.legacy ? "Legacy content" : "",
@@ -6259,8 +6447,16 @@
         ref: creature.ref || "",
         will: creature.will || "",
         speed: creature.speed || "",
+        senses: creature.senses || "",
+        languages: creature.languages || "",
+        skills: creature.skills || [],
+        abilityMods: creature.ability_mods || {},
+        immunities: creature.immunities || "",
+        weaknesses: creature.weaknesses || "",
+        resistances: creature.resistances || "",
         attacks: attackLines,
         abilities: abilityLines,
+        spells: creature.spells || [],
         detail,
       });
     }
@@ -6287,6 +6483,7 @@
       const identity = sheet.identity || {};
       const combat = sheet.combat || {};
       const initiativeValue = Number.isFinite(combat.initiative) ? signedNumber(combat.initiative) : formatValue(combat.initiative);
+      const initiativeSkills = sheetInitiativeSkills(sheet);
       return withCombatHp({
         id: `pc-${sheet.id}`,
         roomId: "Party",
@@ -6300,6 +6497,8 @@
         traits: [identity.ancestry, identity.heritage, identity.class_name].filter(Boolean),
         initiative: initiativeValue,
         initiativeBonus: Number.isFinite(combat.initiative) ? combat.initiative : initiativeBonus({ initiative: initiativeValue }),
+        initiativeSkill: "perception",
+        initiativeSkills,
         initiativeRoll: null,
         initiativeDie: null,
         ac: combat.ac || "",
@@ -6313,6 +6512,7 @@
         speed: combat.speed || "",
         attacks: [],
         abilities: [],
+        spells: [],
         detail: pcCombatDetail(sheet),
         source: "PC Sheet",
         portraitUrl: sheet.portrait || sheet.image?.url || "",
@@ -6342,12 +6542,18 @@
           return combatant;
         }
         const latest = latestById.get(combatant.id);
+        const oldMax = Number.isFinite(combatant.maxHp) ? combatant.maxHp : firstNumber(combatant.hp);
+        const nextMax = Number.isFinite(latest.maxHp) ? latest.maxHp : oldMax;
+        const hpTrack = (combatant.hpTrack || latest.hpTrack || []).map((current) => (
+          current === oldMax ? nextMax : current
+        ));
         return {
           ...latest,
           initiativeRoll: combatant.initiativeRoll,
           initiativeDie: combatant.initiativeDie,
-          hpTrack: combatant.hpTrack,
-          maxHp: combatant.maxHp ?? latest.maxHp,
+          initiativeSkill: combatant.initiativeSkill || latest.initiativeSkill,
+          hpTrack,
+          maxHp: nextMax,
           conditions: combatant.conditions,
           isExpanded: combatant.isExpanded,
         };
@@ -6626,6 +6832,197 @@
         .join("");
     }
 
+    function normalizeAttackRows(lines) {
+      const rows = [];
+      (lines || []).forEach((line) => {
+        const text = String(line || "").trim();
+        if (!text) return;
+        if (/^(Melee|Ranged)\b/i.test(text)) {
+          rows.push(text);
+          return;
+        }
+        if (/^Damage\b/i.test(text) && rows.length) {
+          rows[rows.length - 1] = `${rows[rows.length - 1]} ${text}`;
+        }
+      });
+      return rows;
+    }
+
+    function actionGlyphForText(text) {
+      const value = String(text || "").toLowerCase();
+      if (value.includes("[reaction]") || value.includes("reaction")) return "R";
+      if (value.includes("[free-action]") || value.includes("free action")) return "F";
+      if (value.includes("[three-actions]")) return "3";
+      if (value.includes("[two-actions]")) return "2";
+      if (value.includes("[one-action]")) return "1";
+      return "1";
+    }
+
+    function stripActionGlyphs(text) {
+      return String(text || "")
+        .replace(/\[(?:one|two|three)-actions?\]/gi, "")
+        .replace(/\[(?:free-action|reaction)\]/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function parseCombatAttackLine(line) {
+      const text = String(line || "").trim();
+      const glyph = actionGlyphForText(text);
+      const clean = stripActionGlyphs(text);
+      const damageMatch = clean.match(/\bDamage\b\s+(.+)$/i);
+      const beforeDamage = damageMatch ? clean.slice(0, damageMatch.index).trim().replace(/,\s*$/, "") : clean;
+      const damageText = damageMatch ? damageMatch[1].trim() : "";
+      const titleMatch = beforeDamage.match(/^(Melee|Ranged)\s+([^,+\[]+?)\s*([+-]\d+)?(?=\s|,|\[|$)/i);
+      const title = titleMatch
+        ? `${titleMatch[1]} ${titleMatch[2].trim()}${titleMatch[3] ? ` ${titleMatch[3]}` : ""}`
+        : beforeDamage;
+      const mapPenalty = beforeDamage.match(/\[\s*([+-]\d+\s*\/\s*[+-]\d+)\s*\]/)?.[1]?.replace(/\s+/g, "") || "";
+      const traits = beforeDamage
+        .replace(/^(Melee|Ranged)\s+[^,+]+\s*[+-]?\d*/i, "")
+        .replace(/\[\s*[+-]\d+\s*\/\s*[+-]\d+\s*\]/g, "")
+        .replace(/[()]/g, "")
+        .replace(/,\s*$/g, "")
+        .replace(/^,\s*/, "")
+        .replace(/\s*,\s*/g, ", ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const plusParts = damageText.split(/\s+plus\s+/i);
+      const damage = plusParts.shift() || damageText;
+      const extra = cleanAttackExtra(plusParts.join(" plus "));
+      return {
+        glyph,
+        title: title || clean,
+        traits,
+        mapPenalty,
+        damage,
+        extra,
+        raw: text,
+      };
+    }
+
+    function cleanAttackExtra(value) {
+      let text = String(value || "").trim();
+      if (!text) return "";
+      const boundary = text.match(/\s+(Consume Flesh|Swift Leap|Ghoul Fever|Paralysis)\b/i);
+      if (boundary && boundary.index > 0) {
+        text = text.slice(0, boundary.index).trim();
+      }
+      return text.replace(/\s+/g, " ");
+    }
+
+    function attackDetailLinesForCombatant(attack, combatant) {
+      const extra = normalizeAbilityName(attack.extra || "");
+      if (!extra) return [];
+      const abilityLines = combatAbilityList(combatant);
+      const seen = new Set();
+      const details = [];
+      abilityLines.forEach((line) => {
+        const name = normalizeAbilityName(line);
+        if (!name || seen.has(name)) return;
+        const firstWords = name.split(/\s+/).slice(0, 3).join(" ");
+        const firstTwo = name.split(/\s+/).slice(0, 2).join(" ");
+        const matches = extra.includes(firstWords) || extra.includes(firstTwo) || extra.includes(name.split(/\s+/)[0]);
+        if (!matches) return;
+        const summary = summarizeAttackLinkedDetail(line);
+        if (normalizeAbilityName(summary) !== name) {
+          details.push({
+            label: titleCaseName(firstTwo || name),
+            text: summary,
+          });
+          seen.add(name);
+        }
+      });
+      attackDefaultLinkedDetails(extra, combatant).forEach((detail) => {
+        const key = normalizeAbilityName(detail.label);
+        if (!key || seen.has(key)) return;
+        details.push(detail);
+        seen.add(key);
+      });
+      (campaignBestiaryEntries || []).forEach((entry) => {
+        if (entry.entry_type !== "affliction") return;
+        const afflictionName = normalizeAbilityName(entry.name);
+        if (!afflictionName || !extra.includes(afflictionName) || seen.has(afflictionName)) return;
+        const affliction = entry.affliction || {};
+        details.push({
+          label: entry.name || titleCaseName(afflictionName),
+          text: summarizeAttackLinkedDetail([
+            entry.name,
+            affliction.dc ? `DC ${affliction.dc}` : "",
+            affliction.onset ? `Onset ${affliction.onset}` : "",
+            affliction.frequency ? `Frequency ${affliction.frequency}` : "",
+            (affliction.stages || []).length ? `Stages: ${(affliction.stages || []).join("; ")}` : "",
+          ].filter(Boolean).join("; ")),
+        });
+        seen.add(afflictionName);
+      });
+      return details;
+    }
+
+    function attackDefaultLinkedDetails(extra, combatant) {
+      const details = [];
+      const name = normalizeAbilityName(combatant.name || combatant.aonName || "");
+      const isAugrael = name.includes("augrael");
+      const hasLevelThreeGhoulContext = isAugrael || (
+        String(combatant.level ?? "") === "3" && normalizeAbilityName(traitText(combatant)).includes("ghoul")
+      );
+      if (extra.includes("ghoul fever") && hasLevelThreeGhoulContext) {
+        details.push({
+          label: "Ghoul fever",
+          text: "DC 20 Fortitude; disease stages advance over days. Early stages make the target a carrier, then deal 2d6 negative damage and reduce or block healing; the final stage is death and rising as a ghoul the next midnight.",
+        });
+      }
+      if (extra.includes("paralysis") && hasLevelThreeGhoulContext) {
+        details.push({
+          label: "Paralysis",
+          text: "DC 20 Fortitude; living non-elf targets hit by the attack can become paralyzed. The target saves again at the end of each of its turns, and the DC decreases by 1 on each later save.",
+        });
+      }
+      return details;
+    }
+
+    function summarizeAttackLinkedDetail(line) {
+      const parts = [];
+      const dc = String(line).match(/\bDC\s*\d+\b(?:\s+\w+)?/i)?.[0];
+      const save = String(line).match(/\b(Fortitude|Reflex|Will)\b/i)?.[0];
+      const frequency = String(line).match(/\bFrequency\s+([^;]+)/i)?.[1];
+      const onset = String(line).match(/\bOnset\s+([^;]+)/i)?.[1];
+      const stages = String(line).match(/\bStage\s+1\b[\s\S]*/i)?.[0];
+      if (dc || save) parts.push([dc, save].filter(Boolean).join(" "));
+      if (onset) parts.push(`Onset ${onset.trim()}`);
+      if (frequency) parts.push(`Frequency ${frequency.trim()}`);
+      if (stages) parts.push(stages.trim());
+      return parts.length ? parts.join("; ") : String(line);
+    }
+
+    function renderAttackLines(lines, combatant = {}) {
+      if (!lines?.length) return '<div class="combat-action-line">-</div>';
+      return lines.map((line) => {
+        const attack = parseCombatAttackLine(line);
+        const linkedDetails = attackDetailLinesForCombatant(attack, combatant);
+        return `
+          <div class="combat-attack-card">
+            <div class="combat-attack-title">
+              <span class="combat-action-glyph" title="${escapeHtml(attack.glyph)} action">${escapeHtml(attack.glyph)}</span>
+              <span>${escapeHtml(attack.title)}</span>
+            </div>
+            ${attack.traits ? `<div class="combat-attack-meta"><strong>Traits</strong> ${escapeHtml(attack.traits)}</div>` : ""}
+            ${attack.mapPenalty ? `<div class="combat-attack-meta"><strong>MAP</strong> ${escapeHtml(attack.mapPenalty)}</div>` : ""}
+            ${attack.damage ? `<div class="combat-attack-damage"><strong>Damage</strong> ${escapeHtml(attack.damage)}</div>` : ""}
+            ${attack.extra ? `<div class="combat-attack-meta"><strong>Plus</strong> ${escapeHtml(attack.extra)}</div>` : ""}
+            ${linkedDetails.length ? `
+              <details class="combat-attack-details">
+                <summary>Effect details</summary>
+                ${linkedDetails.map((detail) => `
+                  <div><strong>${escapeHtml(detail.label)}</strong> ${escapeHtml(detail.text)}</div>
+                `).join("")}
+              </details>
+            ` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
     function renderCombatDetail(combatant) {
       const detail = normalizedCombatText(combatant.detail || "");
       if (!detail) {
@@ -6763,11 +7160,168 @@
     }
 
     function combatAttackList(combatant) {
-      return combatant.attacks?.length ? combatant.attacks : [fallbackDamageLine(combatant)].filter(Boolean);
+      const attacks = normalizeAttackRows(combatant.attacks || []);
+      return attacks.length ? attacks : [fallbackDamageLine(combatant)].filter(Boolean);
+    }
+
+    function isSpellLine(line) {
+      return /^(Primal|Occult|Arcane|Divine|Spells?|Cantrips?|Constant|Focus|Rituals?|\d+(?:st|nd|rd|th)\s*:)/i.test(String(line || "").trim());
     }
 
     function combatAbilityList(combatant) {
-      return combatant.abilities || [];
+      return (combatant.abilities || []).filter((line) => !isSpellLine(line));
+    }
+
+    function combatSpellList(combatant) {
+      return [
+        ...(combatant.spells || []),
+        ...(combatant.abilities || []).filter(isSpellLine),
+      ];
+    }
+
+    const combatSpellGlossary = {
+      harm: {
+        title: "Harm",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "Channels void energy. It damages living creatures with a basic Fortitude save and heals undead; the number of actions changes range, targeting, or area.",
+      },
+      "phantom pain": {
+        title: "Phantom Pain",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "Assaults the target's mind with illusory pain, dealing mental damage and potentially sickening the target depending on its Will save.",
+      },
+      command: {
+        title: "Command",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "Gives a simple order to one creature. On a failed Will save, the target must spend actions on its next turn obeying the command.",
+      },
+      "grim tendrils": {
+        title: "Grim Tendrils",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "Sends a line of void energy through creatures in the area, dealing void damage with a Fortitude save and possible persistent bleed on worse results.",
+      },
+      "ray of enfeeblement": {
+        title: "Ray of Enfeeblement",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "A ray that weakens the target. It requires a spell attack roll and can make the target enfeebled depending on its Fortitude save.",
+      },
+      "chill touch": {
+        title: "Chill Touch",
+        source: "Legacy Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "A touch-range cantrip that channels void energy. It harms living targets and interacts differently with undead depending on the version used.",
+      },
+      daze: {
+        title: "Daze",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "Clouds a target's mind with mental force. It deals mental damage on a Will save and can briefly stun on a critical failure.",
+      },
+      "mage hand": {
+        title: "Mage Hand",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "Telekinetically manipulates a light unattended object at range. Useful for moving small objects without touching them.",
+      },
+      "telekinetic projectile": {
+        title: "Telekinetic Projectile",
+        source: "Archives of Nethys spell summary",
+        url: "https://2e.aonprd.com/Spells.aspx",
+        text: "Hurls an unattended object at a creature with a spell attack roll, dealing bludgeoning, piercing, or slashing damage based on the object.",
+      },
+    };
+
+    function normalizeSpellName(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/\([^)]*\)/g, "")
+        .replace(/[^a-z0-9\s'-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function spellNamesFromLine(line) {
+      const text = String(line || "").trim();
+      const lower = text.toLowerCase();
+      if (!text) return [];
+      if (/^(Occult|Primal|Arcane|Divine)\b/i.test(text) && !text.includes(":")) {
+        return [];
+      }
+      const afterLabel = text.includes(":")
+        ? text.split(":").slice(1).join(":")
+        : text.replace(/^(?:Occult|Primal|Arcane|Divine)?\s*(?:Prepared|Innate)?\s*Spells?\s*[^;]*;?/i, "");
+      const cleaned = afterLabel
+        .replace(/\bCantrips?\b/gi, "")
+        .replace(/\b\d+(?:st|nd|rd|th)\b/gi, "")
+        .replace(/\bDC\s*\d+\b/gi, "")
+        .replace(/\bspell attack\s*[+-]\d+\b/gi, "");
+      const names = cleaned
+        .split(/[;,]/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => part.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim())
+        .filter((part) => part && !/^(prepared|innate|spells?|cantrips?)$/i.test(part));
+      if (!names.length && lower.includes("cantrips")) return [];
+      return names;
+    }
+
+    function spellLineLabel(line) {
+      const text = String(line || "").trim();
+      const match = text.match(/^([^:]+):/);
+      if (match) return match[1].trim();
+      if (/^(Occult|Primal|Arcane|Divine)\b/i.test(text)) return text;
+      return "";
+    }
+
+    function spellExplanation(spellName, combatant) {
+      const key = normalizeSpellName(spellName);
+      const glossary = combatSpellGlossary[key];
+      if (glossary) {
+        return {
+          ...glossary,
+          quality: "Spell summary",
+        };
+      }
+      return {
+        title: titleCaseName(spellName || "Spell"),
+        source: combatant.source || "Creature spell list",
+        url: combatant.sourceUrl || "",
+        text: "This spell is listed on the creature's spellcasting entry. The local spell glossary does not have a detailed description yet; use the spell name, tradition, DC, spell attack bonus, and level line from this stat block during play.",
+        quality: "Fallback",
+      };
+    }
+
+    function renderSpellLines(combatant) {
+      const lines = combatSpellList(combatant);
+      if (!lines.length) return "";
+      return lines.map((line, lineIndex) => {
+        const names = spellNamesFromLine(line);
+        const label = spellLineLabel(line);
+        if (!names.length) {
+          return `<div class="combat-action-line">${escapeHtml(line)}</div>`;
+        }
+        return `
+          <div class="combat-action-line">
+            ${label ? `<strong>${escapeHtml(label)}</strong> ` : ""}
+            ${names.map((name, spellIndex) => `
+              <button
+                type="button"
+                class="combat-ability-hint"
+                data-combatant-id="${escapeHtml(String(combatant.id || ""))}"
+                data-spell-name="${escapeHtml(name)}"
+                data-spell-line="${lineIndex}"
+                data-spell-index="${spellIndex}"
+                aria-haspopup="dialog"
+              >${escapeHtml(name)}</button>
+            `).join(" ")}
+          </div>
+        `;
+      }).join("");
     }
 
     const combatAbilityFallbacks = {
@@ -6818,7 +7372,8 @@
             .replace(/\s*\n\s*/g, " ")
             .replace(/\s+/g, " ")
             .trim();
-          if (block.length > String(ability).length + 12) {
+          const looksLikeRepeatedList = /Abilities:\s*-|Attacks:\s*-/i.test(block) || /-\s+[A-Z][A-Za-z' -]{2,}\s+-\s+[A-Z][A-Za-z' -]{2,}/.test(block);
+          if (!looksLikeRepeatedList && block.length > String(ability).length + 12) {
             return block;
           }
         }
@@ -6835,29 +7390,185 @@
       return inline || "";
     }
 
+    function abilitySpecificsFromLine(ability) {
+      const line = String(ability || "").trim();
+      const parts = [];
+      const dc = line.match(/\bDC\s*\d+\b(?:\s+\w+)?/i)?.[0];
+      const damage = line.match(/\b\d+d\d+(?:[+-]\d+)?\s+\w+\b/i)?.[0];
+      const action = line.match(/\[(?:one|two|three)-actions?\]|\[reaction\]|\[free-action\]/i)?.[0];
+      const turns = line.match(/\b(?:\d+|one|two|three)\s+(?:rounds?|turns?|days?|hours?)\b/i)?.[0];
+      if (action) parts.push(`Action: ${stripActionGlyphs(action) || action.replace(/[[\]]/g, "")}.`);
+      if (dc) parts.push(`This combatant: ${dc}.`);
+      if (damage) parts.push(`Listed damage: ${damage}.`);
+      if (turns) parts.push(`Duration/frequency note: ${turns}.`);
+      return parts.join(" ");
+    }
+
+    function glossaryRuleForAbility(ability) {
+      const name = normalizeAbilityName(ability);
+      if (!name) return null;
+      if (combatAbilityGlossary[name]) return combatAbilityGlossary[name];
+      return Object.entries(combatAbilityGlossary).find(([key]) => (
+        name === key || name.startsWith(`${key} `) || name.includes(` ${key}`)
+      ))?.[1] || null;
+    }
+
     function abilityExplanation(ability, combatant) {
-      return abilityExplanationFromDetail(ability, combatant)
-        || combatAbilityFallbacks[normalizeAbilityName(ability)]
-        || "";
+      const glossaryRule = glossaryRuleForAbility(ability);
+      const statBlockText = abilityExplanationFromDetail(ability, combatant);
+      const specifics = abilitySpecificsFromLine(ability);
+      if (glossaryRule) {
+        const statBlockSuffix = statBlockText && normalizeAbilityName(statBlockText) !== normalizeAbilityName(ability)
+          ? `\n\nThis combatant: ${statBlockText}`
+          : "";
+        const specificsSuffix = specifics ? `\n\n${specifics}` : "";
+        return {
+          ...glossaryRule,
+          url: glossaryRule.url || combatant.sourceUrl || "",
+          text: `${glossaryRule.text}${specificsSuffix}${statBlockSuffix}`,
+          quality: "Rules glossary",
+        };
+      }
+      if (statBlockText) {
+        return {
+          title: String(ability || "Ability"),
+          source: combatant.source || "Creature stat block",
+          url: combatant.sourceUrl || "",
+          text: statBlockText,
+          quality: "From stat block",
+        };
+      }
+      const fallback = combatAbilityFallbacks[normalizeAbilityName(ability)];
+      return fallback ? {
+        title: String(ability || "Ability"),
+        source: "DMA fallback summary",
+        url: "",
+        text: specifics ? `${fallback}\n\n${specifics}` : fallback,
+        quality: "Fallback",
+      } : null;
     }
 
     function renderAbilityLines(combatant) {
       const lines = combatAbilityList(combatant);
       if (!lines?.length) return '<div class="combat-action-line">-</div>';
-      return lines.map((line) => {
-        const explanation = abilityExplanation(line, combatant);
-        if (!explanation) {
+      return lines.map((line, abilityIndex) => {
+        const rule = abilityExplanation(line, combatant);
+        if (!rule) {
           return `<div class="combat-action-line">${escapeHtml(line)}</div>`;
         }
         return `
           <div class="combat-action-line">
-            <button type="button" class="combat-ability-hint" title="${escapeHtml(explanation)}">
+            <button
+              type="button"
+              class="combat-ability-hint"
+              data-combatant-id="${escapeHtml(String(combatant.id || ""))}"
+              data-ability-index="${abilityIndex}"
+              aria-haspopup="dialog"
+            >
               ${escapeHtml(line)}
-              <span class="combat-ability-tooltip" role="tooltip">${escapeHtml(explanation)}</span>
             </button>
           </div>
         `;
       }).join("");
+    }
+
+    function abilityRuleForButton(button) {
+      const combatantId = button?.dataset.combatantId || "";
+      const abilityIndex = Number.parseInt(button?.dataset.abilityIndex || "", 10);
+      const combatant = (currentCombat.combatants || []).find((item) => String(item.id || "") === combatantId);
+      if (!combatant) return null;
+      const spellName = button?.dataset.spellName || "";
+      if (spellName) {
+        const rule = spellExplanation(spellName, combatant);
+        return rule ? { ability: spellName, rule } : null;
+      }
+      if (!Number.isFinite(abilityIndex)) return null;
+      const ability = combatAbilityList(combatant)[abilityIndex] || "";
+      const rule = abilityExplanation(ability, combatant);
+      return rule ? { ability, rule } : null;
+    }
+
+    function ensureAbilityPopover() {
+      let popover = document.getElementById("combat-ability-popover");
+      if (popover) return popover;
+      popover = document.createElement("div");
+      popover.id = "combat-ability-popover";
+      popover.className = "combat-ability-popover";
+      popover.hidden = true;
+      popover.setAttribute("role", "dialog");
+      popover.setAttribute("aria-live", "polite");
+      document.body.appendChild(popover);
+      return popover;
+    }
+
+    function positionAbilityPopover(popover, anchor) {
+      const rect = anchor.getBoundingClientRect();
+      const margin = 12;
+      popover.hidden = false;
+      popover.style.left = "0px";
+      popover.style.top = "0px";
+      const popoverRect = popover.getBoundingClientRect();
+      let left = rect.left;
+      let top = rect.bottom + 8;
+      if (top + popoverRect.height > window.innerHeight - margin) {
+        top = rect.top - popoverRect.height - 8;
+      }
+      if (top < margin) {
+        top = margin;
+      }
+      if (left + popoverRect.width > window.innerWidth - margin) {
+        left = window.innerWidth - popoverRect.width - margin;
+      }
+      if (left < margin) {
+        left = margin;
+      }
+      popover.style.left = `${Math.round(left)}px`;
+      popover.style.top = `${Math.round(top)}px`;
+    }
+
+    function showAbilityPopover(anchor, { pinned = false } = {}) {
+      const payload = abilityRuleForButton(anchor);
+      if (!payload) return;
+      abilityPopoverPinned = pinned;
+      const { ability, rule } = payload;
+      const popover = ensureAbilityPopover();
+      const source = [rule.quality, rule.source].filter(Boolean).join(" · ");
+      popover.innerHTML = `
+        <strong>${escapeHtml(rule.title || ability)}</strong>
+        <div class="body">${escapeHtml(rule.text || "No description found yet.")}</div>
+        ${source ? `<div class="source">${escapeHtml(source)}</div>` : ""}
+        ${rule.url ? `<a href="${escapeHtml(rule.url)}" target="_blank" rel="noreferrer">Open source</a>` : ""}
+      `;
+      positionAbilityPopover(popover, anchor);
+    }
+
+    function hideAbilityPopover() {
+      const popover = document.getElementById("combat-ability-popover");
+      if (popover) {
+        popover.hidden = true;
+      }
+      abilityPopoverPinned = false;
+    }
+
+    function initiativeSkillLabel(combatant) {
+      const selected = (combatant.initiativeSkills || []).find((skill) => skill.key === combatant.initiativeSkill);
+      if (selected?.name) return selected.name;
+      return combatant.initiativeSkill ? titleCaseName(combatant.initiativeSkill) : "Perception";
+    }
+
+    function renderInitiativeSkillSelect(combatant, combatantIndex) {
+      const skills = combatant.initiativeSkills || [];
+      if (!skills.length) return "";
+      const selected = combatant.initiativeSkill || "perception";
+      return `
+        <select class="combat-init-select" data-combat-init-skill="${combatantIndex}" title="Initiative skill">
+          ${skills.map((skill) => `
+            <option value="${escapeHtml(skill.key)}" ${skill.key === selected ? "selected" : ""}>
+              ${escapeHtml(skill.name)} ${escapeHtml(signedNumber(skill.total))}
+            </option>
+          `).join("")}
+        </select>
+      `;
     }
 
     function renderCombatInitiative(combatant, combatantIndex) {
@@ -6869,6 +7580,7 @@
         : "";
       return `
         <div class="combat-init-cell">
+          ${renderInitiativeSkillSelect(combatant, combatantIndex)}
           <input class="combat-init-input" type="number" value="${escapeHtml(Number.isFinite(combatant.initiativeRoll) ? String(combatant.initiativeRoll) : "")}" placeholder="${escapeHtml(signedNumber(bonus))}" data-combat-init-manual="${combatantIndex}" />
           <div class="combat-init-roll">${escapeHtml(rollText || shortInitiativeLabel(combatant, bonus))}</div>
           <button type="button" class="ghost combat-hp-btn" data-combat-init-roll="${combatantIndex}">Roll</button>
@@ -7048,6 +7760,17 @@
       commitCombatState();
     }
 
+    function setCombatInitiativeSkill(combatantIndex, skillKey) {
+      const combatant = currentCombat.combatants?.[combatantIndex];
+      if (!combatant) return;
+      combatant.initiativeSkill = skillKey || "perception";
+      combatant.initiativeBonus = initiativeBonus(combatant);
+      if (Number.isFinite(combatant.initiativeDie)) {
+        combatant.initiativeRoll = combatant.initiativeDie + combatant.initiativeBonus;
+      }
+      commitCombatState();
+    }
+
     function rollAllCombatInitiative() {
       (currentCombat.combatants || []).forEach((_combatant, index) => {
         const combatant = currentCombat.combatants[index];
@@ -7090,6 +7813,41 @@
       }).join("");
     }
 
+    function renderCombatActiveActions() {
+      return `
+        <div class="combat-active-actions">
+          <button type="button" id="combat-card-next-turn" data-combat-end-turn>End Turn</button>
+          <button type="button" class="ghost" id="combat-card-roll-all" data-combat-roll-all>Roll All</button>
+          <button type="button" class="ghost" id="combat-card-sort-init" data-combat-sort>Order</button>
+        </div>
+      `;
+    }
+
+    function renderCombatantQuickStats(combatant) {
+      const mods = combatant.abilityMods || {};
+      const abilityLine = ["str", "dex", "con", "int", "wis", "cha"]
+        .map((key) => mods[key] ? `${key.toUpperCase()} ${mods[key]}` : "")
+        .filter(Boolean)
+        .join(" · ");
+      const defenseLine = [
+        combatant.immunities ? `Imm ${combatant.immunities}` : "",
+        combatant.weaknesses ? `Weak ${combatant.weaknesses}` : "",
+        combatant.resistances ? `Res ${combatant.resistances}` : "",
+      ].filter(Boolean).join("\n");
+      const skillLine = (combatant.skills || []).slice(0, 8).join(", ");
+      const awarenessLine = [
+        combatant.senses ? `Senses ${combatant.senses}` : "",
+        combatant.languages ? `Languages ${combatant.languages}` : "",
+      ].filter(Boolean).join("\n");
+      const blocks = [
+        awarenessLine ? `<div class="combat-stat-block"><strong>Awareness</strong><span>${escapeHtml(awarenessLine)}</span></div>` : "",
+        skillLine ? `<div class="combat-stat-block"><strong>Skills</strong><span>${escapeHtml(skillLine)}</span></div>` : "",
+        abilityLine ? `<div class="combat-stat-block"><strong>Abilities</strong><span>${escapeHtml(abilityLine)}</span></div>` : "",
+        defenseLine ? `<div class="combat-stat-block"><strong>Defenses</strong><span>${escapeHtml(defenseLine)}</span></div>` : "",
+      ].filter(Boolean).join("");
+      return blocks || '<div class="combat-stat-block"><strong>Details</strong><span class="empty">No extra structured stats loaded.</span></div>';
+    }
+
     function renderCombatantCard(combatant, combatantIndex) {
       withCombatHp(combatant);
       const levelLabel = combatant.level !== "" && combatant.level !== undefined
@@ -7117,7 +7875,7 @@
             <span class="combat-card-summary-stat">AC ${escapeHtml(formatValue(combatant.ac))}</span>
             <span class="combat-card-status">${combatantConditionSummary(combatant)}</span>
           </button>
-          ${expanded ? cardBody : ""}
+          ${expanded ? `${active ? renderCombatActiveActions() : ""}${cardBody}` : ""}
         </article>
       `;
     }
@@ -7142,20 +7900,6 @@
       const className = combatant.kind === "pc"
         ? "combat-summary-portrait"
         : "combat-summary-portrait is-monster";
-      return `<img class="${className}" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(displayName)} portrait" loading="lazy" />`;
-    }
-
-    function renderCombatTablePortrait(combatant) {
-      const imageUrl = combatant.kind === "pc"
-        ? combatant.portraitUrl
-        : combatant.imageUrl;
-      const displayName = combatantDisplayName(combatant);
-      if (!imageUrl) {
-        return `<span class="combat-table-portrait-placeholder" aria-label="No portrait for ${escapeHtml(displayName)}">${escapeHtml(combatantInitials(combatant))}</span>`;
-      }
-      const className = combatant.kind === "pc"
-        ? "combat-table-portrait"
-        : "combat-table-portrait is-monster";
       return `<img class="${className}" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(displayName)} portrait" loading="lazy" />`;
     }
 
@@ -7185,8 +7929,16 @@
           <div>
             <strong>Speed</strong><div>${escapeHtml(combatant.speed || "-")}</div>
           </div>
-          <div><strong>Attacks</strong><div class="combat-action-list">${renderActionLines(combatAttackList(combatant))}</div></div>
-          <div><strong>Abilities</strong><div class="combat-action-list">${renderActionLines(combatAbilityList(combatant))}</div></div>
+          <div>
+            <strong>Attacks</strong>
+            <div class="combat-action-list">${renderAttackLines(combatAttackList(combatant), combatant)}</div>
+            ${combatSpellList(combatant).length ? `
+              <div class="combat-action-subhead">Spells</div>
+              <div class="combat-action-list">${renderSpellLines(combatant)}</div>
+            ` : ""}
+          </div>
+          <div><strong>Abilities</strong><div class="combat-action-list">${renderAbilityLines(combatant)}</div></div>
+          <div class="combat-card-reference"><div class="combat-stat-stack">${renderCombatantQuickStats(combatant)}</div></div>
           <div class="combat-card-reference">${renderCombatReference(combatant)}</div>
         </div>
       `;
@@ -7783,228 +8535,6 @@
 
     function renderCombatStatus(message) {
       document.getElementById("combat-meta").innerHTML = `<span class="stat-badge">${escapeHtml(message)}</span>`;
-    }
-
-    function setCombatFromRoom(room, { append = false } = {}) {
-      if (!room) {
-        renderCombatStatus("Open a room card in Map Room first.");
-        return;
-      }
-      const combatants = combatantsFromRoom(room);
-      if (!combatants.length) {
-        renderCombatStatus(`No monsters or encounter text found for ${room.room_id || "this room"}.`);
-        return;
-      }
-      currentCombat = {
-        roomId: room.room_id || currentCombat.roomId,
-        roomTitle: room.title || currentCombat.roomTitle,
-        combatants: append ? [...currentCombat.combatants, ...combatants] : combatants,
-      };
-      renderCombatPanel();
-    }
-
-    function compactDefenseLine(combatant) {
-      return [
-        combatant.ac ? `AC ${combatant.ac}` : "",
-        combatant.fort ? `Fort ${combatant.fort}` : "",
-        combatant.ref ? `Ref ${combatant.ref}` : "",
-        combatant.will ? `Will ${combatant.will}` : "",
-      ].filter(Boolean).join("\n");
-    }
-
-    function fallbackDamageLine(combatant) {
-      const detail = normalizedCombatText(combatant.detail || "");
-      const simpleDamage = detail.match(/\bDamage\s+([^;\n]+)/i);
-      return simpleDamage ? `Damage ${simpleDamage[1].trim()}` : "";
-    }
-
-    function renderCombatHp(combatant, combatantIndex) {
-      withCombatHp(combatant);
-      const defenses = compactDefenseLine(combatant);
-      const hpRows = (combatant.hpTrack || []).map((currentHp, targetIndex) => {
-        const label = (combatant.hpTrack || []).length > 1 ? `${targetIndex + 1}: ` : "";
-        const max = combatant.maxHp ?? firstNumber(combatant.hp);
-        const hpText = currentHp === null || Number.isNaN(currentHp)
-          ? (combatant.hp || "-")
-          : `${currentHp}${max !== null && max !== undefined ? `/${max}` : ""}`;
-        return `
-          <div class="combat-hp-line">
-            <span class="combat-hp-value">${escapeHtml(label + hpText)}</span>
-            <div class="combat-hp-buttons">
-              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-1">-1</button>
-              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-5">-5</button>
-              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-10">-10</button>
-              <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="1">+1</button>
-            </div>
-          </div>
-        `;
-      }).join("");
-      return `
-        <div class="combat-hp-stack">
-          ${hpRows || '<span class="combat-hp-value">-</span>'}
-          <div class="combat-defense-line">${escapeHtml(defenses || "No defenses parsed.")}</div>
-        </div>
-      `;
-    }
-
-    function renderActionLines(lines) {
-      if (!lines?.length) return '<div class="combat-action-line">-</div>';
-      return lines
-        .map((line) => `<div class="combat-action-line">${escapeHtml(line)}</div>`)
-        .join("");
-    }
-
-    function combatAttackList(combatant) {
-      return combatant.attacks?.length ? combatant.attacks : [fallbackDamageLine(combatant)].filter(Boolean);
-    }
-
-    function combatAbilityList(combatant) {
-      return combatant.abilities || [];
-    }
-
-    function renderCombatInitiative(combatant, combatantIndex) {
-      const bonus = initiativeBonus(combatant);
-      combatant.initiativeBonus = bonus;
-      const hasDie = Number.isFinite(combatant.initiativeDie);
-      const rollText = Number.isFinite(combatant.initiativeRoll) && hasDie
-        ? `${combatant.initiativeRoll} (${combatant.initiativeDie}${signedNumber(bonus)})`
-        : "";
-      return `
-        <div class="combat-init-cell">
-          <input class="combat-init-input" type="number" value="${escapeHtml(Number.isFinite(combatant.initiativeRoll) ? String(combatant.initiativeRoll) : "")}" placeholder="${escapeHtml(signedNumber(bonus))}" data-combat-init-manual="${combatantIndex}" />
-          <div class="combat-init-roll">${escapeHtml(rollText || shortInitiativeLabel(combatant, bonus))}</div>
-          <button type="button" class="ghost combat-hp-btn" data-combat-init-roll="${combatantIndex}">Roll</button>
-        </div>
-      `;
-    }
-
-    function adjustCombatHp(combatantIndex, targetIndex, delta) {
-      const combatant = currentCombat.combatants?.[combatantIndex];
-      if (!combatant) return;
-      withCombatHp(combatant);
-      if (!combatant.hpTrack || combatant.hpTrack[targetIndex] === undefined) return;
-      const current = combatant.hpTrack[targetIndex];
-      if (current === null || Number.isNaN(current)) return;
-      combatant.hpTrack[targetIndex] = Math.max(0, current + delta);
-      renderCombatPanel();
-    }
-
-    function rollCombatInitiative(combatantIndex) {
-      const combatant = currentCombat.combatants?.[combatantIndex];
-      if (!combatant) return;
-      const die = 1 + Math.floor(Math.random() * 20);
-      const bonus = initiativeBonus(combatant);
-      combatant.initiativeBonus = bonus;
-      combatant.initiativeDie = die;
-      combatant.initiativeRoll = die + bonus;
-      renderCombatPanel();
-    }
-
-    function setManualCombatInitiative(combatantIndex, value) {
-      const combatant = currentCombat.combatants?.[combatantIndex];
-      if (!combatant) return;
-      const trimmed = String(value || "").trim();
-      if (!trimmed) {
-        combatant.initiativeRoll = null;
-        combatant.initiativeDie = null;
-        renderCombatPanel();
-        return;
-      }
-      const parsed = Number.parseInt(trimmed, 10);
-      if (!Number.isFinite(parsed)) return;
-      combatant.initiativeRoll = parsed;
-      combatant.initiativeDie = null;
-      combatant.initiativeBonus = initiativeBonus(combatant);
-      renderCombatPanel();
-    }
-
-    function rollAllCombatInitiative() {
-      (currentCombat.combatants || []).forEach((_combatant, index) => {
-        const combatant = currentCombat.combatants[index];
-        const die = 1 + Math.floor(Math.random() * 20);
-        const bonus = initiativeBonus(combatant);
-        combatant.initiativeBonus = bonus;
-        combatant.initiativeDie = die;
-        combatant.initiativeRoll = die + bonus;
-      });
-      renderCombatPanel();
-    }
-
-    function sortCombatByInitiative() {
-      currentCombat.combatants = [...(currentCombat.combatants || [])].sort((left, right) => {
-        const leftRoll = Number.isFinite(left.initiativeRoll) ? left.initiativeRoll : -999;
-        const rightRoll = Number.isFinite(right.initiativeRoll) ? right.initiativeRoll : -999;
-        if (rightRoll !== leftRoll) return rightRoll - leftRoll;
-        return initiativeBonus(right) - initiativeBonus(left);
-      });
-      renderCombatPanel();
-    }
-
-    function renderCombatantRow(combatant, combatantIndex) {
-      withCombatHp(combatant);
-      const levelLabel = combatant.level !== "" && combatant.level !== undefined
-        ? `Level ${combatant.level}`
-        : "";
-      return `
-        <tr>
-          <td>
-            <div class="combat-table-identity">
-              ${renderCombatTablePortrait(combatant)}
-              <div>
-                <div class="combat-name">${escapeHtml(combatantDisplayName(combatant))}</div>
-                <div class="combat-quickline">${escapeHtml(levelLabel)}</div>
-              </div>
-            </div>
-          </td>
-          <td>${renderCombatInitiative(combatant, combatantIndex)}</td>
-          <td>${renderCombatHp(combatant, combatantIndex)}</td>
-          <td class="combat-speed-cell">${escapeHtml(combatant.speed || "-")}</td>
-          <td class="combat-attacks-cell"><div class="combat-action-list">${renderActionLines(combatAttackList(combatant))}</div></td>
-          <td class="combat-abilities-cell"><div class="combat-action-list">${renderAbilityLines(combatant)}</div></td>
-        </tr>
-      `;
-    }
-
-    function renderCombatPanel() {
-      const roster = document.getElementById("combat-roster");
-      const meta = document.getElementById("combat-meta");
-      const combatants = currentCombat.combatants || [];
-      if (!combatants.length) {
-        meta.innerHTML = '<span class="stat-badge">No combat loaded</span>';
-        roster.innerHTML = '<div class="empty">Open a room in Map Room, then start combat from it.</div>';
-        return;
-      }
-      const total = combatants.reduce((sum, combatant) => sum + (combatant.count || 1), 0);
-      meta.innerHTML = `
-        <span class="stat-badge">${escapeHtml(currentCombat.roomId || "Custom combat")} ${escapeHtml(currentCombat.roomTitle || "")}</span>
-        <span class="stat-badge">${combatants.length} row${combatants.length === 1 ? "" : "s"}</span>
-        <span class="stat-badge">${total} foe${total === 1 ? "" : "s"} tracked</span>
-      `;
-      roster.innerHTML = `
-        <table class="combat-table">
-          <colgroup>
-            <col class="combat-col-enemy" />
-            <col class="combat-col-init" />
-            <col class="combat-col-hp" />
-            <col class="combat-col-speed" />
-            <col class="combat-col-attacks" />
-            <col class="combat-col-abilities" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="combat-col-enemy">Enemy</th>
-              <th class="combat-col-init">Init</th>
-              <th class="combat-col-hp">HP / Defenses</th>
-              <th class="combat-col-speed">Speed</th>
-              <th class="combat-col-attacks">Attacks</th>
-              <th class="combat-col-abilities">Abilities</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${combatants.map(renderCombatantRow).join("")}
-          </tbody>
-        </table>
-      `;
     }
 
     function roomExists(roomId) {
@@ -8939,6 +9469,24 @@
         .sort((a, b) => b.total - a.total)
         .slice(0, limit)
         .map((skill) => `${skill.name} ${skill.total >= 0 ? "+" : ""}${skill.total}`);
+    }
+
+    function sheetInitiativeSkills(sheet) {
+      const combat = sheet.combat || {};
+      const options = new Map();
+      const add = (key, name, total) => {
+        if (!Number.isFinite(Number(total))) return;
+        options.set(key, { key, name, total: Number(total) });
+      };
+      add("perception", "Perception", combat.perception ?? combat.initiative);
+      (sheet.skills || []).forEach((skill) => {
+        add(skill.key || String(skill.name || "").toLowerCase(), skill.name || titleCaseName(skill.key || ""), skill.total);
+      });
+      return Array.from(options.values()).sort((left, right) => {
+        if (left.key === "perception") return -1;
+        if (right.key === "perception") return 1;
+        return left.name.localeCompare(right.name);
+      });
     }
 
     function compactList(values, limit = 4) {
@@ -10507,7 +11055,7 @@
     document.getElementById("combat-roll-all").addEventListener("click", rollAllCombatInitiative);
     document.getElementById("combat-sort-initiative").addEventListener("click", sortCombatByInitiative);
     document.getElementById("combat-clear").addEventListener("click", () => {
-      currentCombat = { roomId: "", roomTitle: "", round: 1, activeIndex: 0, combatants: [] };
+      currentCombat = { roomId: "", roomTitle: "", round: 1, activeIndex: 0, combatants: [], afflictions: [] };
       commitCombatState();
     });
     document.getElementById("combat-next-turn").addEventListener("click", nextCombatTurn);
@@ -10517,6 +11065,23 @@
       const toggleButton = event.target.closest("[data-combat-toggle]");
       if (toggleButton) {
         toggleCombatantCard(Number.parseInt(toggleButton.dataset.combatToggle, 10));
+        return;
+      }
+      const abilityButton = event.target.closest("[data-combatant-id][data-ability-index], [data-combatant-id][data-spell-name]");
+      if (abilityButton) {
+        showAbilityPopover(abilityButton, { pinned: true });
+        return;
+      }
+      if (event.target.closest("[data-combat-end-turn]")) {
+        nextCombatTurn();
+        return;
+      }
+      if (event.target.closest("[data-combat-roll-all]")) {
+        rollAllCombatInitiative();
+        return;
+      }
+      if (event.target.closest("[data-combat-sort]")) {
+        sortCombatByInitiative();
         return;
       }
       const button = event.target.closest("[data-combat-hp]");
@@ -10587,6 +11152,14 @@
       const maxHp = event.target.closest("[data-combat-hp-max]");
       if (maxHp) {
         setCombatHpMax(Number.parseInt(maxHp.dataset.combatHpMax, 10), maxHp.value);
+        return;
+      }
+      const initSkill = event.target.closest("[data-combat-init-skill]");
+      if (initSkill) {
+        setCombatInitiativeSkill(
+          Number.parseInt(initSkill.dataset.combatInitSkill, 10),
+          initSkill.value,
+        );
         return;
       }
       const input = event.target.closest("[data-combat-init-manual]");
@@ -10676,6 +11249,25 @@
       const button = event.target.closest("[data-campaign-tab]");
       if (button) {
         openCampaignOverviewTab(button.dataset.campaignTab);
+      }
+    });
+    document.getElementById("combat-roster").addEventListener("mouseover", (event) => {
+      const abilityButton = event.target.closest("[data-combatant-id][data-ability-index], [data-combatant-id][data-spell-name]");
+      if (abilityButton && !abilityPopoverPinned) showAbilityPopover(abilityButton);
+    });
+    document.getElementById("combat-roster").addEventListener("focusin", (event) => {
+      const abilityButton = event.target.closest("[data-combatant-id][data-ability-index], [data-combatant-id][data-spell-name]");
+      if (abilityButton) showAbilityPopover(abilityButton, { pinned: true });
+    });
+    document.getElementById("combat-roster").addEventListener("mouseout", (event) => {
+      if (!abilityPopoverPinned && event.target.closest("[data-combatant-id][data-ability-index], [data-combatant-id][data-spell-name]")) hideAbilityPopover();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") hideAbilityPopover();
+    });
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest("[data-combatant-id][data-ability-index], [data-combatant-id][data-spell-name]") && !event.target.closest("#combat-ability-popover")) {
+        hideAbilityPopover();
       }
     });
     document.getElementById("session-overview-refresh").addEventListener("click", loadSessionOverviews);

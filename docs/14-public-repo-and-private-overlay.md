@@ -35,15 +35,40 @@ For collaborators who legally have access to the same source material, use:
 
 `local-private-overlay/project-root/`
 
-That folder mirrors the project root. To install the private assets into a fresh checkout, copy the contents of `local-private-overlay/project-root/` into the repository root.
+That folder mirrors the private parts of the project root, but it should stay in
+place as an ignored root overlay. Do **not** copy its contents into
+`assets/imports/...`, and do **not** unpack it over the repository root during
+normal updates.
 
-Example:
+Required local layout:
 
-```bash
-cp -R local-private-overlay/project-root/. .
+```text
+DMA-main/
+  local-private-overlay/
+    project-root/
+      assets/imports/misc/private-local/
+      obsidian-abomination-vaults-vault/
 ```
 
-After copying, the DMA should find maps, PDFs, extracted local images, and handout exports at the expected local paths, while Git continues to ignore them.
+When `.env` leaves the standard local paths at their defaults, DMA automatically
+prefers matching paths under `local-private-overlay/project-root/`. This lets a
+fresh GitHub pull update public code while the ignored overlay remains a separate
+manual private update.
+
+Collaborators must manually acquire the latest `local-private-overlay/` bundle
+from the GM or approved private distribution channel. GitHub updates alone will
+never update private maps, PDFs, monster portraits, room keys, or campaign-only
+data.
+
+If a helper, LLM, or merge tool suggests copying `local-private-overlay/` into
+`assets/`, reject that suggestion unless the GM explicitly asks for a one-off
+migration.
+
+## Combat UI Guardrail
+
+Current Combat is intentionally card-based. The older table-based combat UI is
+removed and should not be restored during merges or updates. Any new combat
+features must be implemented in the card-based module.
 
 ## Legal / Policy Note
 
@@ -56,4 +81,3 @@ For public releases, use only:
 - short summaries in our own words
 - user-created campaign notes
 - placeholders for local purchased assets
-
