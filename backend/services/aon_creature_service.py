@@ -47,7 +47,16 @@ class AonCreatureDocument:
     will: str
     speed: str
     perception: str
+    senses: str
+    languages: str
+    skills: list[str]
+    ability_mods: dict[str, str]
+    immunities: str
+    weaknesses: str
+    resistances: str
     attacks: list[str]
+    actions: list[str]
+    spells: list[str]
     image_url: str
     fetched_at: str
 
@@ -134,6 +143,7 @@ class AonCreatureService:
         if cache_path.exists() and not refresh:
             payload = json.loads(cache_path.read_text(encoding="utf-8"))
             if "image_url" in payload:
+                self._backfill_document_payload(payload)
                 return AonCreatureDocument(**payload)
 
         try:
@@ -141,7 +151,7 @@ class AonCreatureService:
         except Exception:
             if cache_path.exists() and not refresh:
                 payload = json.loads(cache_path.read_text(encoding="utf-8"))
-                payload.setdefault("image_url", "")
+                self._backfill_document_payload(payload)
                 return AonCreatureDocument(**payload)
             raise
         document = self.parse_creature_page(html_text, item)
@@ -182,7 +192,16 @@ class AonCreatureService:
             will=self._stat_value(content, "Will"),
             speed=self._stat_value(content, "Speed"),
             perception=self._stat_value(content, "Perception"),
+            senses=self._senses(content),
+            languages=self._stat_value(content, "Languages"),
+            skills=self._skills(content),
+            ability_mods=self._ability_mods(content),
+            immunities=self._stat_value(content, "Immunities"),
+            weaknesses=self._stat_value(content, "Weaknesses"),
+            resistances=self._stat_value(content, "Resistances"),
             attacks=self._attack_lines(content),
+            actions=self._action_lines(content),
+            spells=self._spell_lines(content),
             image_url=self._image_url(html_text),
             fetched_at=datetime.now(timezone.utc).isoformat(),
         )
@@ -196,6 +215,26 @@ class AonCreatureService:
     def _cache_path(self, item: AonCreatureIndexItem) -> Path:
         slug = re.sub(r"[^a-z0-9]+", "-", item.name.lower()).strip("-")
         return self.cache_root / f"{item.creature_id}-{slug}.json"
+
+    def _backfill_document_payload(self, payload: dict[str, Any]) -> None:
+        content = str(payload.get("content") or "")
+        payload.setdefault("image_url", "")
+        payload.setdefault("senses", "")
+        payload.setdefault("languages", "")
+        payload.setdefault("skills", [])
+        payload.setdefault("ability_mods", {})
+        payload.setdefault("immunities", "")
+        payload.setdefault("weaknesses", "")
+        payload.setdefault("resistances", "")
+        payload["attacks"] = self._normalize_attack_lines(payload.get("attacks") or [])
+        if not payload.get("actions") and content:
+            payload["actions"] = self._action_lines(content)
+        else:
+            payload.setdefault("actions", [])
+        if not payload.get("spells") and content:
+            payload["spells"] = self._spell_lines(content)
+        else:
+            payload.setdefault("spells", [])
 
     def _fetch_text(self, url: str, *, timeout_seconds: float) -> str:
         request = Request(
@@ -304,11 +343,141 @@ class AonCreatureService:
         return match.group(1).strip() if match else ""
 
     def _attack_lines(self, content: str) -> list[str]:
+        return self._normalize_attack_lines(content.splitlines())
+
+    def _normalize_attack_lines(self, lines: list[Any]) -> list[str]:
+        attacks: list[str] = []
+        for line in (str(line).strip() for line in lines):
+            if re.match(r"^(Melee|Ranged)", line, re.IGNORECASE):
+                attacks.append(line)
+                continue
+            if re.match(r"^Damage\b", line, re.IGNORECASE):
+                if attacks:
+                    attacks[-1] = f"{attacks[-1]} {self._clean_attack_damage_continuation(line)}"
+        return attacks[:8]
+
+    def _clean_attack_damage_continuation(self, line: str) -> str:
+        text = str(line or "").strip()
+        match = re.search(
+            r"\s+(Consume Flesh|Swift Leap)\b",
+            text,
+        )
+        if match and match.start() > 0:
+            return text[: match.start()].strip()
+        return text
+
+    def _action_lines(self, content: str) -> list[str]:
+        action_re = re.compile(
+            r"^(Reactive|Free|Frequency|Trigger|Requirements?|"
+            r"Effect|Grab|Constrict|Rend|Pounce|Baffling|Vengeful|Consume|Flicker|"
+            r"Claim|Death|Blood|Breath|Poison|Paralysis|Ghoul Fever|Sneak Attack|"
+            r"Attack of Opportunity|Reactive Strike)",
+            re.IGNORECASE,
+        )
+        actions = [
+            line.strip()
+            for line in content.splitlines()
+            if action_re.match(line.strip())
+        ]
+        compact = re.sub(r"\s+", " ", content).strip()
+        self._append_named_action_block(
+            actions,
+            compact,
+            "Consume Flesh",
+            ["Ghoul Fever", "Paralysis", "Swift Leap"],
+            fallback_start="Requirements",
+        )
+        self._append_named_action_block(
+            actions,
+            compact,
+            "Ghoul Fever",
+            ["Paralysis", "Swift Leap"],
+        )
+        self._append_named_action_block(
+            actions,
+            compact,
+            "Paralysis",
+            ["Swift Leap"],
+        )
+        self._append_named_action_block(actions, compact, "Swift Leap", [])
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for action in actions:
+            key = re.sub(r"\s+", " ", action).strip().casefold()
+            if not key or key in seen:
+                continue
+            if (
+                key.startswith(("requirements ", "effect "))
+                and any(item.casefold().startswith("consume flesh") for item in actions)
+            ):
+                continue
+            deduped.append(action)
+            seen.add(key)
+        return deduped[:12]
+
+    def _append_named_action_block(
+        self,
+        actions: list[str],
+        content: str,
+        name: str,
+        stop_names: list[str],
+        *,
+        fallback_start: str | None = None,
+    ) -> None:
+        start = re.search(rf"\b{re.escape(name)}\b", content)
+        prefix = name
+        if not start and fallback_start:
+            start = re.search(rf"\b{re.escape(fallback_start)}\b", content)
+            prefix = name
+        if not start:
+            return
+        stop_positions = [
+            match.start()
+            for stop_name in stop_names
+            for match in [re.search(rf"\b{re.escape(stop_name)}\b", content[start.end() :])]
+            if match
+        ]
+        end = start.end() + min(stop_positions) if stop_positions else min(len(content), start.start() + 700)
+        block = content[start.start() : end].strip(" ;")
+        if prefix != name or not block.casefold().startswith(name.casefold()):
+            block = f"{prefix} {block}"
+        actions.append(block)
+
+    def _spell_lines(self, content: str) -> list[str]:
+        spell_re = re.compile(
+            r"^(Occult|Primal|Arcane|Divine|Spells?|Cantrips?|Constant|Focus|Rituals?)\b",
+            re.IGNORECASE,
+        )
         return [
             line.strip()
             for line in content.splitlines()
-            if re.match(r"^(Melee|Ranged|Damage|Occult|Primal|Arcane|Divine|Reactive|Grab|Constrict|Rend|Pounce|Baffling|Vengeful|Consume|Flicker|Claim|Death|Blood)", line.strip(), re.IGNORECASE)
-        ][:8]
+            if spell_re.match(line.strip())
+        ][:12]
+
+    def _skills(self, content: str) -> list[str]:
+        skills = self._stat_value(content, "Skills")
+        if not skills:
+            return []
+        return [part.strip() for part in re.split(r",\s*", skills) if part.strip()]
+
+    def _ability_mods(self, content: str) -> dict[str, str]:
+        match = re.search(
+            r"\bStr\s+([+-]\d+).*?\bDex\s+([+-]\d+).*?\bCon\s+([+-]\d+).*?"
+            r"\bInt\s+([+-]\d+).*?\bWis\s+([+-]\d+).*?\bCha\s+([+-]\d+)",
+            content,
+            re.IGNORECASE | re.DOTALL,
+        )
+        if not match:
+            return {}
+        keys = ("str", "dex", "con", "int", "wis", "cha")
+        return {key: match.group(index + 1) for index, key in enumerate(keys)}
+
+    def _senses(self, content: str) -> str:
+        perception = self._stat_value(content, "Perception")
+        if not perception:
+            return ""
+        parts = [part.strip() for part in perception.split(",")[1:] if part.strip()]
+        return ", ".join(parts)
 
     def _is_remastered_source(self, source: str) -> bool:
         return any(name in source for name in ("Monster Core", "Player Core", "GM Core", "NPC Core"))

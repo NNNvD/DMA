@@ -1,16 +1,19 @@
 # Private-Local Campaign Bundle
 
-DMA now treats this ignored folder as the single private campaign data bundle:
+DMA treats the private campaign data bundle as ignored local material. The
+preferred collaborator layout is the root overlay:
 
-`assets/imports/misc/private-local/`
+`local-private-overlay/project-root/assets/imports/misc/private-local/`
 
-This folder is the source of truth for generated campaign material that should
-not be committed to public GitHub.
+When the standard `.env` defaults are used, DMA checks this root overlay before
+the legacy `assets/imports/misc/private-local/` path. The overlay is the normal
+source of truth for generated campaign material that should not be committed to
+public GitHub.
 
 ## Current Layout
 
 ```text
-assets/imports/misc/private-local/
+local-private-overlay/project-root/assets/imports/misc/private-local/
   campaigns/abomination-vaults/
     campaign-overview.json
     campaign-recaps.json
@@ -39,7 +42,7 @@ New campaign imports should pass through a draft review layer before they become
 live DMA data.
 
 ```text
-assets/imports/misc/private-local/
+local-private-overlay/project-root/assets/imports/misc/private-local/
   campaigns/abomination-vaults/sources.json
   reference/extracted/<source-id>/
     manifest.json
@@ -63,12 +66,18 @@ Unreviewed drafts do not appear in Map Room.
 
 ## Sharing With Collaborators
 
-Give collaborators the `private-local` folder and ask them to place it at:
+Give collaborators the full `local-private-overlay/` folder and ask them to
+place it at the repository root:
 
-`assets/imports/misc/private-local/`
+`DMA-main/local-private-overlay/project-root/`
 
-They should not use `local-private-overlay/` for new installs. That workflow is
-deprecated and kept only as a compatibility note.
+They must acquire this folder manually from the GM or approved private
+distribution channel. GitHub cannot and should not provide it. After every public
+DMA update, confirm whether a newer `local-private-overlay/` was also provided.
+
+Do **not** copy or unpack `local-private-overlay/project-root/assets/...` into
+`assets/imports/...` for normal use. The backend already prefers the root overlay
+when default paths are configured.
 
 ## Migration
 
@@ -89,5 +98,17 @@ DMA_PRIVATE_DATA_ROOT=./assets/imports/misc/private-local
 DMA_CAMPAIGN_ID=abomination-vaults
 ```
 
+When `DMA_PRIVATE_DATA_ROOT` is left at the default value, the app first checks
+for `./local-private-overlay/project-root/assets/imports/misc/private-local` and
+uses that root overlay if present. This keeps private updates in the root
+`local-private-overlay/` folder instead of requiring a copy into `assets/`.
+
 `OBSIDIAN_VAULT_PATH` may remain configured for legacy import/export helpers, but
 the live DM Panel no longer depends on Obsidian for generated campaign content.
+
+## Current Combat Guardrail
+
+The Current Combat module is card-based only. Do not restore the older
+table-based combat module when applying updates, resolving conflicts, or using an
+LLM to modify the DMA. If a feature exists only in old table-oriented code,
+rebuild that feature in the card-based module.

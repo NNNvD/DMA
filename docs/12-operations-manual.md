@@ -121,6 +121,11 @@ Notes:
 - the Map Room reads map images from `DUNGEON_MAP_ROOT`, defaulting to `./assets/imports/misc/private-local/media`
 - the Map Room reads room-key JSON from `DUNGEON_ROOM_KEY_ROOT`, defaulting to `./assets/imports/misc/private-local/room-keys`
 
+When those paths are left at their defaults, DMA prefers matching paths under
+`./local-private-overlay/project-root/` if that overlay folder exists. This lets
+private campaign updates stay in the root overlay without copying them into
+`assets/`.
+
 ### Map Room
 
 Use `Map Room` when the party is exploring a numbered dungeon map.

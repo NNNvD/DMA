@@ -1012,8 +1012,59 @@ source_url: "{source_path}"
         assert payload["character_name"] == "Shmungus"
         assert payload["identity"]["class_name"] == "Druid"
         assert payload["combat"]["ac"] == 16
+        assert payload["combat"]["hp"] == 18
         full_sheet = client.get("/api/live/pc-sheet", params={"id": payload["id"]}).json()
         assert full_sheet["attacks"][0]["name"] == "Thundermace"
+    finally:
+        asyncio.run(engine.dispose())
+
+
+def test_live_private_pc_sheet_hp_includes_constitution_per_level(tmp_path, monkeypatch):
+    private_root = tmp_path / "private-local"
+    campaign_root = private_root / "campaigns" / "abomination-vaults"
+    campaign_root.mkdir(parents=True)
+    (campaign_root / "pcs.json").write_text(
+        json.dumps(
+            {
+                "campaign_id": "abomination-vaults",
+                "items": [
+                    {
+                        "id": 1,
+                        "player_name": "Alex",
+                        "character_name": "Dwarf Guardian",
+                        "identity": {
+                            "level": 3,
+                            "class_name": "Guardian",
+                            "ancestry": "Dwarf",
+                        },
+                        "combat": {"hp": 46},
+                        "abilities": [
+                            {"key": "con", "name": "CON", "score": 16, "modifier": 3}
+                        ],
+                        "raw": {
+                            "level": 3,
+                            "attributes": {"con": 16},
+                            "vitals": {
+                                "ancestry_hp": 10,
+                                "class_hp": 12,
+                                "bonus_hp": 0,
+                                "bonus_hp_per_level": 0,
+                            },
+                        },
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(settings, "dma_private_data_root", str(private_root))
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/live/pc-sheets")
+        assert response.status_code == 200
+        assert response.json()["items"][0]["combat"]["hp"] == 55
     finally:
         asyncio.run(engine.dispose())
 
@@ -1078,6 +1129,7 @@ special_abilities: ["Sneak Attack", "Low-Light Vision"]
         detail = client.get("/api/live/pc-sheet", params={"id": 42})
         assert detail.status_code == 200
         assert detail.json()["combat"]["ac"] == 17
+        assert detail.json()["combat"]["hp"] == 13
         assert detail.json()["combat"]["speed"] == 30
         assert detail.json()["specials"] == ["Sneak Attack", "Low-Light Vision"]
     finally:

@@ -6,6 +6,7 @@ from pathlib import Path
 from time import time
 from typing import Any
 
+from backend.config.local_paths import private_data_root
 from backend.config.settings import settings
 
 
@@ -18,10 +19,7 @@ class PrivateCampaignDataService:
         ).resolve()
 
     def private_root(self) -> Path:
-        configured = Path(settings.dma_private_data_root).expanduser()
-        if not configured.is_absolute():
-            configured = self.project_root / configured
-        return configured.resolve()
+        return private_data_root(self.project_root, settings.dma_private_data_root)
 
     def campaign_id(self) -> str:
         return str(settings.dma_campaign_id or "abomination-vaults").strip()

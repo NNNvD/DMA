@@ -30,6 +30,7 @@ class LiveSessionService:
             "round": 1,
             "activeIndex": 0,
             "combatants": [],
+            "afflictions": [],
         },
     }
 
@@ -296,6 +297,9 @@ class LiveSessionService:
         combatants = value.get("combatants")
         if not isinstance(combatants, list):
             combatants = []
+        afflictions = value.get("afflictions")
+        if not isinstance(afflictions, list):
+            afflictions = []
 
         try:
             round_number = max(1, int(value.get("round") or 1))
@@ -316,6 +320,7 @@ class LiveSessionService:
             "round": round_number,
             "activeIndex": active_index,
             "combatants": combatants,
+            "afflictions": afflictions,
         }
 
 

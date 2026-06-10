@@ -60,3 +60,51 @@ def test_private_campaign_data_service_rejects_paths_outside_private_root(tmp_pa
         assert "outside" in str(exc)
     else:
         raise AssertionError("Expected path traversal to be rejected")
+
+
+def test_private_campaign_data_service_prefers_root_overlay_for_default_path(
+    tmp_path, monkeypatch
+):
+    overlay = (
+        tmp_path
+        / "local-private-overlay"
+        / "project-root"
+        / "assets"
+        / "imports"
+        / "misc"
+        / "private-local"
+    )
+    legacy = tmp_path / "assets" / "imports" / "misc" / "private-local"
+    overlay.mkdir(parents=True)
+    legacy.mkdir(parents=True)
+    monkeypatch.setattr(
+        "backend.services.private_campaign_data_service.settings.dma_private_data_root",
+        "./assets/imports/misc/private-local",
+    )
+    service = PrivateCampaignDataService(project_root=tmp_path)
+
+    assert service.private_root() == overlay.resolve()
+
+
+def test_private_campaign_data_service_keeps_explicit_private_root(
+    tmp_path, monkeypatch
+):
+    overlay = (
+        tmp_path
+        / "local-private-overlay"
+        / "project-root"
+        / "assets"
+        / "imports"
+        / "misc"
+        / "private-local"
+    )
+    explicit = tmp_path / "custom-private"
+    overlay.mkdir(parents=True)
+    explicit.mkdir()
+    monkeypatch.setattr(
+        "backend.services.private_campaign_data_service.settings.dma_private_data_root",
+        str(explicit),
+    )
+    service = PrivateCampaignDataService(project_root=tmp_path)
+
+    assert service.private_root() == explicit.resolve()
