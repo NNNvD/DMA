@@ -56,6 +56,10 @@
   and must not require copying/unpacking it into `assets/imports/...`.
   Collaborators must manually obtain the latest ignored `local-private-overlay/`
   bundle outside GitHub whenever updating local DMA data.
+- Town Square live data is private overlay data. Do not commit Otari maps or
+  generated settlement JSON to the public repo, and do not replace the
+  `campaigns/<campaign-id>/settlements.json` overlay structure with legacy
+  `assets/imports/...` copies.
 - Current Combat must remain the richer card-based module. Do not reintroduce,
   resurrect, or route to the older table-based combat UI; move any needed
   functionality into the card-based module instead.

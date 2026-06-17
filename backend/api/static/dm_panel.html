@@ -130,6 +130,7 @@
       align-items: start;
       gap: 18px;
       margin-top: 18px;
+      min-width: 0;
     }
 
     body {
@@ -445,6 +446,8 @@
 
     .panel {
       align-self: start;
+      min-width: 0;
+      max-width: 100%;
       padding: 20px;
       border-radius: 24px;
       background: var(--panel);
@@ -496,6 +499,7 @@
 
     .panel.full-width {
       grid-column: 1 / -1;
+      min-width: 0;
     }
 
     .module-map-room {
@@ -794,6 +798,86 @@
       font-weight: 800;
     }
 
+    .party-roll-controls {
+      display: grid;
+      grid-template-columns: minmax(110px, 150px) minmax(0, 1fr);
+      gap: 12px;
+      align-items: end;
+      margin-top: 12px;
+    }
+
+    .party-roll-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .party-roll-buttons button {
+      flex: 0 0 auto;
+    }
+
+    .party-roll-results {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .party-roll-row {
+      display: grid;
+      grid-template-columns: minmax(112px, 1fr) 44px 56px 56px minmax(84px, 0.8fr);
+      gap: 6px;
+      align-items: center;
+      padding: 9px 10px;
+      border-radius: 14px;
+      background: rgba(255, 252, 246, 0.86);
+      border: 1px solid rgba(90, 71, 59, 0.12);
+      font-size: 0.92rem;
+    }
+
+    .party-roll-row.is-header {
+      background: transparent;
+      border-color: transparent;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .party-roll-row.is-missing {
+      color: var(--ink-soft);
+      background: rgba(90, 71, 59, 0.05);
+    }
+
+    .party-roll-row.is-natural-20 {
+      border-color: rgba(42, 101, 92, 0.3);
+      background: rgba(42, 101, 92, 0.08);
+    }
+
+    .party-roll-row.is-natural-1 {
+      border-color: rgba(138, 47, 29, 0.26);
+      background: rgba(138, 47, 29, 0.08);
+    }
+
+    .party-roll-total {
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .party-roll-outcome {
+      font-weight: 800;
+    }
+
+    .party-roll-outcome.is-critical-success,
+    .party-roll-outcome.is-success {
+      color: #24584f;
+    }
+
+    .party-roll-outcome.is-critical-failure,
+    .party-roll-outcome.is-failure {
+      color: #8a2f1d;
+    }
+
     .stat-line {
       display: flex;
       flex-wrap: wrap;
@@ -867,6 +951,11 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       margin-top: 12px;
+    }
+
+    .range-row label,
+    .range-row input[type="range"] {
+      min-width: 0;
     }
 
     .small-actions {
@@ -1238,6 +1327,7 @@
       grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.8fr);
       gap: 14px;
       align-items: start;
+      min-width: 0;
     }
 
     .map-room-filters {
@@ -1291,8 +1381,12 @@
     .map-viewer img {
       display: block;
       width: 100%;
-      min-width: 720px;
+      min-width: min(720px, 100%);
       height: auto;
+    }
+
+    #town-square-viewer {
+      min-height: 220px;
     }
 
     .room-card {
@@ -1480,13 +1574,17 @@
 
     .combat-initiative-strip {
       display: flex;
+      flex-wrap: wrap;
       gap: 7px;
-      overflow-x: auto;
-      padding: 2px 0 8px;
+      min-width: 0;
+      max-width: 100%;
+      overflow: visible;
+      padding: 2px 0 4px;
     }
 
     .combat-strip-chip {
-      min-width: 128px;
+      flex: 0 0 150px;
+      min-width: 150px;
       display: grid;
       gap: 3px;
       border-radius: 14px;
@@ -1545,11 +1643,68 @@
       background: rgba(138, 47, 29, 0.05);
     }
 
+    .combat-card-summary.combat-affliction-summary {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
     .combat-card-name {
       display: flex;
       flex-wrap: wrap;
       gap: 7px;
       align-items: baseline;
+    }
+
+    .combat-card-name-block {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .combat-card-property-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .combat-property-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 18px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(90, 71, 59, 0.18);
+      background: rgba(255, 248, 239, 0.72);
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .combat-property-pill.is-alignment {
+      border-color: rgba(138, 47, 29, 0.22);
+      background: rgba(138, 47, 29, 0.09);
+      color: #6e2b20;
+    }
+
+    .combat-property-pill.is-size {
+      border-color: rgba(42, 101, 92, 0.22);
+      background: rgba(42, 101, 92, 0.09);
+      color: #24584f;
+    }
+
+    .combat-property-pill.is-rarity {
+      border-color: rgba(134, 93, 22, 0.24);
+      background: rgba(134, 93, 22, 0.1);
+      color: #6f4b13;
+    }
+
+    .combat-property-pill.is-trait {
+      border-color: rgba(72, 69, 137, 0.2);
+      background: rgba(72, 69, 137, 0.08);
+      color: #44417d;
     }
 
     .combat-duplicate-badge {
@@ -2112,6 +2267,7 @@
     }
 
     .sheet-overview-table {
+      max-width: 100%;
       overflow-x: auto;
       border-radius: 16px;
       border: 1px solid rgba(90, 71, 59, 0.14);
@@ -3201,7 +3357,7 @@
         <article class="panel">
           <h2>Dice Roller</h2>
           <p class="subtle">
-            Roll quick checks, damage, and custom expressions without leaving the panel. Supports formulas like
+            Roll custom expressions, damage, and party-wide saves or Perception checks. Supports formulas like
             <code>1d20+7</code>, <code>2d6+4</code>, <code>4d6kh3</code>, and <code>2d20kl1+9</code>.
           </p>
           <form id="dice-form">
@@ -3209,31 +3365,7 @@
               Roll Expression
               <input id="dice-expression" placeholder="1d20+7" value="1d20" />
             </label>
-            <div class="dice-pad" aria-label="Dice buttons">
-              <button type="button" class="utility-chip" data-dice-fragment="d3">d3</button>
-              <button type="button" class="utility-chip" data-dice-fragment="d4">d4</button>
-              <button type="button" class="utility-chip" data-dice-fragment="d6">d6</button>
-              <button type="button" class="utility-chip" data-dice-fragment="d8">d8</button>
-              <button type="button" class="utility-chip" data-dice-fragment="d10">d10</button>
-              <button type="button" class="utility-chip" data-dice-fragment="d12">d12</button>
-              <button type="button" class="utility-chip" data-dice-fragment="d20">d20</button>
-              <button type="button" class="utility-chip" data-dice-fragment="d100">d100</button>
-            </div>
-            <div class="dice-pad" aria-label="Flat modifier buttons">
-              <button type="button" class="utility-chip" data-dice-fragment="+1">+1</button>
-              <button type="button" class="utility-chip" data-dice-fragment="+3">+3</button>
-              <button type="button" class="utility-chip" data-dice-fragment="+5">+5</button>
-              <button type="button" class="utility-chip" data-dice-fragment="+10">+10</button>
-              <button type="button" class="utility-chip" data-dice-fragment="-1">-1</button>
-              <button type="button" class="utility-chip" data-dice-fragment="-3">-3</button>
-              <button type="button" class="utility-chip" data-dice-fragment="-5">-5</button>
-              <button type="button" class="utility-chip" data-dice-fragment="-10">-10</button>
-            </div>
             <div class="small-actions">
-              <button type="button" class="ghost" data-dice-template="1d20">Flat Check</button>
-              <button type="button" class="ghost" data-dice-template="1d20+7">Skill Check</button>
-              <button type="button" class="ghost" data-dice-template="2d20kh1+7">Fortune</button>
-              <button type="button" class="ghost" data-dice-template="2d20kl1+7">Misfortune</button>
               <button type="button" class="ghost" id="dice-clear-expression">Clear Dice</button>
               <button type="button" class="ghost" id="dice-clear-history">Clear History</button>
             </div>
@@ -3241,6 +3373,18 @@
               <button type="submit">Roll Dice</button>
             </div>
           </form>
+          <div class="party-roll-controls">
+            <label>
+              Check DC
+              <input id="party-roll-dc" type="number" min="1" max="60" step="1" placeholder="optional" />
+            </label>
+            <div class="party-roll-buttons" aria-label="Party check buttons">
+              <button type="button" class="ghost" data-party-roll="fortitude">Fortitude</button>
+              <button type="button" class="ghost" data-party-roll="reflex">Reflex</button>
+              <button type="button" class="ghost" data-party-roll="will">Will</button>
+              <button type="button" class="ghost" data-party-roll="perception">Perception</button>
+            </div>
+          </div>
           <div class="result-box" id="dice-result"><span class="empty">Dice results will appear here.</span></div>
           <div class="history-list" id="dice-history">
             <div class="empty">Recent rolls will appear here.</div>
@@ -3551,7 +3695,7 @@
       "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. The viewer reads the private-local campaign JSON bundle first so the DM sees the current campaign party. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
       "NPC Dossier Viewer": "Use this to inspect and update NPC campaign dossiers during play.\n\nSearch by NPC name, role, status, or summary, then open the dossier. NPCs are displayed differently from PCs: the focus is portrait, appearance, role, current location, player-facing description, GM summary, whether the party has encountered them, relationship to the PCs, campaign encounter points, goals, secrets, clues, relationships, and optional combat/statblock data. Use Edit NPC Notes And Details for table notes, better status values, appearance text, and disposition changes.",
       "Campaign Bestiary": "Use this to inspect the campaign-specific encounter library.\n\nThis is where DMA keeps custom adventure creatures, AoN-linked creatures used in the campaign, hazards, and afflictions such as diseases. Search by name, room, trait, or source. Use the type filter to focus on custom creatures, AoN references, hazards, or afflictions. Opening an entry shows GM-facing stats, strategy, appearance, first-glance information, Recall Knowledge suggestions, and source rooms. Creature entries can be added to Current Combat. Hazards and afflictions are shown as structured references; hazards are added only when you explicitly choose them, and afflictions are tracked separately rather than becoming initiative combatants.",
-      "Dice Roller": "Use this for quick checks, saves, attacks, damage, and fortune or misfortune rolls.\n\nType formulas like 1d20+7, 2d6+4, 4d6kh3, or 2d20kl1+9. The die and modifier buttons help build common expressions quickly. Flat Check, Skill Check, Fortune, and Misfortune load useful templates that you can edit before rolling. Roll history keeps the latest results visible while the page stays open.",
+      "Dice Roller": "Use this for quick custom rolls and party-wide saves or checks.\n\nType formulas like 1d20+7, 2d6+4, 4d6kh3, or 2d20kl1+9. Fortitude, Reflex, Will, and Perception roll the selected check for every loaded party member. Add a DC to mark success, failure, critical success, and critical failure automatically. Roll history keeps the latest results visible while the page stays open.",
       "Session Soundboard": "Use this for lightweight sound cues and ambience during play.\n\nThe recommended sounds are based on the saved scene title, focus, and current location, so update Current Scene first if the suggestions feel off. One-shot cues play briefly. Ambience loops until you stop it or start a different ambience. Stop All Audio cuts off all sounds started by this panel. These are browser-generated sounds, not imported audio tracks.",
       "Voice Reader": "Use this to read boxed text, NPC dialogue, recaps, or assistant answers aloud.\n\nChoose a Voice Preset for pacing and tone, then pick one of the voices installed in your browser or operating system. Rate and Pitch fine-tune the result. Use Assistant Reply loads the latest chat answer. Use Scene Notes loads the current DM notes. Paste or edit the text, then press Speak. Stop Speaking cancels the current read-aloud.",
       "Reference PDFs": "Use this when you need the original books beside the DMA tools.\n\nFilter narrows the configured PDF list, Source PDF chooses the book, and Open PDF Tab adds it to the in-panel reader. The PDF viewer uses Chrome's native controls, so page search, zoom, download, and page navigation behave like normal Chrome PDFs. Open multiple tabs when you want the adventure volume, player guide, and another reference available at the same time.",
@@ -5972,6 +6116,9 @@
         type: entryType === "hazard" ? "HAZARD" : "CREATURE",
         level: entry.level ?? "",
         traits: entry.traits || [],
+        alignment: entry.alignment || "",
+        size: entry.size || "",
+        rarity: entry.rarity || "",
         source: "Campaign Bestiary",
         sourceUrl: "",
         imageUrl: entry.portrait || "",
@@ -6012,6 +6159,9 @@
         type: "CREATURE",
         level: entry.level ?? "",
         traits: entry.traits || [],
+        alignment: entry.alignment || "",
+        size: entry.size || "",
+        rarity: entry.rarity || "",
         source: "Campaign Bestiary AoN reference",
         sourceUrl: "",
         imageUrl: entry.portrait || "",
@@ -6050,6 +6200,9 @@
         sourceUrl: creature.source_url || enriched.sourceUrl || "",
         level: enriched.level !== "" && enriched.level !== undefined ? enriched.level : combatant.level,
         traits: creature.traits || enriched.traits || combatant.traits || [],
+        alignment: enriched.alignment || combatant.alignment || "",
+        size: enriched.size || combatant.size || "",
+        rarity: enriched.rarity || combatant.rarity || "",
         content: creature.content || enriched.content || combatant.content || "",
         initiative: enriched.initiative || combatant.initiative,
         initiativeBonus: enriched.initiativeBonus || combatant.initiativeBonus,
@@ -6365,6 +6518,9 @@
         abilities: [],
         spells: [],
         traits: [],
+        alignment: "",
+        size: "",
+        rarity: "",
         content: "",
         sourceUrl: "",
         detail: "No literal encounter text is available for this monster yet.",
@@ -6434,6 +6590,9 @@
         type: "CREATURE",
         level: creature.level ?? "",
         traits: creature.traits || [],
+        alignment: creature.alignment || "",
+        size: creature.size || "",
+        rarity: creature.rarity || "",
         content: creature.content || "",
         sourceUrl: creature.source_url || "",
         imageUrl: creature.image_url || "",
@@ -6654,16 +6813,20 @@
       if (!afflictions.length) {
         return `
           <details class="combat-card">
-            <summary class="combat-card-summary">
-              <span class="combat-card-name"><strong>Affliction Tracker</strong><span class="subtle">No active afflictions</span></span>
+            <summary class="combat-card-summary combat-affliction-summary">
+              <span class="combat-card-name-block">
+                <span class="combat-card-name"><strong>Affliction Tracker</strong><span class="subtle">No active afflictions</span></span>
+              </span>
             </summary>
           </details>
         `;
       }
       return `
         <details class="combat-card" open>
-          <summary class="combat-card-summary">
-            <span class="combat-card-name"><strong>Affliction Tracker</strong><span class="subtle">${escapeHtml(String(afflictions.length))} tracked</span></span>
+          <summary class="combat-card-summary combat-affliction-summary">
+            <span class="combat-card-name-block">
+              <span class="combat-card-name"><strong>Affliction Tracker</strong><span class="subtle">${escapeHtml(String(afflictions.length))} tracked</span></span>
+            </span>
           </summary>
           <div class="combat-card-body" style="grid-template-columns: 1fr;">
             ${afflictions.map((affliction, index) => `
@@ -7848,6 +8011,40 @@
       return blocks || '<div class="combat-stat-block"><strong>Details</strong><span class="empty">No extra structured stats loaded.</span></div>';
     }
 
+    function renderCombatantPropertyPills(combatant) {
+      if (combatant.kind === "pc") return "";
+      const seen = new Set();
+      const alignmentLabels = {
+        LG: "Lawful Good",
+        NG: "Neutral Good",
+        CG: "Chaotic Good",
+        LN: "Lawful Neutral",
+        N: "Neutral",
+        CN: "Chaotic Neutral",
+        LE: "Lawful Evil",
+        NE: "Neutral Evil",
+        CE: "Chaotic Evil",
+      };
+      const rawPills = [
+        combatant.rarity ? { label: combatant.rarity, type: "rarity" } : null,
+        combatant.alignment ? { label: alignmentLabels[combatant.alignment] || combatant.alignment, type: "alignment" } : null,
+        combatant.size ? { label: combatant.size, type: "size" } : null,
+        ...(combatant.traits || []).map((trait) => ({ label: trait, type: "trait" })),
+      ].filter(Boolean);
+      const pills = rawPills.filter((pill) => {
+        const key = `${pill.type}:${String(pill.label || "").toLowerCase()}`;
+        if (!pill.label || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 8);
+      if (!pills.length) return "";
+      return `
+        <span class="combat-card-property-pills" aria-label="Creature properties">
+          ${pills.map((pill) => `<span class="combat-property-pill is-${escapeHtml(pill.type)}">${escapeHtml(pill.label)}</span>`).join("")}
+        </span>
+      `;
+    }
+
     function renderCombatantCard(combatant, combatantIndex) {
       withCombatHp(combatant);
       const levelLabel = combatant.level !== "" && combatant.level !== undefined
@@ -7866,10 +8063,13 @@
         <article class="combat-card ${active ? "is-active" : ""}">
           <button type="button" class="combat-card-summary" data-combat-toggle="${combatantIndex}">
             ${renderCombatSummaryPortrait(combatant)}
-            <span class="combat-card-name">
+            <span class="combat-card-name-block">
+              <span class="combat-card-name">
               ${duplicateBadge}
               <strong>${escapeHtml(displayName)}</strong>
               <span class="subtle">${escapeHtml([levelLabel, active ? "Active turn" : ""].filter(Boolean).join(" · "))}</span>
+            </span>
+              ${renderCombatantPropertyPills(combatant)}
             </span>
             <span class="combat-card-summary-stat">HP ${escapeHtml(combatantHpSummary(combatant))}</span>
             <span class="combat-card-summary-stat">AC ${escapeHtml(formatValue(combatant.ac))}</span>
@@ -8416,6 +8616,13 @@
         speed: "",
         attacks: [],
         abilities: [],
+        spells: [],
+        traits: [],
+        alignment: "",
+        size: "",
+        rarity: "",
+        content: "",
+        sourceUrl: "",
         detail: "No literal encounter text is available for this monster yet.",
       })).map(withCombatHp);
     }
@@ -8461,7 +8668,7 @@
     function combatantFromAonCreature(creature) {
       const traits = (creature.traits || []).join(", ");
       const attackLines = (creature.attacks || []).filter((line) => /^(Melee|Ranged|Damage)/i.test(line));
-      const abilityLines = (creature.attacks || []).filter((line) => !/^(Melee|Ranged|Damage)/i.test(line));
+      const abilityLines = (creature.actions || creature.attacks || []).filter((line) => !/^(Melee|Ranged|Damage)/i.test(line));
       const sourceFlags = [
         creature.remastered ? "Remastered" : "",
         creature.legacy ? "Legacy content" : "",
@@ -8481,6 +8688,13 @@
         count: 1,
         type: "CREATURE",
         level: creature.level ?? "",
+        traits: creature.traits || [],
+        alignment: creature.alignment || "",
+        size: creature.size || "",
+        rarity: creature.rarity || "",
+        content: creature.content || "",
+        sourceUrl: creature.source_url || "",
+        imageUrl: creature.image_url || "",
         initiative: creature.perception ? `Perception ${creature.perception}` : "",
         initiativeBonus: initiativeBonus({ initiative: creature.perception ? `Perception ${creature.perception}` : "" }),
         initiativeRoll: null,
@@ -8491,8 +8705,16 @@
         ref: creature.ref || "",
         will: creature.will || "",
         speed: creature.speed || "",
+        senses: creature.senses || "",
+        languages: creature.languages || "",
+        skills: creature.skills || [],
+        abilityMods: creature.ability_mods || {},
+        immunities: creature.immunities || "",
+        weaknesses: creature.weaknesses || "",
+        resistances: creature.resistances || "",
         attacks: attackLines,
         abilities: abilityLines,
+        spells: creature.spells || [],
         detail,
       });
     }
@@ -8837,7 +9059,7 @@
           <div style="padding: 16px;">
             <h3>${escapeHtml(activeTownSettlement.title || activeTownSettlement.name || "Settlement")}</h3>
             <p>${escapeHtml(activeTownSettlement.summary || "No settlement summary listed yet.")}</p>
-            <div class="subtle">No town map image is configured yet. Add a local image path to <code>map_path</code> in private-local settlements data.</div>
+            <div class="subtle">No town map image is configured yet. Use the location cards and search while running town scenes.</div>
           </div>
         `;
       if (!settlementMatches) {
@@ -10205,12 +10427,167 @@
       };
     }
 
+    function parseCheckBonus(value) {
+      if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+      }
+      const text = String(value ?? "").trim();
+      if (!text || text === "—" || text === "-") {
+        return null;
+      }
+      const signed = text.match(/[+-]\d+/);
+      if (signed) {
+        return Number.parseInt(signed[0], 10);
+      }
+      const plain = text.match(/-?\d+/);
+      return plain ? Number.parseInt(plain[0], 10) : null;
+    }
+
+    function degreeFromTotal(total, dc, die) {
+      if (!Number.isFinite(dc)) {
+        return "";
+      }
+      const degrees = ["Critical Failure", "Failure", "Success", "Critical Success"];
+      let degreeIndex = total >= dc + 10 ? 3 : total >= dc ? 2 : total <= dc - 10 ? 0 : 1;
+      if (die === 20) {
+        degreeIndex = Math.min(3, degreeIndex + 1);
+      } else if (die === 1) {
+        degreeIndex = Math.max(0, degreeIndex - 1);
+      }
+      return degrees[degreeIndex];
+    }
+
+    function outcomeClass(outcome) {
+      return String(outcome || "").toLowerCase().replace(/\s+/g, "-");
+    }
+
+    function partyCheckStat(sheet, statKey) {
+      const combat = sheet.combat || {};
+      if (statKey === "fortitude") return combat.fortitude;
+      if (statKey === "reflex") return combat.reflex;
+      if (statKey === "will") return combat.will;
+      if (statKey === "perception") return combat.perception;
+      return null;
+    }
+
+    function partyCheckLabel(statKey) {
+      return {
+        fortitude: "Fortitude",
+        reflex: "Reflex",
+        will: "Will",
+        perception: "Perception",
+      }[statKey] || "Party Check";
+    }
+
+    function renderPartyRollResults(roll) {
+      const header = `
+        <div class="party-roll-row is-header" aria-hidden="true">
+          <span>PC</span>
+          <span>d20</span>
+          <span>Bonus</span>
+          <span>Total</span>
+          <span>Outcome</span>
+        </div>
+      `;
+      const rows = roll.results.map((result) => {
+        const classes = [
+          "party-roll-row",
+          result.missing ? "is-missing" : "",
+          result.die === 20 ? "is-natural-20" : "",
+          result.die === 1 ? "is-natural-1" : "",
+        ].filter(Boolean).join(" ");
+        const outcome = result.missing
+          ? "Missing"
+          : result.outcome || (result.die === 20 ? "Natural 20" : result.die === 1 ? "Natural 1" : "—");
+        return `
+          <div class="${classes}">
+            <strong>${escapeHtml(result.name)}</strong>
+            <span>${result.missing ? "—" : escapeHtml(String(result.die))}</span>
+            <span>${result.missing ? "—" : escapeHtml(signedNumber(result.bonus))}</span>
+            <span class="party-roll-total">${result.missing ? "—" : escapeHtml(String(result.total))}</span>
+            <span class="party-roll-outcome is-${escapeHtml(outcomeClass(result.outcome))}">${escapeHtml(outcome)}</span>
+          </div>
+        `;
+      }).join("");
+      return `<div class="party-roll-results">${header}${rows}</div>`;
+    }
+
+    async function rollPartyCheck(statKey) {
+      const resultHost = document.getElementById("dice-result");
+      try {
+        await ensurePcSheetsLoaded();
+        if (!pcSheets.length) {
+          resultHost.innerHTML = '<span class="empty">No party members are loaded yet.</span>';
+          return;
+        }
+        const dcValue = Number.parseInt(document.getElementById("party-roll-dc").value, 10);
+        const dc = Number.isFinite(dcValue) ? dcValue : null;
+        const label = partyCheckLabel(statKey);
+        const results = pcSheets.map((sheet) => {
+          const bonus = parseCheckBonus(partyCheckStat(sheet, statKey));
+          const name = sheet.character_name || sheet.player_name || "Unnamed PC";
+          if (bonus === null) {
+            return { name, missing: true };
+          }
+          const die = 1 + Math.floor(Math.random() * 20);
+          const total = die + bonus;
+          return {
+            name,
+            die,
+            bonus,
+            total,
+            outcome: degreeFromTotal(total, dc, die),
+            missing: false,
+          };
+        });
+        const roll = {
+          kind: "party-check",
+          expression: `Party ${label}${dc ? ` vs DC ${dc}` : ""}`,
+          statKey,
+          label,
+          dc,
+          results,
+          rolledAt: nowLabel(),
+        };
+        diceHistory = [roll, ...diceHistory].slice(0, 8);
+        renderDiceHistory();
+        resultHost.innerHTML = `
+          <div class="stat-line">
+            <span class="stat-badge">Party ${escapeHtml(label)}</span>
+            ${dc ? `<span class="stat-badge">DC ${escapeHtml(String(dc))}</span>` : ""}
+          </div>
+          ${renderPartyRollResults(roll)}
+        `;
+      } catch (error) {
+        resultHost.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+      }
+    }
+
     function renderDiceHistory() {
       const host = document.getElementById("dice-history");
       if (!diceHistory.length) {
         host.innerHTML = '<div class="empty">Recent rolls will appear here.</div>';
         return;
       }
+      host.innerHTML = diceHistory.map((entry) => {
+        const details = entry.kind === "party-check"
+          ? `<span>${escapeHtml(String(entry.results.filter((result) => !result.missing).length))} rolled</span>
+            <span class="history-meta">${escapeHtml(entry.results.map((result) => (
+              result.missing
+                ? `${result.name}: missing`
+                : `${result.name}: ${result.die}${signedNumber(result.bonus)} = ${result.total}${result.outcome ? `, ${result.outcome}` : ""}`
+            )).join(" · "))}</span>`
+          : `<span>Total ${escapeHtml(entry.total)}</span>
+            <span class="history-meta">${escapeHtml(entry.parts.map((part) => `${part.detail} = ${part.subtotal}`).join(" · "))}</span>`;
+        return `
+          <div class="history-item">
+            <strong>${escapeHtml(entry.expression)}</strong>
+            ${details}
+            <span class="history-meta">Rolled at ${escapeHtml(entry.rolledAt)}</span>
+          </div>
+        `;
+      }).join("");
+      return;
       host.innerHTML = diceHistory.map((entry) => `
         <div class="history-item">
           <strong>${escapeHtml(entry.expression)}</strong>
@@ -10238,75 +10615,6 @@
       } catch (error) {
         resultHost.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
       }
-    }
-
-    function diceTermText(term, isFirst = false) {
-      const sign = term.sign < 0 ? "-" : (isFirst ? "" : "+");
-      if (term.kind === "dice") {
-        return `${sign}${term.count}d${term.sides}${term.keepMode ? `k${term.keepMode}${term.keepCount}` : ""}`;
-      }
-      return `${sign}${term.value}`;
-    }
-
-    function formatDiceBuilderTerms(terms) {
-      const filtered = terms.filter((term) => term.kind !== "flat" || term.value !== 0);
-      if (!filtered.length) return "0";
-      return filtered.map((term, index) => diceTermText(term, index === 0)).join("");
-    }
-
-    function parsedDiceBuilderTerms(expression) {
-      try {
-        return parseDiceExpression(expression);
-      } catch (_error) {
-        const trimmed = String(expression || "").trim();
-        return trimmed ? [{ kind: "raw", text: trimmed }] : [];
-      }
-    }
-
-    function appendDiceFragment(fragment) {
-      const input = document.getElementById("dice-expression");
-      const terms = parsedDiceBuilderTerms(input.value);
-      if (terms.some((term) => term.kind === "raw")) {
-        input.value = `${input.value.trim()}${fragment}`;
-        return;
-      }
-
-      const diceMatch = String(fragment || "").match(/^d(\d+)$/i);
-      if (diceMatch) {
-        const sides = Number.parseInt(diceMatch[1], 10);
-        const existing = terms.find((term) => (
-          term.kind === "dice"
-          && term.sign > 0
-          && term.sides === sides
-          && !term.keepMode
-        ));
-        if (existing) {
-          existing.count += 1;
-        } else {
-          terms.push({ kind: "dice", sign: 1, count: 1, sides, keepMode: null, keepCount: null });
-        }
-        input.value = formatDiceBuilderTerms(terms);
-        return;
-      }
-
-      const modifier = Number.parseInt(fragment, 10);
-      if (Number.isFinite(modifier)) {
-        const flatTerms = terms.filter((term) => term.kind === "flat");
-        const diceTerms = terms.filter((term) => term.kind !== "flat");
-        const currentFlat = flatTerms.reduce((sum, term) => sum + (term.sign * term.value), 0);
-        const nextFlat = currentFlat + modifier;
-        if (nextFlat !== 0) {
-          diceTerms.push({
-            kind: "flat",
-            sign: nextFlat < 0 ? -1 : 1,
-            value: Math.abs(nextFlat),
-          });
-        }
-        input.value = formatDiceBuilderTerms(diceTerms);
-        return;
-      }
-
-      input.value = `${input.value.trim()}${fragment}`;
     }
 
     function ensureAudioContext() {
@@ -11569,14 +11877,6 @@
       document.getElementById("tts-status-copy").textContent =
         document.getElementById("tts-text").value ? "Loaded current scene notes." : "Current scene notes are empty.";
     });
-    document.querySelectorAll("[data-dice-fragment]").forEach((button) => {
-      button.addEventListener("click", () => appendDiceFragment(button.dataset.diceFragment));
-    });
-    document.querySelectorAll("[data-dice-template]").forEach((button) => {
-      button.addEventListener("click", () => {
-        document.getElementById("dice-expression").value = button.dataset.diceTemplate;
-      });
-    });
     document.getElementById("dice-clear-expression").addEventListener("click", () => {
       document.getElementById("dice-expression").value = "";
       document.getElementById("dice-expression").focus();
@@ -11586,6 +11886,11 @@
       renderDiceHistory();
       document.getElementById("dice-result").innerHTML =
         '<span class="empty">Dice results will appear here.</span>';
+    });
+    document.querySelectorAll("[data-party-roll]").forEach((button) => {
+      button.addEventListener("click", () => {
+        rollPartyCheck(button.dataset.partyRoll);
+      });
     });
     document.getElementById("soundboard-list").addEventListener("click", (event) => {
       const button = event.target.closest("[data-sound-key]");
