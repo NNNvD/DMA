@@ -40,6 +40,9 @@ class AonCreatureDocument:
     content: str
     remastered: bool
     legacy: bool
+    alignment: str
+    size: str
+    rarity: str
     ac: str
     hp: str
     fort: str
@@ -174,6 +177,9 @@ class AonCreatureService:
         remastered = item.remastered or self._is_remastered_source(source)
         level = self._extract_level(content, item.name, item.level)
         traits = self._extract_traits(content, item.traits)
+        alignment = self._extract_header_token(content, self._alignment_tokens())
+        size = self._extract_header_token(content, self._size_tokens())
+        rarity = self._extract_header_token(content, self._rarity_tokens())
 
         return AonCreatureDocument(
             creature_id=item.creature_id,
@@ -185,6 +191,9 @@ class AonCreatureService:
             content=content,
             remastered=remastered,
             legacy=legacy and not remastered,
+            alignment=alignment,
+            size=size,
+            rarity=rarity,
             ac=self._stat_value(content, "AC"),
             hp=self._stat_value(content, "HP"),
             fort=self._stat_value(content, "Fort"),
@@ -219,6 +228,18 @@ class AonCreatureService:
     def _backfill_document_payload(self, payload: dict[str, Any]) -> None:
         content = str(payload.get("content") or "")
         payload.setdefault("image_url", "")
+        payload["alignment"] = payload.get("alignment") or self._extract_header_token(
+            content,
+            self._alignment_tokens(),
+        )
+        payload["size"] = payload.get("size") or self._extract_header_token(
+            content,
+            self._size_tokens(),
+        )
+        payload["rarity"] = payload.get("rarity") or self._extract_header_token(
+            content,
+            self._rarity_tokens(),
+        )
         payload.setdefault("senses", "")
         payload.setdefault("languages", "")
         payload.setdefault("skills", [])
@@ -318,18 +339,40 @@ class AonCreatureService:
             return fallback
 
     def _extract_traits(self, content: str, fallback: list[str]) -> list[str]:
+        candidates = self._header_tokens(content)
+        traits = [
+            trait
+            for trait in candidates
+            if trait
+            and trait not in {"Legacy", "Content"}
+            and trait not in self._alignment_tokens()
+            and trait not in self._size_tokens()
+            and trait not in self._rarity_tokens()
+        ]
+        return traits or fallback
+
+    def _header_tokens(self, content: str) -> list[str]:
         source_match = re.search(r"\nSource\b", content)
         before_source = content[: source_match.start()] if source_match else content[:300]
         lines = [line.strip() for line in before_source.splitlines() if line.strip()]
         if len(lines) < 2:
-            return fallback
-        candidates = re.split(r"\s{2,}| ", lines[-1])
-        traits = [
-            trait
-            for trait in candidates
-            if trait and trait not in {"Legacy", "Content", "N", "NE", "CE", "LE", "CN", "LN", "NG", "LG", "CG", "Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan"}
-        ]
-        return traits or fallback
+            return []
+        return [token for token in re.split(r"\s{2,}| ", lines[-1]) if token]
+
+    def _extract_header_token(self, content: str, candidates: set[str]) -> str:
+        for token in self._header_tokens(content):
+            if token in candidates:
+                return token
+        return ""
+
+    def _alignment_tokens(self) -> set[str]:
+        return {"N", "NE", "CE", "LE", "CN", "LN", "NG", "LG", "CG"}
+
+    def _size_tokens(self) -> set[str]:
+        return {"Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan"}
+
+    def _rarity_tokens(self) -> set[str]:
+        return {"Common", "Uncommon", "Rare", "Unique"}
 
     def _stat_value(self, content: str, label: str) -> str:
         if label in {"Fort", "Ref", "Will"}:

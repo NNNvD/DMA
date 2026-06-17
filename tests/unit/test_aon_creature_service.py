@@ -30,7 +30,7 @@ def test_aon_creature_parser_extracts_structured_combat_fields():
     html = """
     <div class="main" id="main">
       Ghoul Creature 1
-      Ghoul Undead
+      Rare CE Medium Ghoul Undead Incorporeal
       Source Bestiary
       Perception +7, darkvision
       Languages Common, Necril
@@ -56,6 +56,10 @@ def test_aon_creature_parser_extracts_structured_combat_fields():
         AonCreatureIndexItem(218, "Ghoul", 1, "Bestiary", ["Ghoul", "Undead"], False, True),
     )
 
+    assert document.rarity == "Rare"
+    assert document.alignment == "CE"
+    assert document.size == "Medium"
+    assert document.traits == ["Ghoul", "Undead", "Incorporeal"]
     assert document.senses == "darkvision"
     assert document.languages == "Common, Necril"
     assert document.skills == ["Acrobatics +7", "Athletics +4", "Stealth +7"]
@@ -117,6 +121,9 @@ def test_aon_creature_cache_without_image_url_still_loads(tmp_path):
     )
     document = service.get_creature(item.creature_id)
     assert document.image_url == ""
+    assert document.alignment == ""
+    assert document.size == ""
+    assert document.rarity == ""
 
 
 def test_aon_creature_cache_backfills_actions_and_merges_split_damage(tmp_path):

@@ -191,6 +191,10 @@ This text belongs to the next chapter, not A25.
                         "room_id": "A1",
                         "title": "Damp Entrance",
                         "player_visible_description": "Wet stone and webs.",
+                        "gm_description": "A hidden guard watches from the mist.",
+                        "hazards": ["Concealing mist"],
+                        "secret_doors": ["Secret door in the west wall"],
+                        "detection_notes": "Search can find the secret door.",
                         "source": "Abomination Vaults 1 - Ruins of Gauntlight.pdf, p. 6",
                     },
                     {
@@ -303,6 +307,27 @@ This text belongs to the next chapter, not A25.
         assert a2["general_text"] == (
             "True to appearances, the drawbridge isn't safe to cross."
         )
+
+        player_safe = client.get(
+            "/api/live/dungeon-room-key/player-safe", params={"map_id": "level1"}
+        )
+        assert player_safe.status_code == 200
+        safe_rooms = {room["room_id"]: room for room in player_safe.json()["rooms"]}
+        assert safe_rooms["A1"] == {
+            "room_id": "A1",
+            "title": "Damp Entrance",
+            "player_visible_description": "Wet stone and webs.",
+            "literal_text": {
+                "read_aloud": "Wet stone and original boxed text near Gauntlight Keep.",
+            },
+        }
+        unsafe_text = json.dumps(safe_rooms["A1"])
+        assert "hidden guard" not in unsafe_text
+        assert "Secret door" not in unsafe_text
+        assert "Concealing mist" not in unsafe_text
+        assert "Search can find" not in unsafe_text
+        assert "mitflits" not in unsafe_text
+        assert "source" not in safe_rooms["A1"]
 
         bestiary = client.get("/api/live/campaign-bestiary")
         assert bestiary.status_code == 200

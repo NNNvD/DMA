@@ -36,6 +36,30 @@ The live DM Panel reads campaign overview tabs, session notes, PC sheets, NPC
 dossiers, portraits, room keys, and campaign bestiary data from this folder
 first.
 
+## Town Square Data
+
+The Town Square module reads settlement data from:
+
+```text
+local-private-overlay/project-root/assets/imports/misc/private-local/
+  campaigns/abomination-vaults/settlements.json
+```
+
+For Abomination Vaults, the ignored overlay bundle should include the Otari
+settlement with all 20 numbered town-map locations from the Book 1 legend. The
+Otari map image should stay in the ignored overlay under a private media path
+such as:
+
+```text
+local-private-overlay/project-root/assets/imports/misc/private-local/
+  media/abomination-vaults/towns/otari-town-map-page-68.png
+```
+
+Do not commit the map image or generated `settlements.json` content to the public
+repository. Collaborator agents should preserve the `settlements.json` structure
+and update the private overlay bundle out of band when Town Square content
+changes.
+
 ## Import Review Pipeline
 
 New campaign imports should pass through a draft review layer before they become

@@ -1241,6 +1241,29 @@ def _enrich_room_key_literal_text(payload: dict) -> dict:
     return payload
 
 
+def _player_safe_room_key_payload(payload: dict) -> dict:
+    safe_payload = {
+        "map_id": payload.get("map_id"),
+        "title": payload.get("title"),
+        "path": payload.get("path"),
+        "rooms": [],
+    }
+    for room in payload.get("rooms") or []:
+        if not isinstance(room, dict):
+            continue
+        safe_room: dict[str, Any] = {
+            "room_id": room.get("room_id"),
+            "title": room.get("title"),
+            "player_visible_description": room.get("player_visible_description") or "",
+        }
+        literal = room.get("literal_text") if isinstance(room.get("literal_text"), dict) else {}
+        read_aloud = literal.get("read_aloud")
+        if read_aloud:
+            safe_room["literal_text"] = {"read_aloud": read_aloud}
+        safe_payload["rooms"].append(safe_room)
+    return safe_payload
+
+
 def _campaign_bestiary_files() -> list[Path]:
     root = _bestiary_root()
     if not root.exists():
@@ -3000,6 +3023,23 @@ async def get_dungeon_room_key(map_id: str = Query(min_length=1)):
     raise _not_found("Dungeon room key was not found")
 
 
+@router.get("/dungeon-room-key/player-safe")
+async def get_player_safe_dungeon_room_key(map_id: str = Query(min_length=1)):
+    root = _room_key_root()
+    if not root.exists():
+        raise _not_found("Configured dungeon room-key root was not found")
+    normalized_map_id = map_id.strip().casefold()
+    for path in sorted(root.rglob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if str(payload.get("map_id", "")).strip().casefold() == normalized_map_id:
+            payload["path"] = path.relative_to(root).as_posix()
+            return _player_safe_room_key_payload(_enrich_room_key_literal_text(payload))
+    raise _not_found("Dungeon room key was not found")
+
+
 @router.get("/campaign-bestiary", response_model=CampaignBestiarySearchResponse)
 async def list_campaign_bestiary(
     q: Optional[str] = Query(default=None),
@@ -3482,6 +3522,9 @@ async def get_aon_creature(
             "content": document.content,
             "remastered": document.remastered,
             "legacy": document.legacy,
+            "alignment": document.alignment,
+            "size": document.size,
+            "rarity": document.rarity,
             "ac": document.ac,
             "hp": document.hp,
             "fort": document.fort,
@@ -3489,7 +3532,16 @@ async def get_aon_creature(
             "will": document.will,
             "speed": document.speed,
             "perception": document.perception,
+            "senses": document.senses,
+            "languages": document.languages,
+            "skills": document.skills,
+            "ability_mods": document.ability_mods,
+            "immunities": document.immunities,
+            "weaknesses": document.weaknesses,
+            "resistances": document.resistances,
             "attacks": document.attacks,
+            "actions": document.actions,
+            "spells": document.spells,
             "image_url": document.image_url,
             "fetched_at": document.fetched_at,
             "ruleset": "pf2e",
