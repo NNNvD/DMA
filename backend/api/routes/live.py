@@ -50,9 +50,16 @@ class LiveSessionStateUpdate(BaseModel):
 
 class LiveAssistantRequest(BaseModel):
     message: str
-    mode: Literal["auto", "scene", "rules", "continuity", "recap", "npc", "prep"] = (
-        "auto"
-    )
+    mode: Literal[
+        "auto",
+        "scene",
+        "rules",
+        "continuity",
+        "recap",
+        "npc",
+        "prep",
+        "memory",
+    ] = "auto"
 
 
 class LiveMapToolSyncRequest(BaseModel):

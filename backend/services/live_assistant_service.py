@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
+from datetime import datetime, timezone
 from typing import Any, Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.services.campaign_service import campaign_service
 from backend.services.live_session_service import live_session_service
 from backend.services.prep_service import prep_service
+from backend.services.private_index_service import private_index_service
 from backend.services.rules_service import rules_service
 
 
@@ -20,6 +23,7 @@ LiveAssistantMode = Literal[
     "recap",
     "npc",
     "prep",
+    "memory",
 ]
 
 
@@ -38,6 +42,10 @@ class LiveAssistantService:
         "improv": "npc",
         "prep": "prep",
         "brief": "prep",
+        "memory": "memory",
+        "remember": "memory",
+        "update": "memory",
+        "log": "memory",
     }
     scene_keyword_patterns = (
         "who is here",
@@ -59,6 +67,15 @@ class LiveAssistantService:
         "brief me",
         "session brief",
         "what should i prep",
+    )
+    memory_keyword_patterns = (
+        "remember that",
+        "note that",
+        "record that",
+        "log that",
+        "update memory",
+        "campaign update",
+        "session update",
     )
     npc_keyword_patterns = (
         "make up an npc",
@@ -127,6 +144,8 @@ class LiveAssistantService:
             response = self._npc_response(snapshot, query)
         elif resolved_mode == "prep":
             response = await self._prep_response(db, snapshot, query)
+        elif resolved_mode == "memory":
+            response = await self._memory_response(db, snapshot, query)
         else:
             raise ValueError(f"Unsupported live assistant mode: {resolved_mode}")
 
@@ -158,6 +177,10 @@ class LiveAssistantService:
             return "npc", message
         if any(pattern in lowered for pattern in self.prep_keyword_patterns):
             return "prep", message
+        if any(pattern in lowered for pattern in self.memory_keyword_patterns):
+            return "memory", message
+        if self._looks_like_campaign_update(lowered):
+            return "memory", message
         if self._looks_like_rules_query(lowered):
             return "rules", message
         return "continuity", message
@@ -166,7 +189,11 @@ class LiveAssistantService:
         normalized = message.strip()
         if not normalized.startswith("/"):
             return None, normalized
-        command, _, remainder = normalized[1:].partition(" ")
+        match = re.match(r"^/(\S+)(?:\s+([\s\S]*))?$", normalized)
+        if not match:
+            return None, normalized
+        command = match.group(1)
+        remainder = match.group(2) or ""
         mode = self.command_aliases.get(command.casefold())
         return mode, remainder.strip()
 
@@ -180,6 +207,253 @@ class LiveAssistantService:
         if any(pattern in message for pattern in self.rules_keyword_patterns):
             return True
         return any(term in message for term in self.rules_terms)
+
+    def _looks_like_campaign_update(self, message: str) -> bool:
+        actor_pattern = r"\b(players|pcs|party|they|characters)\b"
+        event_pattern = (
+            r"\b(cleared|entered|left|killed|defeated|fled|retreated|rested|"
+            r"found|took|opened|triggered|spoke|promised|learned|discovered)\b"
+        )
+        room_pattern = r"\b[a-d]\d{1,2}\b"
+        return bool(
+            re.search(actor_pattern, message)
+            and (re.search(event_pattern, message) or re.search(room_pattern, message))
+        )
+
+    def _looks_like_location_lookup(self, message: str) -> bool:
+        return bool(
+            re.search(
+                r"\b(where|located|location|find|hidden|stored)\b",
+                message,
+                flags=re.IGNORECASE,
+            )
+        )
+
+    def _private_search_matches(
+        self,
+        query: str,
+        *,
+        limit: int = 5,
+    ) -> list[dict[str, Any]]:
+        terms = self._search_terms(query)
+        if not terms:
+            return []
+        path = private_index_service.indexes_root() / "campaign-search.jsonl"
+        if not path.exists():
+            return []
+
+        try:
+            rows = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return []
+
+        scored: list[tuple[int, dict[str, Any]]] = []
+        for line in rows:
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("title") or "")
+            text = str(item.get("text") or item.get("content") or "")
+            searchable = self._normalized_search_text(f"{title} {text}")
+            score = self._private_match_score(terms, searchable, title)
+            dependency_payload = self._dependency_payload(item)
+            dependency_kind = str(dependency_payload.get("kind") or "")
+            if score <= 0:
+                continue
+            if dependency_kind in {"item", "quest_item"}:
+                score += 8
+            if dependency_payload.get("sources"):
+                score += 2
+            scored.append(
+                (
+                    score,
+                    {
+                        "id": item.get("id"),
+                        "kind": item.get("kind"),
+                        "title": title,
+                        "source_path": item.get("source_path"),
+                        "metadata": item.get("metadata") or {},
+                        "dependency_kind": dependency_kind or None,
+                        "sources": dependency_payload.get("sources") or [],
+                        "snippet": self._private_match_snippet(
+                            text,
+                            terms,
+                            dependency_payload=dependency_payload,
+                        ),
+                        "score": score,
+                    },
+                )
+            )
+        scored.sort(
+            key=lambda pair: (
+                -pair[0],
+                str(pair[1].get("kind") or ""),
+                str(pair[1].get("title") or ""),
+            )
+        )
+        return [item for _score, item in scored[:limit]]
+
+    def _search_terms(self, query: str) -> list[str]:
+        stopwords = {
+            "and",
+            "are",
+            "can",
+            "find",
+            "for",
+            "from",
+            "how",
+            "is",
+            "located",
+            "location",
+            "of",
+            "the",
+            "there",
+            "to",
+            "what",
+            "where",
+            "who",
+        }
+        terms = []
+        for token in re.findall(r"[a-z0-9]+", query.casefold()):
+            if token in stopwords or len(token) < 3:
+                continue
+            terms.append(token[:-1] if token.endswith("s") and len(token) > 4 else token)
+        return sorted(set(terms), key=terms.index)
+
+    def _normalized_search_text(self, value: str) -> str:
+        tokens = []
+        for token in re.findall(r"[a-z0-9]+", value.casefold()):
+            tokens.append(token)
+            if token.endswith("s") and len(token) > 4:
+                tokens.append(token[:-1])
+        return " ".join(tokens)
+
+    def _private_match_score(
+        self,
+        terms: list[str],
+        searchable: str,
+        title: str,
+    ) -> int:
+        score = 0
+        title_search = self._normalized_search_text(title)
+        for term in terms:
+            if re.search(rf"\b{re.escape(term)}\b", searchable):
+                score += 2
+            if re.search(rf"\b{re.escape(term)}\b", title_search):
+                score += 3
+        if all(re.search(rf"\b{re.escape(term)}\b", searchable) for term in terms):
+            score += 6
+        return score
+
+    def _snippet_for_terms(
+        self,
+        text: str,
+        terms: list[str],
+        *,
+        max_chars: int = 240,
+    ) -> str:
+        cleaned = " ".join(str(text or "").split())
+        if not cleaned:
+            return ""
+        normalized = self._normalized_search_text(cleaned)
+        positions = [normalized.find(term) for term in terms if normalized.find(term) >= 0]
+        start = max(0, min(positions) - 80) if positions else 0
+        snippet = cleaned[start : start + max_chars].strip()
+        if start > 0:
+            snippet = "..." + snippet
+        if start + max_chars < len(cleaned):
+            snippet += "..."
+        return snippet
+
+    def _private_match_snippet(
+        self,
+        text: str,
+        terms: list[str],
+        *,
+        dependency_payload: dict[str, Any],
+    ) -> str:
+        if dependency_payload:
+            name = str(dependency_payload.get("name") or "").strip()
+            kind = str(dependency_payload.get("kind") or "").strip()
+            source_labels = []
+            for source in dependency_payload.get("sources") or []:
+                if not isinstance(source, dict):
+                    continue
+                if source.get("entity_type") == "room" and source.get("entity_id"):
+                    source_labels.append(
+                        f"{source.get('entity_id')}"
+                        + (
+                            f" ({source.get('map_id')})"
+                            if source.get("map_id")
+                            else ""
+                        )
+                    )
+            parts = [name]
+            if kind:
+                parts.append(f"type: {kind}")
+            if source_labels:
+                parts.append("source room: " + ", ".join(source_labels))
+            return "; ".join(part for part in parts if part)
+        return self._snippet_for_terms(text, terms)
+
+    def _private_match_label(self, item: dict[str, Any]) -> str:
+        metadata = item.get("metadata") or {}
+        room_id = metadata.get("room_id")
+        title = str(item.get("title") or item.get("id") or "Private match")
+        if room_id:
+            suffix = title.replace(str(room_id), "", 1).strip()
+            return f"{room_id} {suffix}".strip()
+        for source in item.get("sources") or []:
+            if not isinstance(source, dict):
+                continue
+            if source.get("entity_type") == "room" and source.get("entity_id"):
+                room_title = self._source_room_title(source)
+                if room_title:
+                    return room_title
+                return f"{source.get('entity_id')} {title}".strip()
+        return title
+
+    def _dependency_payload(self, item: dict[str, Any]) -> dict[str, Any]:
+        if item.get("kind") != "dependency":
+            return {}
+        text = item.get("text") or item.get("content") or ""
+        try:
+            payload = json.loads(str(text))
+        except json.JSONDecodeError:
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
+    def _source_room_title(self, source: dict[str, Any]) -> str | None:
+        room_id = str(source.get("entity_id") or "").strip()
+        map_id = str(source.get("map_id") or "").strip()
+        if not room_id:
+            return None
+        path = private_index_service.indexes_root() / "campaign-search.jsonl"
+        if not path.exists():
+            return None
+        try:
+            rows = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return None
+        expected_id = f"room:{map_id}:{room_id}".casefold() if map_id else ""
+        for line in rows:
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            metadata = item.get("metadata") if isinstance(item, dict) else {}
+            if not isinstance(metadata, dict):
+                continue
+            if expected_id and str(item.get("id") or "").casefold() != expected_id:
+                continue
+            if str(metadata.get("room_id") or "").casefold() != room_id.casefold():
+                continue
+            title = str(item.get("title") or "").strip()
+            return title or room_id
+        return room_id
 
     def _scene_response(self, snapshot: dict[str, Any]) -> dict[str, Any]:
         state = snapshot.get("state") or {}
@@ -301,6 +575,10 @@ class LiveAssistantService:
             page=1,
             page_size=2 if frugal_mode else 3,
         )
+        private_matches = self._private_search_matches(
+            normalized_query,
+            limit=3 if frugal_mode else 5,
+        )
 
         primary_payload = None
         if exact_entity is not None:
@@ -318,7 +596,11 @@ class LiveAssistantService:
                     include_sheet_versions=entity.entity_type == "pc",
                 )
 
-        if primary_payload is None and not session_matches["items"]:
+        if (
+            primary_payload is None
+            and not session_matches["items"]
+            and not private_matches
+        ):
             return {
                 "answer": f"No continuity match found for '{normalized_query}'.",
                 "citations": [],
@@ -359,12 +641,31 @@ class LiveAssistantService:
         if session_titles:
             lines.append("Matching sessions: " + ", ".join(session_titles))
 
+        if private_matches:
+            if self._looks_like_location_lookup(normalized_query):
+                lines.append(f"Likely location: {self._private_match_label(private_matches[0])}.")
+            lines.append("Private campaign matches:")
+            for item in private_matches[:3]:
+                lines.append(
+                    f"- {self._private_match_label(item)}: {item.get('snippet') or ''}"
+                )
+
         return {
             "answer": "\n".join(lines),
             "citations": [],
-            "entities": search_items,
+            "entities": [
+                *search_items,
+                *[
+                    {
+                        "name": self._private_match_label(item),
+                        "entity_type": item.get("kind") or "private",
+                    }
+                    for item in private_matches
+                ],
+            ],
             "recent_sessions": session_matches["items"],
             "prep": None,
+            "private_matches": private_matches,
         }
 
     async def _recap_response(
@@ -472,6 +773,60 @@ class LiveAssistantService:
                 "location": payload.get("location"),
                 "markdown": payload.get("markdown"),
             },
+        }
+
+    async def _memory_response(
+        self,
+        db: AsyncSession,
+        snapshot: dict[str, Any],
+        query: str,
+    ) -> dict[str, Any]:
+        normalized_query = self._normalize_message(query)
+        if normalized_query is None:
+            raise ValueError(
+                "Memory mode needs a table update, for example '/memory PCs cleared C7 and left ghoul bodies.'"
+            )
+
+        state = snapshot.get("state") or {}
+        existing_notes = self._normalize_optional_multiline(state.get("notes")) or ""
+        entry = self._format_memory_entry(normalized_query)
+        updated_notes = "\n\n".join(part for part in [existing_notes, entry] if part)
+        updated_snapshot = await live_session_service.save_state(
+            db,
+            scene_title=state.get("scene_title"),
+            focus=state.get("focus"),
+            current_location_id=state.get("current_location_id"),
+            active_pc_ids=state.get("active_pc_ids") or [],
+            active_npc_ids=state.get("active_npc_ids") or [],
+            maptool_map_id=state.get("maptool_map_id"),
+            notes=updated_notes,
+            frugal_mode=bool(state.get("frugal_mode")),
+            combat_state=state.get("combat_state"),
+        )
+
+        extracted = self._memory_extracts(normalized_query)
+        lines = [
+            "Saved to live campaign memory.",
+            f"Update: {normalized_query}",
+        ]
+        if extracted:
+            lines.append("Detected: " + "; ".join(extracted))
+        lines.append(
+            "This is now part of the live scene notes used by /scene, /prep, and contextual answers."
+        )
+
+        return {
+            "answer": "\n".join(lines),
+            "citations": [],
+            "entities": [],
+            "recent_sessions": updated_snapshot.get("recent_sessions") or [],
+            "prep": updated_snapshot.get("latest_prep"),
+            "memory": {
+                "entry": entry,
+                "detected": extracted,
+                "notes": updated_notes,
+            },
+            "scene_context": self._scene_context(updated_snapshot),
         }
 
     def _npc_response(self, snapshot: dict[str, Any], query: str) -> dict[str, Any]:
@@ -680,8 +1035,39 @@ class LiveAssistantService:
     def _normalize_message(self, message: str | None) -> str | None:
         if message is None:
             return None
-        cleaned = re.sub(r"\s+", " ", str(message)).strip()
+        normalized = str(message).replace("\r\n", "\n").replace("\r", "\n")
+        lines = [
+            re.sub(r"[ \t]+", " ", line).strip()
+            for line in normalized.split("\n")
+        ]
+        cleaned = "\n".join(lines).strip()
+        cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
         return cleaned or None
+
+    def _normalize_optional_multiline(self, value: Any) -> str | None:
+        if value is None:
+            return None
+        return self._normalize_message(str(value))
+
+    def _format_memory_entry(self, text: str) -> str:
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        return f"[{timestamp}] {text}"
+
+    def _memory_extracts(self, text: str) -> list[str]:
+        extracts: list[str] = []
+        rooms = sorted(
+            set(re.findall(r"\b[A-D]\d{1,2}\b", text, flags=re.IGNORECASE)),
+            key=lambda item: (item[0].upper(), int(item[1:])),
+        )
+        if rooms:
+            extracts.append("rooms " + ", ".join(room.upper() for room in rooms))
+        if re.search(r"\bcleared|defeated|killed\b", text, flags=re.IGNORECASE):
+            extracts.append("cleared/defeated state")
+        if re.search(r"\bbod(?:y|ies|ys)\b|corpse|corpses", text, flags=re.IGNORECASE):
+            extracts.append("bodies/corpses left behind")
+        if re.search(r"\bretreat|recuperate|rest|town|otari\b", text, flags=re.IGNORECASE):
+            extracts.append("party rest/retreat context")
+        return extracts
 
     def _extract_name_candidate(self, prompt: str) -> str | None:
         match = re.search(r"\b([A-Z][a-z]+(?: [A-Z][a-z]+)+)\b", prompt)

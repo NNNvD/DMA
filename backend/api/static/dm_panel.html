@@ -991,6 +991,18 @@
       color: var(--accent);
     }
 
+    .chat-compose-grid {
+      display: grid;
+      grid-template-columns: minmax(150px, 0.35fr) minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .chat-compose-grid textarea {
+      min-height: 150px;
+      line-height: 1.45;
+    }
+
     .workspace-grid {
       display: grid;
       grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.4fr);
@@ -1385,6 +1397,100 @@
       height: auto;
     }
 
+    .map-image-stage {
+      position: relative;
+      min-width: min(720px, 100%);
+    }
+
+    .map-image-stage img {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .map-encounter-marker {
+      position: absolute;
+      left: var(--marker-x);
+      top: var(--marker-y);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(15px, 2.1vw, 21px);
+      height: clamp(15px, 2.1vw, 21px);
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 252, 246, 0.96);
+      color: #fffaf2;
+      padding: 0;
+      box-shadow: 0 2px 7px rgba(24, 18, 14, 0.45);
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    .map-encounter-marker svg {
+      width: 72%;
+      height: 72%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .map-encounter-marker.is-easy {
+      background: #c99a1a;
+    }
+
+    .map-encounter-marker.is-medium {
+      background: #c2631f;
+    }
+
+    .map-encounter-marker.is-hard {
+      background: #a22622;
+    }
+
+    .map-encounter-marker.is-haunt {
+      background: #7044a0;
+    }
+
+    .map-encounter-marker:hover,
+    .map-encounter-marker:focus-visible {
+      transform: translate(-50%, -50%) scale(1.12);
+      outline: 3px solid rgba(255, 252, 246, 0.7);
+    }
+
+    .map-encounter-toggle {
+      margin-top: 8px;
+    }
+
+    .map-encounter-legend {
+      position: sticky;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      background: rgba(255, 252, 246, 0.9);
+      border-top: 1px solid rgba(90, 71, 59, 0.14);
+      color: var(--ink-soft);
+      font-size: 0.82rem;
+    }
+
+    .map-legend-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .map-legend-dot::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--dot-color);
+      box-shadow: 0 0 0 1px rgba(90, 71, 59, 0.18);
+    }
+
     #town-square-viewer {
       min-height: 220px;
     }
@@ -1624,6 +1730,12 @@
       background: rgba(255, 249, 239, 0.98);
     }
 
+    .combat-card-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 34px;
+      align-items: stretch;
+    }
+
     .combat-card-summary {
       width: 100%;
       display: grid;
@@ -1641,6 +1753,26 @@
 
     .combat-card-summary:hover {
       background: rgba(138, 47, 29, 0.05);
+    }
+
+    .combat-remove-button {
+      align-self: stretch;
+      min-width: 34px;
+      min-height: 34px;
+      padding: 0;
+      border: 0;
+      border-left: 1px solid rgba(90, 71, 59, 0.12);
+      border-radius: 0;
+      background: rgba(255, 252, 246, 0.72);
+      color: var(--muted);
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .combat-remove-button:hover {
+      background: rgba(138, 47, 29, 0.12);
+      color: var(--accent);
     }
 
     .combat-card-summary.combat-affliction-summary {
@@ -2585,6 +2717,10 @@
         grid-template-columns: 1fr;
       }
 
+      .chat-compose-grid {
+        grid-template-columns: 1fr;
+      }
+
       .workspace-grid {
         grid-template-columns: 1fr;
       }
@@ -2849,6 +2985,10 @@
               <label><input type="checkbox" value="haunt" /> Haunt</label>
               <label><input type="checkbox" value="npc" /> NPC</label>
             </fieldset>
+            <div class="inline-toggle map-encounter-toggle">
+              <input id="map-encounter-icons-toggle" type="checkbox" checked />
+              <label for="map-encounter-icons-toggle" style="margin: 0;">Show encounter icons</label>
+            </div>
             <div class="actions">
               <button type="submit">Load Map</button>
               <button type="button" class="ghost" id="map-room-refresh">Refresh Maps</button>
@@ -3223,7 +3363,7 @@
             <div class="empty">Ask DMA a campaign question or assign a small live task.</div>
           </div>
           <form id="chat-form" style="margin-top: 12px;">
-            <div class="grid-two">
+            <div class="chat-compose-grid">
               <label>
                 Chat Mode
                 <select id="chat-mode">
@@ -3234,11 +3374,12 @@
                   <option value="recap">Recap</option>
                   <option value="npc">NPC</option>
                   <option value="prep">Prep</option>
+                  <option value="memory">Memory</option>
                 </select>
               </label>
               <label>
-                Quick Prompt
-                <input id="chat-message" placeholder="What should I know before the next room?" />
+                Message Or Campaign Update
+                <textarea id="chat-message" placeholder="Ask a question, or record what changed: PCs cleared C15-C21, left ghoul bodies, and returned to Otari to rest."></textarea>
               </label>
             </div>
             <div class="small-actions">
@@ -3246,6 +3387,7 @@
               <button type="button" class="ghost" data-chat-template="/rules frightened" data-chat-mode="rules">/rules</button>
               <button type="button" class="ghost" data-chat-template="/recap" data-chat-mode="recap">/recap</button>
               <button type="button" class="ghost" data-chat-template="/prep next likely encounters" data-chat-mode="prep">/prep</button>
+              <button type="button" class="ghost" data-chat-template="/memory PCs cleared C15-C21 and left bodies behind." data-chat-mode="memory">/memory</button>
               <button type="button" class="ghost" data-chat-template="/search Wrin" data-chat-mode="continuity">/search</button>
               <button type="button" class="ghost" id="chat-clear">Clear Chat</button>
             </div>
@@ -3691,7 +3833,7 @@
       "Import Review": "Use this before new extracted PDF material becomes live campaign data.\n\nCreate a room import run, inspect the room checklist, resolve missing or uncertain fields, approve drafts that look correct, and then promote reviewed rooms into the live private-local room-key JSON. Unreviewed drafts stay quarantined here and do not appear in Map Room.",
       "Quick Rules": "Use this when you want a direct rules answer with citations rather than a conversational answer.\n\nType the rules question in plain language. Strict rules mode keeps the answer close to approved rules documents and is best during live play. Top K controls how many source chunks DMA considers; use 3 for fast focused answers and 5 or 8 when the first answer needs more context. For looser questions, the /rules button in DMA Chat is often enough.",
       "Quick Prep": "Use this to generate a structured prep brief from the current live scene, recent sessions, and campaign state.\n\nBrief Title names the generated prep document. Prep Focus can override the current scene focus if you want a more specific brief, such as Level 1 hazards or Otari social fallout. Session Count controls how much recent history DMA considers. Store as session_prep document writes the brief back into DMA so it appears later in Session Context.",
-      "DMA Chat Workbench": "Use this as the main place to talk to DMA.\n\nAsk normal questions, or use the quick slash prompt buttons. /scene summarizes the current live situation. /rules starts a rules question. /recap asks for recent continuity. /prep asks for preparation help. /search looks up campaign memory. Chat Mode lets you steer the assistant when your request is ambiguous. Chat responses stay in this browser session and can be sent to Voice Reader with Use Assistant Reply.",
+      "DMA Chat Workbench": "Use this as the main place to talk to DMA.\n\nAsk normal questions, or use the quick slash prompt buttons. /scene summarizes the current live situation. /rules starts a rules question. /recap asks for recent continuity. /prep asks for preparation help. /search looks up campaign memory. /memory, /remember, /update, and /log save a timestamped table update into Current Scene notes so later scene, prep, and contextual answers can see what changed. Chat Mode lets you steer the assistant when your request is ambiguous. Chat bubbles stay in this browser session, while Memory entries persist in the saved live scene notes.",
       "PC Sheet Viewer": "Use this to inspect party character sheets during play.\n\nSearch by player name, character name, ancestry, or class, then open a PC. The viewer reads the private-local campaign JSON bundle first so the DM sees the current campaign party. The viewer shows a portrait slot, player and character identity, combat numbers, ability scores, saves, skills, attacks, armor, feats, special abilities, inventory, money, and spells when those were imported. For now this module is read-only. Portraits are shown when a portrait/image field exists in the character details; otherwise the slot stays as a clear placeholder.",
       "NPC Dossier Viewer": "Use this to inspect and update NPC campaign dossiers during play.\n\nSearch by NPC name, role, status, or summary, then open the dossier. NPCs are displayed differently from PCs: the focus is portrait, appearance, role, current location, player-facing description, GM summary, whether the party has encountered them, relationship to the PCs, campaign encounter points, goals, secrets, clues, relationships, and optional combat/statblock data. Use Edit NPC Notes And Details for table notes, better status values, appearance text, and disposition changes.",
       "Campaign Bestiary": "Use this to inspect the campaign-specific encounter library.\n\nThis is where DMA keeps custom adventure creatures, AoN-linked creatures used in the campaign, hazards, and afflictions such as diseases. Search by name, room, trait, or source. Use the type filter to focus on custom creatures, AoN references, hazards, or afflictions. Opening an entry shows GM-facing stats, strategy, appearance, first-glance information, Recall Knowledge suggestions, and source rooms. Creature entries can be added to Current Combat. Hazards and afflictions are shown as structured references; hazards are added only when you explicitly choose them, and afflictions are tracked separately rather than becoming initiative combatants.",
@@ -3882,6 +4024,32 @@
     const activeToolKey = "dma.dmPanel.tools.active";
     const sketchPadKey = "dma.dmPanel.sketchPad";
     const defaultPinnedToolIds = ["dice-roller", "session-soundboard"];
+    const partyLevelForMapMarkers = 3;
+    const mapEncounterMarkerPositions = {
+      level3: {
+        C1: { x: 9.3, y: 84.3 },
+        C3: { x: 20.3, y: 65.9 },
+        C4: { x: 10.9, y: 65.9 },
+        C6: { x: 14.5, y: 54.6 },
+        C8: { x: 14.1, y: 42.9 },
+        C11: { x: 45.3, y: 48.3 },
+        C13: { x: 34.4, y: 54.9 },
+        C15: { x: 44.7, y: 74.9 },
+        C18: { x: 54.8, y: 51.1 },
+        C19: { x: 59.4, y: 58.0 },
+        C23: { x: 56.6, y: 86.8 },
+        C24: { x: 47.7, y: 88.1 },
+        C27: { x: 24.8, y: 37.5 },
+        C32: { x: 16.4, y: 29.4 },
+        C33: { x: 73.6, y: 38.6 },
+        C34: { x: 74.7, y: 18.3 },
+        C35: { x: 51.3, y: 18.6 },
+        C36: { x: 79.4, y: 58.5 },
+        C38: { x: 71.3, y: 58.5 },
+        C39: { x: 71.2, y: 70.1 },
+        C40: { x: 79.5, y: 86.6 },
+      },
+    };
     const toolDefinitions = [
       { id: "current-scene", title: "Current Scene", icon: "scene" },
       { id: "quick-rules", title: "Quick Rules", icon: "book-open" },
@@ -3911,6 +4079,8 @@
         layers: '<path d="m12 2 9 5-9 5-9-5z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path>',
         map: '<path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path>',
         sword: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6"></path><path d="m16 16 4 4"></path><path d="m19 21 2-2"></path>',
+        monster: '<path d="M6 8 3 4"></path><path d="m18 8 3-4"></path><path d="M5 13c0-4 3-7 7-7s7 3 7 7v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"></path><path d="M9 12h.01M15 12h.01"></path><path d="M9.5 16h5"></path>',
+        haunt: '<path d="M6 20V9a6 6 0 0 1 12 0v11l-3-2-3 2-3-2z"></path><path d="M9 11h.01M15 11h.01"></path><path d="M10 15c.9.7 3.1.7 4 0"></path>',
       };
       return `<svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.scene}</svg>`;
     }
@@ -4306,6 +4476,9 @@
           time: nowLabel(),
         });
         renderChatLog();
+        if (payload.mode === "memory") {
+          await loadPanel();
+        }
       } catch (error) {
         chatHistory = chatHistory.filter((item) => !item.pending);
         chatHistory.push({
@@ -7831,6 +8004,22 @@
       commitCombatState();
     }
 
+    function removeCombatant(combatantIndex) {
+      const combatants = currentCombat.combatants || [];
+      if (!combatants[combatantIndex]) return;
+      combatants.splice(combatantIndex, 1);
+      currentCombat.combatants = labelDuplicateCombatants(combatants);
+      if (!currentCombat.combatants.length) {
+        currentCombat.activeIndex = 0;
+      } else if ((currentCombat.activeIndex || 0) > combatantIndex) {
+        currentCombat.activeIndex = (currentCombat.activeIndex || 0) - 1;
+      } else if ((currentCombat.activeIndex || 0) >= currentCombat.combatants.length) {
+        currentCombat.activeIndex = currentCombat.combatants.length - 1;
+      }
+      syncActiveCombatExpansion();
+      commitCombatState();
+    }
+
     function activeCombatant() {
       const combatants = currentCombat.combatants || [];
       if (!combatants.length) return null;
@@ -8061,6 +8250,7 @@
         : renderMonsterCombatantBody(combatant, combatantIndex);
       return `
         <article class="combat-card ${active ? "is-active" : ""}">
+          <div class="combat-card-header">
           <button type="button" class="combat-card-summary" data-combat-toggle="${combatantIndex}">
             ${renderCombatSummaryPortrait(combatant)}
             <span class="combat-card-name-block">
@@ -8075,6 +8265,8 @@
             <span class="combat-card-summary-stat">AC ${escapeHtml(formatValue(combatant.ac))}</span>
             <span class="combat-card-status">${combatantConditionSummary(combatant)}</span>
           </button>
+          <button type="button" class="combat-remove-button" data-combat-remove="${combatantIndex}" title="Remove from combat" aria-label="Remove ${escapeHtml(displayName)} from combat">&times;</button>
+          </div>
           ${expanded ? `${active ? renderCombatActiveActions() : ""}${cardBody}` : ""}
         </article>
       `;
@@ -8946,6 +9138,134 @@
       return !selectedTags.length || selectedTags.some((tag) => roomMatchesTag(room, tag));
     }
 
+    function encounterXpForLevel(level, count = 1) {
+      const difference = Number(level) - partyLevelForMapMarkers;
+      const xpByDifference = {
+        "-4": 10,
+        "-3": 15,
+        "-2": 20,
+        "-1": 30,
+        "0": 40,
+        "1": 60,
+        "2": 80,
+        "3": 120,
+        "4": 160,
+      };
+      return (xpByDifference[String(Math.max(-4, Math.min(4, difference)))] || 40) * Math.max(1, Number(count) || 1);
+    }
+
+    function roomEncounterSummary(room) {
+      const refs = Array.isArray(room.encounter_refs) ? room.encounter_refs : [];
+      const relevantRefs = refs.filter((ref) => !["affliction"].includes(String(ref.type || "").toLowerCase()));
+      const isHaunt = Boolean((room.haunts || []).length)
+        || relevantRefs.some((ref) => {
+          const entry = bestiaryEntryById(ref.id) || {};
+          return String(ref.type || entry.entry_type || "").toLowerCase() === "hazard"
+            && /haunt/i.test([entry.name, entry.summary, ...(entry.traits || []), room.literal_text?.encounter_text].join(" "));
+        });
+      const hasEncounter = isHaunt
+        || relevantRefs.length
+        || (room.monsters || []).length
+        || (room.npcs || []).length
+        || (room.traps || []).length;
+      if (!hasEncounter) {
+        return null;
+      }
+      if (isHaunt) {
+        return {
+          kind: "haunt",
+          severity: "haunt",
+          label: "Haunt",
+          detail: room.haunts?.[0] || room.hazards?.[0] || "Haunt",
+        };
+      }
+
+      let xp = 0;
+      relevantRefs.forEach((ref) => {
+        const entry = bestiaryEntryById(ref.id) || {};
+        const level = Number.isFinite(Number(entry.level)) ? Number(entry.level) : partyLevelForMapMarkers;
+        xp += encounterXpForLevel(level, ref.count || 1);
+      });
+      if (!xp && ((room.monsters || []).length || (room.npcs || []).length || (room.traps || []).length)) {
+        xp = 80;
+      }
+      const severity = xp >= 120 ? "hard" : xp >= 80 ? "medium" : "easy";
+      const label = severity === "hard" ? "Hard encounter" : severity === "medium" ? "Medium encounter" : "Easy encounter";
+      const names = [
+        ...(room.monsters || []),
+        ...(room.npcs || []),
+        ...relevantRefs.map((ref) => bestiaryEntryById(ref.id)?.name || ref.id),
+      ].filter(Boolean);
+      return {
+        kind: "monster",
+        severity,
+        label,
+        detail: names.length ? names.join(", ") : "Encounter",
+        xp,
+      };
+    }
+
+    function renderMapEncounterMarkers(mapId, roomKey) {
+      const toggle = document.getElementById("map-encounter-icons-toggle");
+      if (toggle && !toggle.checked) {
+        return "";
+      }
+      const positions = mapEncounterMarkerPositions[mapId] || {};
+      const rooms = roomKey?.rooms || [];
+      const markers = rooms.map((room) => {
+        const roomId = String(room.room_id || "").toUpperCase();
+        const position = positions[roomId];
+        const encounter = position ? roomEncounterSummary(room) : null;
+        if (!position || !encounter) {
+          return "";
+        }
+        const title = `${roomId} ${room.title || ""}: ${encounter.label}${encounter.detail ? ` - ${encounter.detail}` : ""}`;
+        return `
+          <button
+            type="button"
+            class="map-encounter-marker is-${escapeHtml(encounter.severity)}"
+            style="--marker-x: ${escapeHtml(String(position.x))}%; --marker-y: ${escapeHtml(String(position.y))}%;"
+            data-room-link="${escapeHtml(roomId)}"
+            title="${escapeHtml(title)}"
+            aria-label="${escapeHtml(title)}"
+          >
+            ${iconSvg(encounter.kind === "haunt" ? "haunt" : "monster")}
+          </button>
+        `;
+      }).join("");
+      if (!markers) {
+        return "";
+      }
+      return `
+        <div class="map-encounter-markers" aria-label="Encounter markers">${markers}</div>
+        <div class="map-encounter-legend" aria-label="Encounter marker legend">
+          <span class="map-legend-dot" style="--dot-color: #c99a1a;">Easy</span>
+          <span class="map-legend-dot" style="--dot-color: #c2631f;">Medium</span>
+          <span class="map-legend-dot" style="--dot-color: #a22622;">Hard</span>
+          <span class="map-legend-dot" style="--dot-color: #7044a0;">Haunt</span>
+        </div>
+      `;
+    }
+
+    function renderMapImage(map, roomKey = null) {
+      const markers = roomKey ? renderMapEncounterMarkers(map.map_id, roomKey) : "";
+      return `
+        <div class="map-image-stage">
+          <img src="${escapeHtml(map.url)}" alt="${escapeHtml(map.title)}" />
+          ${markers}
+        </div>
+      `;
+    }
+
+    function refreshMapEncounterOverlay() {
+      const selectedMapId = document.getElementById("map-room-select")?.value;
+      const map = dungeonMaps.find((item) => item.map_id === selectedMapId);
+      if (!map || !activeRoomKey) {
+        return;
+      }
+      document.getElementById("map-room-viewer").innerHTML = renderMapImage(map, activeRoomKey);
+    }
+
     function renderRoomKey() {
       const list = document.getElementById("map-room-list");
       const meta = document.getElementById("map-room-meta");
@@ -9127,7 +9447,7 @@
       if (!map) {
         return;
       }
-      viewer.innerHTML = `<img src="${escapeHtml(map.url)}" alt="${escapeHtml(map.title)}" />`;
+      viewer.innerHTML = renderMapImage(map);
       list.innerHTML = '<div class="empty">Loading room key…</div>';
       activeRoomKey = null;
       roomNavigationStack = [];
@@ -9136,6 +9456,7 @@
         activeRoomKey = await fetchJson(
           `${endpoints.dungeonRoomKey}?map_id=${encodeURIComponent(selectedMapId)}`,
         );
+        viewer.innerHTML = renderMapImage(map, activeRoomKey);
       } catch (error) {
         document.getElementById("map-room-meta").innerHTML = `
           <span class="stat-badge">${escapeHtml(map.title)}</span>
@@ -11324,6 +11645,12 @@
 
     document.getElementById("state-form").addEventListener("submit", saveLiveState);
     document.getElementById("chat-form").addEventListener("submit", sendChatMessage);
+    document.getElementById("chat-message").addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        document.getElementById("chat-form").requestSubmit();
+      }
+    });
     document.getElementById("dice-form").addEventListener("submit", handleDiceRoll);
     document.getElementById("maptool-form").addEventListener("submit", syncMapTool);
     document.getElementById("rules-form").addEventListener("submit", askRules);
@@ -11339,6 +11666,7 @@
     });
     document.getElementById("map-room-back").addEventListener("click", navigateBackRoom);
     document.getElementById("map-room-search").addEventListener("input", renderRoomKey);
+    document.getElementById("map-encounter-icons-toggle").addEventListener("change", refreshMapEncounterOverlay);
     document.getElementById("town-square-form").addEventListener("submit", (event) => {
       event.preventDefault();
       loadTownSquare();
@@ -11370,6 +11698,11 @@
     document.getElementById("combat-prev-turn").addEventListener("click", previousCombatTurn);
     document.getElementById("combat-reset-round").addEventListener("click", resetCombatRound);
     document.getElementById("combat-roster").addEventListener("click", (event) => {
+      const removeButton = event.target.closest("[data-combat-remove]");
+      if (removeButton) {
+        removeCombatant(Number.parseInt(removeButton.dataset.combatRemove, 10));
+        return;
+      }
       const toggleButton = event.target.closest("[data-combat-toggle]");
       if (toggleButton) {
         toggleCombatantCard(Number.parseInt(toggleButton.dataset.combatToggle, 10));
@@ -11558,6 +11891,12 @@
       if (button) {
         openCampaignOverviewTab(button.dataset.campaignTab);
       }
+    });
+    document.getElementById("map-room-viewer").addEventListener("click", (event) => {
+      const roomLink = event.target.closest("[data-room-link]");
+      if (!roomLink) return;
+      event.preventDefault();
+      openRoomCard(roomLink.dataset.roomLink, { mode: "summary" });
     });
     document.getElementById("combat-roster").addEventListener("mouseover", (event) => {
       const abilityButton = event.target.closest("[data-combatant-id][data-ability-index], [data-combatant-id][data-spell-name]");

@@ -1379,6 +1379,22 @@ Location: Greyhaven Docks
         assert improv_payload["mode"] == "npc"
         assert "Improvised NPC" in improv_payload["answer"]
         assert improv_payload["npc"]["role"] == "suspicious dock clerk"
+
+        memory = client.post(
+            "/api/live/respond",
+            json={
+                "message": "/memory PCs cleared C15 and left ghoul bodies behind.",
+            },
+        )
+        assert memory.status_code == 200
+        memory_payload = memory.json()
+        assert memory_payload["mode"] == "memory"
+        assert "Saved to live campaign memory" in memory_payload["answer"]
+        assert "C15" in memory_payload["memory"]["entry"]
+
+        restored_memory = client.get("/api/live/session-state")
+        assert restored_memory.status_code == 200
+        assert "PCs cleared C15" in restored_memory.json()["state"]["notes"]
     finally:
         asyncio.run(engine.dispose())
 
