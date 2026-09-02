@@ -280,3 +280,35 @@ The concrete tools (e.g., `pytest` vs `jest`) depend on the chosen stack; this d
 - Periodically:
   - Run full integration and scenario tests.
   - Review cost and latency metrics.
+
+## 4. Task Completion Standard
+
+Before work begins on every task, define task-specific acceptance criteria and
+record them with the task or its work record. If criteria were defined in
+advance, reevaluate them immediately before starting so that scope, risks,
+dependencies, and verification methods are current.
+
+### Sufficient completion
+
+The task works within its stated scope, appropriate automated tests pass, no
+known critical regression remains, the user-facing flow is verified when
+relevant, and the work record explains what changed, why, how it was tested,
+and what remains open.
+
+### Excellent completion
+
+Sufficient completion is met, and the task also has meaningful edge-case
+coverage, clear loading/empty/error states, polished user-facing behavior,
+visual and interaction verification, acceptable performance, and reusable
+documentation or tooling where appropriate.
+
+### Not complete
+
+A task is not complete if a critical failure remains, required tests are
+missing or failing, the actual interface is unverified when relevant,
+private/spoiler-sensitive data may leak, or the rationale and limitations are
+not documented.
+
+The final work record must state which level was achieved and list the concrete
+steps needed to raise a sufficient result to excellent. These criteria are
+completion gates, not permission to expand a task's scope without approval.
