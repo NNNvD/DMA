@@ -155,6 +155,12 @@ class ImageCandidateUpdate(BaseModel):
 
 
 CAMPAIGN_OVERVIEW_PATH = "Command Center/Campaign Overview.md"
+CAMPAIGN_OVERVIEW_TAB_PATHS = {
+    "overview": CAMPAIGN_OVERVIEW_PATH,
+    "gm-summary": "Command Center/Campaign Recaps/GM Summary Through Level 3 C7.md",
+    "pc-summary": "Command Center/Campaign Recaps/Player Summary Level 3 Through Ghoul Fever.md",
+    "items": "Command Center/Treasure Tracker.md",
+}
 SESSION_OVERVIEW_DIR = "Command Center/Sessions"
 HANDOUT_EXPORT_DIR = "Exports/Handouts"
 
@@ -2529,16 +2535,18 @@ async def upload_live_npc_portrait(
 
 @router.get("/campaign-overview")
 async def get_campaign_overview(tab: str = Query(default="overview")):
+    tab_id = tab.strip() or "overview"
     private_note = private_campaign_data_service.campaign_note_payload(
-        tab,
+        tab_id,
         DEFAULT_CAMPAIGN_OVERVIEW,
     )
     if private_note:
         return private_note
 
     root = _vault_root()
+    relative_path = CAMPAIGN_OVERVIEW_TAB_PATHS.get(tab_id, CAMPAIGN_OVERVIEW_PATH)
     note_path = _ensure_vault_note(
-        CAMPAIGN_OVERVIEW_PATH,
+        relative_path,
         DEFAULT_CAMPAIGN_OVERVIEW,
     )
     return _note_payload(root, note_path)

@@ -369,7 +369,6 @@ def build_html(markdown: str) -> str:
       <header>
         <p class="eyebrow">Player Handout</p>
         <h1>{html.escape(title)}</h1>
-        <p class="subtitle">A one-page player-safe session prep handout.</p>
         <div class="divider" aria-hidden="true">&#10022;</div>
       </header>
 

@@ -1186,6 +1186,40 @@ def test_live_command_center_overview_routes_create_and_update_private_notes(
         assert campaign_payload["path"] == "campaign-overview.json#overview"
         assert "## Campaign Premise" in campaign_payload["content"]
 
+        campaign_json = private_root / "campaigns" / "test-campaign" / "campaign-overview.json"
+        campaign_json.parent.mkdir(parents=True, exist_ok=True)
+        campaign_json.write_text(
+            json.dumps(
+                {
+                    "campaign_id": "test-campaign",
+                    "tabs": [
+                        {
+                            "id": "gm-summary",
+                            "title": "GM Summary",
+                            "path": "campaign-overview.json#gm-summary",
+                            "body_markdown": "# GM Summary\n\nA secret.",
+                        },
+                        {
+                            "id": "items",
+                            "title": "Treasure Tracker",
+                            "path": "campaign-overview.json#items",
+                            "body_markdown": "# Items\n\nA silver key.",
+                        },
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        gm_summary = client.get(
+            "/api/live/campaign-overview", params={"tab": " gm-summary "}
+        )
+        assert gm_summary.status_code == 200
+        assert gm_summary.json()["content"] == "# GM Summary\n\nA secret."
+
+        items = client.get("/api/live/campaign-overview", params={"tab": "items"})
+        assert items.status_code == 200
+        assert items.json()["content"] == "# Items\n\nA silver key."
+
         updated_campaign = client.patch(
             "/api/live/campaign-overview",
             params={"tab": "gm-summary"},
@@ -1193,7 +1227,6 @@ def test_live_command_center_overview_routes_create_and_update_private_notes(
         )
         assert updated_campaign.status_code == 200
         assert "Updated notes." in updated_campaign.json()["content"]
-        campaign_json = private_root / "campaigns" / "test-campaign" / "campaign-overview.json"
         assert campaign_json.exists()
 
         sessions_json = private_root / "campaigns" / "test-campaign" / "sessions.json"
