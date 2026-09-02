@@ -14,7 +14,9 @@ def test_aon_creature_cache_prefers_private_overlay_when_present(tmp_path, monke
         / "imports"
         / "misc"
         / "private-local"
-        / "aon-creatures"
+        / "reference"
+        / "aon"
+        / "creatures"
         / "raw"
     )
     overlay_cache.mkdir(parents=True)

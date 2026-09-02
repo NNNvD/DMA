@@ -92,3 +92,24 @@ empty states can be checked in the live interface.
 - Completion is blocked pending an approved current private overlay containing
   the AoN creature cache at the configured overlay path, or explicit direction
   to use the untracked `assets/imports (1)/` bundle for local-only verification.
+
+## Overlay follow-up and successful verification
+
+- The approved overlay now contains 12 valid creature files at
+  `assets/imports/misc/private-local/reference/aon/creatures/raw/`, including
+  Mitflit `3031`.
+- After restarting the server, `/api/live/aon-creature?creature_id=3031`
+  returned HTTP 200 with the expected stat block fields.
+- In the browser, after allowing the panel's initial asynchronous loading to
+  finish, Add Monster successfully added Mitflit to Current Combat. The card
+  displayed HP 10/10, AC 14, Perception +4, level, traits, and source metadata.
+- The browser search empty state was also verified with a non-matching query:
+  `No PF2e creatures matched that search.`
+- The earlier failure was caused by the cache path not matching the overlay's
+  actual `reference/aon/creatures/raw` layout, compounded by the absent cache
+  in the original checkout.
+
+**Sufficient completion remains achieved and is now browser-verified.**
+Excellent completion remains optional follow-up work: exercise more
+representative creatures and polish or verify remote image loading where the
+browser/network permits.

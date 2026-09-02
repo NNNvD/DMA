@@ -101,7 +101,9 @@ class AonCreatureService:
         ).resolve()
         self.cache_root = (
             private_data_root(self.project_root, settings.dma_private_data_root)
-            / "aon-creatures"
+            / "reference"
+            / "aon"
+            / "creatures"
             / "raw"
         )
 
