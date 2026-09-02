@@ -78,3 +78,17 @@ cleanup are tested and documented. **Excellent completion is deferred** until
 the frontend can be operated and visually verified in a browser-compatible
 environment, and representative cached creatures plus user-facing error and
 empty states can be checked in the live interface.
+
+## Live browser evidence
+
+- The local `/dm-panel` page rendered successfully in the in-app browser.
+- Current Combat displayed the card-based picker, search field, AoN creature
+  select, and Add Monster control.
+- The default Mitflit flow was operated. The picker remained stable and
+  displayed the network/cache failure inline: `Could not fetch PF2e creature
+  data from Archives of Nethys`.
+- The UI did not crash and no spoiler-sensitive content was exposed by the
+  failure state.
+- Completion is blocked pending an approved current private overlay containing
+  the AoN creature cache at the configured overlay path, or explicit direction
+  to use the untracked `assets/imports (1)/` bundle for local-only verification.
