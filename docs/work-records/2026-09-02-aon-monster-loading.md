@@ -57,3 +57,24 @@ the rationale and limitations are undocumented.
 - The in-app browser could not open the local server and returned
   `ERR_BLOCKED_BY_CLIENT`; direct local HTTP checks remain available, but the
   visual/user-flow criterion is not yet satisfied.
+
+## Implementation result
+
+- Updated `AonCreatureService` to resolve its cache through the configured
+  private-data root, including the standard root overlay when present.
+- Added a regression test proving that an available overlay cache is preferred.
+- Removed the duplicate, later AoN picker/conversion/addition definitions from
+  the static panel so the richer active implementation is not silently
+  overridden.
+- Verification: 31 focused AoN/live API tests passed; the full suite passed
+  with 139 tests; focused Ruff checks passed.
+- Full-repository Ruff still reports 11 unrelated existing issues, including
+  lint findings in the previously checkpointed migration script.
+
+## Completion assessment
+
+**Sufficient completion achieved.** The data-routing fix and duplicate-function
+cleanup are tested and documented. **Excellent completion is deferred** until
+the frontend can be operated and visually verified in a browser-compatible
+environment, and representative cached creatures plus user-facing error and
+empty states can be checked in the live interface.
