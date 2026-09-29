@@ -89,6 +89,28 @@ def test_aon_creature_parser_normalizes_backslash_image_paths():
     )
 
 
+def test_aon_creature_parser_keeps_named_scalathrax_abilities_separate_from_attacks():
+    service = AonCreatureService()
+    content = (
+        "Oily Scales The scalathrax treats Escape as one degree better.\n"
+        "Speed 25 feet\n"
+        "Ranged leg quill +13\n"
+        "Damage 2d4+5 piercing Scalathrax Venom (poison) Saving Throw Fortitude DC 21; "
+        "Stage 1 clumsy 1 Spray Toxic Oil [two-actions] The scalathrax sprays oil. "
+        "Failure The target takes 2d8 poison damage.\n"
+        "Scalathrax Oil\nTreasure text"
+    )
+
+    attacks = service._attack_lines(content)
+    actions = service._action_lines(content)
+
+    assert attacks[-1] == "Ranged leg quill +13 Damage 2d4+5 piercing"
+    assert any(action.startswith("Oily Scales The scalathrax") for action in actions)
+    assert any(action.startswith("Scalathrax Venom (poison)") for action in actions)
+    assert any(action.startswith("Spray Toxic Oil [two-actions]") for action in actions)
+    assert all("Treasure text" not in action for action in actions)
+
+
 def test_aon_creature_cache_without_image_url_still_loads(tmp_path):
     service = AonCreatureService(project_root=tmp_path)
     item = service.creature_index[0]

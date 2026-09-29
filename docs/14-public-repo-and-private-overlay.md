@@ -4,7 +4,7 @@ This project is designed to be pushed to GitHub without redistributing copyright
 
 ## What Goes To GitHub
 
-- DMA source code, tests, scripts, and documentation.
+- DMA source code, tests with synthetic fixtures, scripts, and documentation.
 - Obsidian vault notes written for campaign operation.
 - Metadata, manifests, and placeholders that explain where local assets should be placed.
 - Player and GM prep notes written in our own words.
@@ -14,6 +14,7 @@ This project is designed to be pushed to GitHub without redistributing copyright
 The following material must stay out of the public repository:
 
 - Purchased adventure PDFs.
+- Text extracted from those PDFs, including room descriptions and encounter stat blocks.
 - Official map image files.
 - Images extracted from PDFs.
 - NPC, monster, item, cover, or illustration images from books.
@@ -28,6 +29,12 @@ These paths are intentionally ignored:
 - `obsidian-abomination-vaults-vault/Exports/Handouts/*.pdf`
 - `obsidian-abomination-vaults-vault/Exports/Handouts/*.html`
 - `local-private-overlay/`
+- `.codex-temp/`, `tmp/`, and `pytest-cache-files-*/` scratch folders
+
+Keep PDF parsing rules, data schemas, and validation checks in public code. Put
+the extracted output in the ignored local overlay, not in source files, docs,
+or test fixtures. Public tests should use invented room text and stat blocks;
+tests may read the local overlay when it exists without copying its contents.
 
 ## Local Overlay Folder
 

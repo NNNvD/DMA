@@ -49,6 +49,9 @@ assets/imports/misc/private-local/
 assets/imports/misc/aon-creatures/raw/
 assets/archive/
 local-private-overlay/
+.codex-temp/
+tmp/
+pytest-cache-files-*/
 
 # Editors/IDE
 .vscode/

@@ -1509,6 +1509,21 @@
       font-weight: 700;
     }
 
+    .room-visit { float: right; margin-left: 8px; font-size: 0.78rem; color: #344c47; }
+    .room-visit[data-status="cleared"] { color: #186441; }
+    .room-visit[data-status="entered"] { color: #8c4f18; }
+    .room-progress-control { display: flex; align-items: center; gap: 8px; }
+    .room-progress-control select { width: auto; min-width: 115px; }
+    .maptool-calibration { margin: 10px 0; border-top: 1px solid rgba(90, 71, 59, 0.16); padding-top: 10px; }
+    .maptool-calibration summary { cursor: pointer; font-weight: 700; }
+    .maptool-calibration-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin: 10px 0; }
+    .maptool-calibration-toolbar label { min-width: 110px; }
+    .maptool-calibration-toolbar select { width: auto; }
+    .maptool-calibration-canvas { position: relative; width: fit-content; max-width: 100%; overflow: auto; touch-action: none; cursor: crosshair; }
+    .maptool-calibration-canvas img { display: block; max-width: min(100%, 900px); height: auto; user-select: none; pointer-events: none; }
+    .maptool-calibration-rect, .maptool-calibration-preview { position: absolute; border: 2px solid #15803d; background: rgba(21, 128, 61, 0.2); pointer-events: none; }
+    .maptool-calibration-preview { border-style: dashed; }
+
     .room-card-body {
       display: grid;
       gap: 10px;
@@ -1538,12 +1553,24 @@
     .room-tag {
       display: inline-flex;
       align-items: center;
-      border-radius: 999px;
-      padding: 4px 8px;
-      background: rgba(138, 47, 29, 0.08);
-      color: var(--accent);
+      gap: 5px;
+      border-radius: 4px;
+      padding: 3px 7px;
+      background: #dfeaf5;
+      color: #202124;
       font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.4;
+      white-space: nowrap;
     }
+
+    .room-tag .shell-icon { width: 13px; height: 13px; flex: 0 0 13px; }
+    .room-tag--monster { background: #f5dedd; }
+    .room-tag--haunt { background: #eae2f2; }
+    .room-tag--danger { background: #f6e7cc; }
+    .room-tag--loot { background: #f3edce; }
+    .room-tag--npc { background: #dfeaf5; }
+    .room-tag--secret { background: #daeee8; }
 
     .room-card-toggle {
       display: inline-flex;
@@ -2999,45 +3026,22 @@
             <span class="stat-badge">No dungeon map loaded</span>
           </div>
           <div class="subtle" id="map-room-voice-status">Read-aloud buttons use the best available browser narrator voice.</div>
+          <details class="maptool-calibration" id="maptool-calibration">
+            <summary>MapTool room tracking</summary>
+            <div class="maptool-calibration-toolbar">
+              <label>Room <select id="maptool-calibration-room"></select></label>
+              <button type="button" class="ghost" id="maptool-add-area">Add area</button>
+              <button type="button" class="ghost" id="maptool-import-fog">Import saved fog</button>
+              <span class="subtle" id="maptool-calibration-status"></span>
+            </div>
+            <div class="maptool-calibration-canvas" id="maptool-calibration-canvas"></div>
+          </details>
           <div class="map-room-grid" style="margin-top: 12px;">
             <div class="map-viewer" id="map-room-viewer">
               <div class="empty" style="padding: 16px;">Choose a dungeon map to load it here.</div>
             </div>
             <div class="list scroll-list" id="map-room-list">
               <div class="empty">Room notes will appear here.</div>
-            </div>
-          </div>
-        </article>
-
-        <article class="panel full-width module-town-square" data-module-id="town-square">
-          <h2>Town Square</h2>
-          <form id="town-square-form">
-            <div class="grid-two">
-              <label>
-                Settlement
-                <select id="town-square-select">
-                  <option value="">Loading settlements...</option>
-                </select>
-              </label>
-              <label>
-                Search Town Notes
-                <input id="town-square-search" placeholder="shop, Wrin, rumor, graveyard, hook..." />
-              </label>
-            </div>
-            <div class="actions">
-              <button type="submit">Load Settlement</button>
-              <button type="button" class="ghost" id="town-square-refresh">Refresh Towns</button>
-            </div>
-          </form>
-          <div class="stat-line" id="town-square-meta">
-            <span class="stat-badge">No settlement loaded</span>
-          </div>
-          <div class="map-room-grid" style="margin-top: 12px;">
-            <div class="map-viewer" id="town-square-viewer">
-              <div class="empty" style="padding: 16px;">Choose a settlement to load its town map and overview here.</div>
-            </div>
-            <div class="list scroll-list" id="town-square-list">
-              <div class="empty">Town locations, NPCs, hooks, and rumors will appear here.</div>
             </div>
           </div>
         </article>
@@ -3092,6 +3096,39 @@
               <div class="combat-roster" id="combat-roster">
                 <div class="empty">Open a room in Map Room, then start combat from it.</div>
               </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel full-width module-town-square" data-module-id="town-square">
+          <h2>Town Square</h2>
+          <form id="town-square-form">
+            <div class="grid-two">
+              <label>
+                Settlement
+                <select id="town-square-select">
+                  <option value="">Loading settlements...</option>
+                </select>
+              </label>
+              <label>
+                Search Town Notes
+                <input id="town-square-search" placeholder="shop, Wrin, rumor, graveyard, hook..." />
+              </label>
+            </div>
+            <div class="actions">
+              <button type="submit">Load Settlement</button>
+              <button type="button" class="ghost" id="town-square-refresh">Refresh Towns</button>
+            </div>
+          </form>
+          <div class="stat-line" id="town-square-meta">
+            <span class="stat-badge">No settlement loaded</span>
+          </div>
+          <div class="map-room-grid" style="margin-top: 12px;">
+            <div class="map-viewer" id="town-square-viewer">
+              <div class="empty" style="padding: 16px;">Choose a settlement to load its town map and overview here.</div>
+            </div>
+            <div class="list scroll-list" id="town-square-list">
+              <div class="empty">Town locations, NPCs, hooks, and rumors will appear here.</div>
             </div>
           </div>
         </article>
@@ -3719,6 +3756,7 @@
       referencePdfs: "/api/live/reference-pdfs",
       dungeonMaps: "/api/live/dungeon-maps",
       dungeonRoomKey: "/api/live/dungeon-room-key",
+      maptoolRoom: "/api/live/maptool-room",
       townSquareSettlements: "/api/live/town-square/settlements",
       townSquareSettlement: "/api/live/town-square/settlement",
       ttsStatus: "/api/live/tts/status",
@@ -3766,6 +3804,8 @@
     let activePdfPath = "";
     let dungeonMaps = [];
     let activeRoomKey = null;
+    let maptoolRoomState = null;
+    let appendMaptoolArea = false;
     let townSettlements = [];
     let activeTownSettlement = null;
     let roomNavigationStack = [];
@@ -3781,6 +3821,7 @@
     let abilityPopoverPinned = false;
     let aonCreatures = [];
     let campaignBestiaryEntries = [];
+    let visibleCampaignBestiaryEntries = [];
     let activeBestiaryEntry = null;
     let pendingBestiaryPortraitId = null;
     let importRuns = [];
@@ -4009,10 +4050,11 @@
     }
 
     const moduleOrderKey = "dma.dmPanel.module.order";
+    const mapCombatOrderKey = "dma.dmPanel.module.order.map-combat-v1";
     const defaultTopModuleIds = [
       "map-room",
-      "town-square",
       "current-combat",
+      "town-square",
       "campaign-overview",
       "session-overview",
       "import-review",
@@ -4081,6 +4123,11 @@
         sword: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5"></path><path d="m13 19 6-6"></path><path d="m16 16 4 4"></path><path d="m19 21 2-2"></path>',
         monster: '<path d="M6 8 3 4"></path><path d="m18 8 3-4"></path><path d="M5 13c0-4 3-7 7-7s7 3 7 7v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"></path><path d="M9 12h.01M15 12h.01"></path><path d="M9.5 16h5"></path>',
         haunt: '<path d="M6 20V9a6 6 0 0 1 12 0v11l-3-2-3 2-3-2z"></path><path d="M9 11h.01M15 11h.01"></path><path d="M10 15c.9.7 3.1.7 4 0"></path>',
+        ghost: '<path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 1 8 8v12l-4-2-4 2-4-2-4 2V10a8 8 0 0 1 8-8Z"></path>',
+        warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"></path>',
+        coins: '<circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82"></path>',
+        person: '<path d="M20 21v-2a7 7 0 0 0-14 0v2"></path><circle cx="13" cy="7" r="4"></circle>',
+        door: '<path d="M10 12h.01M18 2H6a2 2 0 0 0-2 2v16h16V4a2 2 0 0 0-2-2ZM2 22h20"></path>',
       };
       return `<svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.scene}</svg>`;
     }
@@ -4265,7 +4312,16 @@
       }
       if (Array.isArray(savedOrder) && savedOrder.length) {
         const missingDefaultTopIds = defaultTopModuleIds.filter((id) => !savedOrder.includes(id));
-        applyModuleOrder([...missingDefaultTopIds, ...savedOrder]);
+        const resolvedOrder = [...missingDefaultTopIds, ...savedOrder];
+        if (!window.localStorage.getItem(mapCombatOrderKey)) {
+          const withoutCombat = resolvedOrder.filter((id) => id !== "current-combat");
+          const mapIndex = withoutCombat.indexOf("map-room");
+          withoutCombat.splice(mapIndex + 1, 0, "current-combat");
+          applyModuleOrder(withoutCombat, true);
+          window.localStorage.setItem(mapCombatOrderKey, "1");
+        } else {
+          applyModuleOrder(resolvedOrder);
+        }
       } else {
         const moduleIds = Array.from(document.querySelectorAll(".layout > .panel"))
           .map((panel) => panel.dataset.moduleId);
@@ -4273,6 +4329,7 @@
           ...defaultTopModuleIds,
           ...moduleIds.filter((id) => !defaultTopModuleIds.includes(id)),
         ]);
+        window.localStorage.setItem(mapCombatOrderKey, "1");
       }
     }
 
@@ -5949,7 +6006,6 @@
       return `
         ${literal.player ? `
           <div class="room-card-section">
-            <strong>Read-aloud text</strong>
             <div class="room-readaloud-toolbar">
               <button type="button" class="ghost" data-room-read-aloud="${escapeHtml(room.room_id || "")}">Read Aloud</button>
             </div>
@@ -5958,7 +6014,6 @@
         ` : ""}
         ${literal.additional ? `
           <div class="room-card-section">
-            <strong>General room text</strong>
             <div class="room-literal-text room-literal-block room-literal-general">${formatLiteralText(literal.additional, "general")}</div>
           </div>
         ` : ""}
@@ -6195,6 +6250,7 @@
     function normalizeCreatureLookupName(value) {
       let name = String(value || "")
         .toLowerCase()
+        .replace(/[’‘]/g, "'")
         .replace(/\([^)]*\)/g, "")
         .replace(/\b(elite|weak)\b/g, "")
         .replace(/\b\d+\b/g, "")
@@ -6270,8 +6326,67 @@
       return lines.filter(Boolean).join("\n\n");
     }
 
+    function campaignPdfCombatOverrides(entry, room) {
+      const combat = entry.combat || {};
+      const overrides = {};
+      for (const key of ["initiative", "ac", "hp", "fort", "ref", "will", "speed", "immunities", "weaknesses", "resistances", "attacks", "abilities", "spells"]) {
+        if (combat[key] && (!Array.isArray(combat[key]) || combat[key].length)) {
+          overrides[key] = combat[key];
+        }
+      }
+      if (entry.level !== undefined && entry.level !== null && entry.level !== "") {
+        overrides.level = entry.level;
+      }
+      const refs = room.encounter_refs || [];
+      const blocks = combatBlocksFromEncounterText(roomLiteralParts(room).gm || "")
+        .filter((block) => /\b(?:CREATURE|HAZARD|TRAP)\s+-?\d+/i.test(block.split("\n")[0] || ""));
+      const refIndex = refs.findIndex((ref) => String(ref.id || "") === String(entry.id || ""));
+      let block = blocks.length === refs.length && refIndex >= 0 ? blocks[refIndex] : "";
+      if (!block) {
+        const name = normalizeCreatureLookupName(entry.name);
+        block = blocks.find((candidate) => {
+          const heading = parseCombatHeading(candidate.split("\n")[0]).name;
+          return normalizeCreatureLookupName(heading) === name;
+        }) || "";
+      }
+      if (!block) return overrides;
+      const text = normalizedCombatText(block).replace(/[–−]/g, "-");
+      const heading = parseCombatHeading(text.split("\n")[0]);
+      if (heading.level !== "") overrides.level = Number.parseInt(heading.level, 10);
+      const initiative = text.match(/\bInitiative\s+([^\n;]+)/i);
+      const perception = text.match(/\bPerception\s+([+-]\d+)/i);
+      if (initiative) overrides.initiative = initiative[1].trim();
+      else if (perception) overrides.initiative = `Perception ${perception[1]}`;
+      for (const key of ["ac", "hp"]) {
+        const match = text.match(new RegExp(`\\b${key}\\s+(\\d+)`, "i"));
+        if (match) overrides[key] = match[1];
+      }
+      for (const key of ["fort", "ref", "will"]) {
+        const match = text.match(new RegExp(`\\b${key}\\s+([+-]\\d+)`, "i"));
+        if (match) overrides[key] = match[1];
+      }
+      const speed = text.match(/\bSpeed\s+([^\n;]+)/i);
+      if (speed) overrides.speed = speed[1].trim();
+      const senses = text.match(/\bPerception\s+[+-]\d+;\s*([^\n]+)/i);
+      if (senses) overrides.senses = senses[1].trim();
+      const languages = text.match(/^Languages\s+([^\n]+)/im);
+      if (languages) overrides.languages = languages[1].trim();
+      const skills = text.match(/^Skills\s+([\s\S]*?)(?=^Str\s+[+-]\d+)/im);
+      if (skills) overrides.skills = skills[1].replace(/\s*\n\s*/g, " ").split(/,\s*/).filter(Boolean);
+      const abilityLine = text.match(/^Str\s+([^\n]+)/im);
+      if (abilityLine) {
+        overrides.abilityMods = {};
+        for (const match of abilityLine[0].matchAll(/\b(Str|Dex|Con|Int|Wis|Cha)\s+([+-]\d+)/gi)) {
+          overrides.abilityMods[match[1].toLowerCase()] = match[2];
+        }
+      }
+      overrides.detail = text;
+      return overrides;
+    }
+
     function combatantFromCampaignBestiaryEntry(entry, { room = {}, count = 1, forceHazard = false } = {}) {
       const combat = entry.combat || {};
+      const campaignOverrides = campaignPdfCombatOverrides(entry, room);
       const entryType = entry.entry_type || "creature";
       const roomEncounterText = roomLiteralParts(room).gm || "";
       if (entryType === "affliction") {
@@ -6319,15 +6434,19 @@
         spells: combat.spells || [],
         detail: roomEncounterText || campaignBestiaryDetailText(entry),
         bestiaryId: entry.id,
+        ...campaignOverrides,
+        initiativeBonus: initiativeBonus({ initiative: campaignOverrides.initiative || combat.initiative || "" }),
+        campaignOverrides,
       });
     }
 
     function combatantFromCampaignAonReference(entry, { room = {}, count = 1 } = {}) {
+      const campaignOverrides = campaignPdfCombatOverrides(entry, room);
       return withCombatHp({
         id: `bestiary-ref-${entry.id}-${Math.random().toString(36).slice(2, 8)}`,
         roomId: room.room_id || (entry.rooms || [])[0] || "Bestiary",
         roomTitle: room.title || "Campaign Bestiary",
-        name: entry.aon_name || entry.name || "Unknown AoN Creature",
+        name: entry.name || entry.aon_name || "Unknown AoN Creature",
         count,
         type: "CREATURE",
         level: entry.level ?? "",
@@ -6362,17 +6481,24 @@
         spells: [],
         detail: campaignBestiaryDetailText(entry) || "AoN reference; fetch full stats through the monster picker if needed.",
         bestiaryId: entry.id,
+        ...campaignOverrides,
+        initiativeBonus: initiativeBonus({ initiative: campaignOverrides.initiative || "" }),
+        campaignOverrides,
       });
     }
 
     function mergeAonDetailsIntoCombatant(combatant, creature) {
       const enriched = combatantFromAonCreature(creature);
+      const campaignOverrides = combatant.campaignOverrides || {};
       return withCombatHp({
         ...combatant,
-        source: "AoN",
+        source: Object.keys(campaignOverrides).length ? "Campaign PDF + AoN" : "AoN",
         sourceUrl: creature.source_url || enriched.sourceUrl || "",
         level: enriched.level !== "" && enriched.level !== undefined ? enriched.level : combatant.level,
-        traits: creature.traits || enriched.traits || combatant.traits || [],
+        traits: [...new Set([
+          ...(creature.traits || enriched.traits || []),
+          ...(combatant.traits || []).filter((trait) => trait !== "AoN reference"),
+        ])],
         alignment: enriched.alignment || combatant.alignment || "",
         size: enriched.size || combatant.size || "",
         rarity: enriched.rarity || combatant.rarity || "",
@@ -6398,6 +6524,10 @@
         detail: enriched.detail || combatant.detail,
         imageUrl: combatant.imageUrl || enriched.imageUrl || "",
         aonName: creature.name || combatant.name,
+        ...campaignOverrides,
+        initiativeBonus: campaignOverrides.initiative
+          ? initiativeBonus({ initiative: campaignOverrides.initiative })
+          : (enriched.initiativeBonus || combatant.initiativeBonus),
       });
     }
 
@@ -6440,7 +6570,7 @@
     }
 
     async function refreshMonsterCombatantsFromAon() {
-      if (!aonCreatures.length || !currentCombat.combatants?.length) return;
+      if (!currentCombat.combatants?.length) return;
       let changed = false;
       const refreshed = [];
       for (const combatant of currentCombat.combatants) {
@@ -6448,18 +6578,34 @@
           refreshed.push(combatant);
           continue;
         }
-        const match = findAonCreatureForCombatant(combatant);
+        const entry = bestiaryEntryById(combatant.bestiaryId);
+        const room = (activeRoomKey?.rooms || []).find((item) => item.room_id === combatant.roomId) || {};
+        const campaignOverrides = entry ? campaignPdfCombatOverrides(entry, room) : {};
+        const current = entry ? withCombatHp({
+          ...combatant,
+          name: entry.name || combatant.name,
+          source: entry.aon_creature_id ? combatant.source : "Campaign PDF",
+          aonCreatureId: entry.aon_creature_id || combatant.aonCreatureId,
+          aonLookupName: entry.aon_name || combatant.aonLookupName,
+          ...campaignOverrides,
+          initiativeBonus: campaignOverrides.initiative
+            ? initiativeBonus({ initiative: campaignOverrides.initiative })
+            : combatant.initiativeBonus,
+          campaignOverrides,
+        }) : combatant;
+        const match = findAonCreatureForCombatant(current);
         if (!match) {
-          refreshed.push(combatant);
+          refreshed.push(current);
+          changed = changed || Boolean(entry);
           continue;
         }
         try {
           const payload = await fetchJson(aonCreatureUrlForMatch(match));
-          const merged = mergeAonDetailsIntoCombatant(combatant, payload.creature || match);
+          const merged = mergeAonDetailsIntoCombatant(current, payload.creature || match);
           refreshed.push(merged);
-          changed = changed || Boolean(merged.imageUrl);
+          changed = true;
         } catch (_error) {
-          refreshed.push(combatant);
+          refreshed.push(current);
         }
       }
       if (!changed) return;
@@ -6624,7 +6770,7 @@
     function combatBlocksFromEncounterText(encounterText) {
       const text = normalizedCombatText(encounterText);
       if (!text) return [];
-      const blockPattern = /([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+[\s\S]*?)(?=\n\n[A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+|$)/g;
+      const blockPattern = /(^[A-Z][^\n]*?\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+[\s\S]*?)(?=^[A-Z][^\n]*?\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+|(?![\s\S]))/gm;
       const blocks = [];
       for (const match of text.matchAll(blockPattern)) {
         blocks.push(match[1].trim());
@@ -8453,10 +8599,6 @@
       return html;
     }
 
-    function renderRoomTextToggle() {
-      return '<button type="button" class="ghost" data-room-mode-toggle>Show Literal PDF Text</button>';
-    }
-
     function updateRoomBackButton() {
       const button = document.getElementById("map-room-back");
       if (!button) {
@@ -8470,11 +8612,6 @@
       return openCard?.dataset.roomId || "";
     }
 
-    function currentOpenRoomMode() {
-      const openCard = document.querySelector("#map-room-list .room-card[open]");
-      return openCard?.dataset.roomTextMode || "summary";
-    }
-
     function roomCardFor(roomId) {
       const normalized = String(roomId || "").toLowerCase();
       return Array.from(document.querySelectorAll("#map-room-list .room-card")).find((card) => (
@@ -8482,18 +8619,7 @@
       ));
     }
 
-    function setRoomCardMode(card, mode) {
-      const nextMode = mode === "literal" ? "literal" : "summary";
-      const button = card.querySelector("[data-room-mode-toggle]");
-      card.dataset.roomTextMode = nextMode;
-      card.querySelector('[data-room-mode-panel="summary"]').hidden = nextMode !== "summary";
-      card.querySelector('[data-room-mode-panel="literal"]').hidden = nextMode !== "literal";
-      if (button) {
-        button.textContent = nextMode === "literal" ? "Show Summary" : "Show Literal PDF Text";
-      }
-    }
-
-    function openRoomCard(roomId, { pushHistory = true, mode = null } = {}) {
+    function openRoomCard(roomId, { pushHistory = true } = {}) {
       const targetRoomId = String(roomId || "").trim();
       if (!targetRoomId || !activeRoomKey) {
         return false;
@@ -8517,16 +8643,12 @@
       if (pushHistory && previousRoomId && previousRoomId.toLowerCase() !== targetRoomId.toLowerCase()) {
         roomNavigationStack.push({
           roomId: previousRoomId,
-          mode: currentOpenRoomMode(),
         });
       }
       document.querySelectorAll("#map-room-list .room-card").forEach((card) => {
         card.open = false;
       });
       target.open = true;
-      if (mode) {
-        setRoomCardMode(target, mode);
-      }
       target.scrollIntoView({ behavior: "smooth", block: "start" });
       updateRoomBackButton();
       return true;
@@ -8540,7 +8662,6 @@
       }
       openRoomCard(previous.roomId || previous, {
         pushHistory: false,
-        mode: previous.mode || null,
       });
     }
 
@@ -8634,13 +8755,11 @@
       return `
         ${literal.player ? `
           <div class="room-card-section">
-            <strong>Read-aloud text</strong>
             <div class="room-literal-text room-literal-block room-literal-readaloud">${formatLiteralText(literal.player, "readaloud")}</div>
           </div>
         ` : ""}
         ${literal.additional ? `
           <div class="room-card-section">
-            <strong>General room text</strong>
             <div class="room-literal-text room-literal-block room-literal-general">${formatLiteralText(literal.additional, "general")}</div>
           </div>
         ` : ""}
@@ -8716,11 +8835,11 @@
     function withCombatHp(combatant) {
       const maxHp = firstNumber(combatant.hp);
       const count = Math.max(1, Number.parseInt(combatant.count || 1, 10) || 1);
-      if (Array.isArray(combatant.hpTrack) && combatant.hpTrack.length === count) {
-        return combatant;
-      }
       combatant.maxHp = maxHp;
-      combatant.hpTrack = Array.from({ length: count }, () => maxHp);
+      const previous = Array.isArray(combatant.hpTrack) ? combatant.hpTrack : [];
+      combatant.hpTrack = Array.from({ length: count }, (_unused, index) => (
+        previous[index] !== undefined ? previous[index] : maxHp
+      ));
       return combatant;
     }
 
@@ -8768,7 +8887,7 @@
     function combatBlocksFromEncounterText(encounterText) {
       const text = normalizedCombatText(encounterText);
       if (!text) return [];
-      const blockPattern = /([A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+[\s\S]*?)(?=\n\n[A-Z][A-Z0-9'â€™(), -]{2,}\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+|$)/g;
+      const blockPattern = /(^[A-Z][^\n]*?\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+[\s\S]*?)(?=^[A-Z][^\n]*?\s+(?:CREATURE|HAZARD|TRAP)\s+-?\d+|(?![\s\S]))/gm;
       const blocks = [];
       for (const match of text.matchAll(blockPattern)) {
         blocks.push(match[1].trim());
@@ -8994,10 +9113,6 @@
       return html;
     }
 
-    function renderRoomTextToggle() {
-      return '<button type="button" class="ghost" data-room-mode-toggle>Show Literal PDF Text</button>';
-    }
-
     function updateRoomBackButton() {
       const button = document.getElementById("map-room-back");
       if (!button) {
@@ -9011,11 +9126,6 @@
       return openCard?.dataset.roomId || "";
     }
 
-    function currentOpenRoomMode() {
-      const openCard = document.querySelector("#map-room-list .room-card[open]");
-      return openCard?.dataset.roomTextMode || "summary";
-    }
-
     function roomCardFor(roomId) {
       const normalized = String(roomId || "").toLowerCase();
       return Array.from(document.querySelectorAll("#map-room-list .room-card")).find((card) => (
@@ -9023,26 +9133,17 @@
       ));
     }
 
-    function setRoomCardMode(card, mode) {
-      const nextMode = mode === "literal" ? "literal" : "summary";
-      const button = card.querySelector("[data-room-mode-toggle]");
-      card.dataset.roomTextMode = nextMode;
-      card.querySelector('[data-room-mode-panel="summary"]').hidden = nextMode !== "summary";
-      card.querySelector('[data-room-mode-panel="literal"]').hidden = nextMode !== "literal";
-      if (button) {
-        button.textContent = nextMode === "literal" ? "Show Summary" : "Show Literal PDF Text";
-      }
-    }
-
-    function openRoomCard(roomId, { pushHistory = true, mode = null } = {}) {
+    function openRoomCard(roomId, { pushHistory = true } = {}) {
       const targetRoomId = String(roomId || "").trim();
       if (!targetRoomId || !activeRoomKey) {
         return false;
       }
       if (!roomCardFor(targetRoomId)) {
-        const filter = document.getElementById("map-room-filter");
-        if (filter.value) {
-          filter.value = "";
+        const search = document.getElementById("map-room-search");
+        const tagFilters = document.querySelectorAll(".map-room-filters input[type='checkbox']:checked");
+        if (search.value || tagFilters.length) {
+          search.value = "";
+          tagFilters.forEach((checkbox) => { checkbox.checked = false; });
           renderRoomKey();
         }
       }
@@ -9054,16 +9155,12 @@
       if (pushHistory && previousRoomId && previousRoomId.toLowerCase() !== targetRoomId.toLowerCase()) {
         roomNavigationStack.push({
           roomId: previousRoomId,
-          mode: currentOpenRoomMode(),
         });
       }
       document.querySelectorAll("#map-room-list .room-card").forEach((card) => {
         card.open = false;
       });
       target.open = true;
-      if (mode) {
-        setRoomCardMode(target, mode);
-      }
       target.scrollIntoView({ behavior: "smooth", block: "start" });
       updateRoomBackButton();
       return true;
@@ -9077,7 +9174,6 @@
       }
       openRoomCard(previous.roomId || previous, {
         pushHistory: false,
-        mode: previous.mode || null,
       });
     }
 
@@ -9110,13 +9206,29 @@
 
     function roomTags(room) {
       const tags = [];
-      if ((room.monsters || []).length) tags.push("Monsters");
+      const literal = roomLiteralParts(room);
+      const text = `${literal.additional}\n${literal.gm}`;
+      const trap = (room.traps || []).length || /\bTraps?:|\bTRAP\b/.test(text);
+      const haunt = (room.haunts || []).length || /\bHaunts?:|\bHAUNT\b/.test(text);
+      if ((room.monsters || []).length || /\bCreatures?:|\bCREATURE\s+[\u2013\u2212-]?\d/.test(text)) tags.push("Monsters");
       if ((room.npcs || []).length) tags.push("NPC");
-      if ((room.traps || []).length) tags.push("Trap");
-      if ((room.haunts || []).length) tags.push("Haunt");
-      if ((room.loot || []).length) tags.push("Loot");
-      if ((room.secret_doors || []).length) tags.push("Secret");
+      if (trap) tags.push("Trap");
+      if (haunt) tags.push("Haunt");
+      if ((room.hazards || []).length || (!trap && !haunt && /\bHazards?:|\b(?:HAZARD|DISEASE)\s+\d/.test(text))) tags.push("Hazard");
+      if ((room.loot || []).length || /\bTreasure:/.test(text)) tags.push("Loot");
+      if ((room.secret_doors || []).length || /\bsecret doors?\b/i.test(text)) tags.push("Secret door");
       return tags;
+    }
+
+    function renderRoomTag(tag) {
+      const styles = {
+        Monsters: ["monster", "sword"], Haunt: ["haunt", "ghost"],
+        Trap: ["danger", "warning"], Hazard: ["danger", "warning"],
+        Loot: ["loot", "coins"], NPC: ["npc", "person"],
+        "Secret door": ["secret", "door"],
+      };
+      const [style, icon] = styles[tag] || ["npc", "person"];
+      return `<span class="room-tag room-tag--${style}">${iconSvg(icon)}${escapeHtml(tag)}</span>`;
     }
 
     function activeRoomTagFilters() {
@@ -9125,13 +9237,8 @@
     }
 
     function roomMatchesTag(room, tag) {
-      if (tag === "secret") return Boolean((room.secret_doors || []).length);
-      if (tag === "loot") return Boolean((room.loot || []).length);
-      if (tag === "monsters") return Boolean((room.monsters || []).length);
-      if (tag === "trap") return Boolean((room.traps || []).length);
-      if (tag === "haunt") return Boolean((room.haunts || []).length);
-      if (tag === "npc") return Boolean((room.npcs || []).length);
-      return false;
+      const labels = { secret: "Secret door", loot: "Loot", monsters: "Monsters", trap: "Trap", haunt: "Haunt", hazard: "Hazard", npc: "NPC" };
+      return roomTags(room).includes(labels[tag]);
     }
 
     function roomMatchesSelectedTags(room, selectedTags) {
@@ -9298,21 +9405,21 @@
       list.innerHTML = rooms.map((room) => {
         const tags = roomTags(room);
         const exactRoomMatch = query && room.room_id && room.room_id.toLowerCase() === query;
+        const visit = maptoolRoomState?.rooms?.[room.room_id]?.status || "unseen";
         return `
-          <details class="room-card" data-room-id="${escapeHtml(room.room_id || "")}" data-room-text-mode="summary" ${exactRoomMatch ? "open" : ""}>
-            <summary>${escapeHtml(room.room_id)} ${escapeHtml(room.title || "")}</summary>
+          <details class="room-card" data-room-id="${escapeHtml(room.room_id || "")}" ${exactRoomMatch ? "open" : ""}>
+            <summary>${escapeHtml(room.room_id)} ${escapeHtml(room.title || "")}<span class="room-visit" data-status="${visit}">${visit}</span></summary>
             <div class="room-card-body">
-              ${tags.length ? `<div class="room-tags">${tags.map((tag) => `<span class="room-tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
-              <div class="room-card-toggle">
+              <label class="room-progress-control">Visit status
+                <select data-room-status="${escapeHtml(room.room_id || "")}">
+                  ${["unseen", "seen", "entered", "cleared"].map((status) => `<option value="${status}" ${visit === status ? "selected" : ""}>${status}</option>`).join("")}
+                </select>
+              </label>
+              ${tags.length ? `<div class="room-tags">${tags.map(renderRoomTag).join("")}</div>` : ""}
+              ${tags.includes("Monsters") ? `<div class="room-card-toggle">
                 <button type="button" class="ghost" data-room-combat-add="${escapeHtml(room.room_id || "")}">Add To Combat</button>
-                ${renderRoomTextToggle()}
-              </div>
-              <div data-room-mode-panel="summary">
-                ${renderSummaryRoomSections(room)}
-              </div>
-              <div data-room-mode-panel="literal" hidden>
-                ${renderLiteralRoomSections(room)}
-              </div>
+              </div>` : ""}
+              ${renderLiteralRoomSections(room)}
               <div class="room-card-section"><strong>Source</strong><div class="subtle">${escapeHtml(room.source || "No source listed.")}</div></div>
             </div>
           </details>
@@ -9432,6 +9539,90 @@
       }
     }
 
+    async function loadMaptoolRoomState(mapId) {
+      try {
+        maptoolRoomState = await fetchJson(`${endpoints.maptoolRoom}/state?map_id=${encodeURIComponent(mapId)}`);
+      } catch (error) {
+        maptoolRoomState = { rooms: {} };
+        document.getElementById("maptool-calibration-status").textContent = error.message;
+      }
+    }
+
+    function updateRoomVisitLabels() {
+      document.querySelectorAll("#map-room-list .room-card[data-room-id]").forEach((card) => {
+        const status = maptoolRoomState?.rooms?.[card.dataset.roomId]?.status || "unseen";
+        const badge = card.querySelector(".room-visit");
+        if (badge) { badge.textContent = status; badge.dataset.status = status; }
+        const select = card.querySelector("[data-room-status]");
+        if (select && document.activeElement !== select) select.value = status;
+      });
+    }
+
+    function renderMaptoolCalibration() {
+      const host = document.getElementById("maptool-calibration-canvas");
+      const select = document.getElementById("maptool-calibration-room");
+      const current = select.value;
+      select.innerHTML = (activeRoomKey?.rooms || []).map((room) =>
+        `<option value="${escapeHtml(room.room_id)}">${escapeHtml(room.room_id)} ${escapeHtml(room.title || "")}</option>`
+      ).join("");
+      if (current && Array.from(select.options).some((option) => option.value === current)) select.value = current;
+      if (!maptoolRoomState?.image_url) {
+        host.innerHTML = '<span class="subtle">Set MAPTOOL_CAMPAIGN_PATH in DMA\'s local .env to calibrate rooms.</span>';
+        return;
+      }
+      host.innerHTML = `<img src="${escapeHtml(maptoolRoomState.image_url)}" alt="Saved MapTool map for room calibration" draggable="false" /><div class="maptool-calibration-preview" hidden></div>`;
+      host.querySelector("img").addEventListener("load", drawMaptoolRoomRect, { once: true });
+      drawMaptoolRoomRect();
+      const saved = maptoolRoomState.campaign_saved_at;
+      document.getElementById("maptool-calibration-status").textContent = saved
+        ? `Campaign saved ${new Date(saved * 1000).toLocaleString()}. Drag over one room to map it.`
+        : "Drag over one room to map it.";
+    }
+
+    function drawMaptoolRoomRect() {
+      const host = document.getElementById("maptool-calibration-canvas");
+      const image = host.querySelector("img");
+      const roomId = document.getElementById("maptool-calibration-room").value;
+      host.querySelectorAll(".maptool-calibration-rect").forEach((item) => item.remove());
+      const preview = host.querySelector(".maptool-calibration-preview");
+      if (preview) preview.hidden = true;
+      if (!image?.naturalWidth) return;
+      const room = maptoolRoomState?.rooms?.[roomId];
+      const rects = room?.rects || (room?.rect ? [room.rect] : []);
+      const scaleX = image.clientWidth / image.naturalWidth;
+      const scaleY = image.clientHeight / image.naturalHeight;
+      rects.forEach((rect) => {
+        const overlay = document.createElement("div");
+        overlay.className = "maptool-calibration-rect";
+        Object.assign(overlay.style, {
+          left: `${rect[0] * scaleX}px`, top: `${rect[1] * scaleY}px`,
+          width: `${(rect[2] - rect[0]) * scaleX}px`, height: `${(rect[3] - rect[1]) * scaleY}px`,
+        });
+        host.append(overlay);
+      });
+    }
+
+    async function saveMaptoolRegion(start, end) {
+      const mapId = activeRoomKey?.map_id;
+      const roomId = document.getElementById("maptool-calibration-room").value;
+      if (!mapId || !roomId) return;
+      const rect = [Math.min(start.x, end.x), Math.min(start.y, end.y), Math.max(start.x, end.x), Math.max(start.y, end.y)];
+      if (rect[2] - rect[0] < 5 || rect[3] - rect[1] < 5) { drawMaptoolRoomRect(); return; }
+      try {
+        const room = await fetchJson(`${endpoints.maptoolRoom}/region`, {
+          method: appendMaptoolArea ? "POST" : "PUT", body: JSON.stringify({ map_id: mapId, room_id: roomId, rect }),
+        });
+        maptoolRoomState.rooms[roomId] = room;
+        appendMaptoolArea = false;
+        document.getElementById("maptool-add-area").textContent = "Add area";
+        drawMaptoolRoomRect();
+        document.getElementById("maptool-calibration-status").textContent = `${roomId} mapped. Continue with another room.`;
+      } catch (error) {
+        drawMaptoolRoomRect();
+        document.getElementById("maptool-calibration-status").textContent = error.message;
+      }
+    }
+
     async function loadMapRoom(mapId = null) {
       const selectedMapId = mapId || document.getElementById("map-room-select").value;
       const viewer = document.getElementById("map-room-viewer");
@@ -9456,6 +9647,7 @@
         activeRoomKey = await fetchJson(
           `${endpoints.dungeonRoomKey}?map_id=${encodeURIComponent(selectedMapId)}`,
         );
+        await loadMaptoolRoomState(selectedMapId);
         viewer.innerHTML = renderMapImage(map, activeRoomKey);
       } catch (error) {
         document.getElementById("map-room-meta").innerHTML = `
@@ -9468,6 +9660,8 @@
       }
       try {
         renderRoomKey();
+        renderMaptoolCalibration();
+        void refreshMonsterCombatantsFromAon();
       } catch (error) {
         document.getElementById("map-room-meta").innerHTML = `
           <span class="stat-badge">${escapeHtml(map.title)}</span>
@@ -9481,18 +9675,17 @@
     function renderBestiaryOverview() {
       const host = document.getElementById("campaign-bestiary-overview");
       if (!host) return;
-      if (!campaignBestiaryEntries.length) {
+      if (!visibleCampaignBestiaryEntries.length) {
         host.innerHTML = '<span class="empty">No campaign bestiary entries found.</span>';
         return;
       }
-      const counts = campaignBestiaryEntries.reduce((acc, entry) => {
+      const counts = visibleCampaignBestiaryEntries.reduce((acc, entry) => {
         const type = entry.entry_type || "entry";
         acc[type] = (acc[type] || 0) + 1;
         return acc;
       }, {});
       host.innerHTML = `
-        <h3>Level 3 Encounter Library</h3>
-        <p class="subtle">Use this overview for custom C-room creatures, AoN-linked monsters, haunts/hazards, and afflictions. Open a row for full GM details.</p>
+        <h3>Campaign Encounter Library</h3>
         <div class="stat-line">
           ${Object.entries(counts).map(([type, count]) => `<span class="stat-badge">${escapeHtml(entryTypeLabel(type))}: ${escapeHtml(String(count))}</span>`).join("")}
         </div>
@@ -9510,7 +9703,7 @@
               </tr>
             </thead>
             <tbody>
-              ${campaignBestiaryEntries.map((entry) => `
+              ${visibleCampaignBestiaryEntries.map((entry) => `
                 <tr>
                   <td>
                     <div class="overview-name-cell">
@@ -9535,11 +9728,11 @@
     function renderBestiaryList() {
       const host = document.getElementById("campaign-bestiary-list");
       if (!host) return;
-      if (!campaignBestiaryEntries.length) {
+      if (!visibleCampaignBestiaryEntries.length) {
         host.innerHTML = '<div class="empty">No campaign bestiary entries found.</div>';
         return;
       }
-      host.innerHTML = campaignBestiaryEntries.map((entry) => `
+      host.innerHTML = visibleCampaignBestiaryEntries.map((entry) => `
         <button type="button" class="note-button" data-bestiary-open="${escapeHtml(entry.id)}">
           <strong>${escapeHtml(entry.name || "Unnamed")}</strong>
           <div class="subtle">${escapeHtml(entryTypeLabel(entry.entry_type))} ${entry.level !== undefined && entry.level !== null ? `Level ${escapeHtml(String(entry.level))}` : ""}</div>
@@ -9621,15 +9814,22 @@
       params.set("limit", "200");
       try {
         const payload = await fetchJson(`${endpoints.campaignBestiary}?${params.toString()}`);
-        campaignBestiaryEntries = payload.items || [];
+        visibleCampaignBestiaryEntries = payload.items || [];
+        if (!query && !entryType) {
+          campaignBestiaryEntries = visibleCampaignBestiaryEntries;
+        } else if (!campaignBestiaryEntries.length) {
+          const all = await fetchJson(`${endpoints.campaignBestiary}?limit=200`);
+          campaignBestiaryEntries = all.items || [];
+        }
         renderBestiaryOverview();
         renderBestiaryList();
         if (refreshCombatantImagesFromBestiary({ commit: false })) {
           commitCombatState();
         }
         if (activeRoomKey) renderRoomKey();
+        if (!query && !entryType) void refreshMonsterCombatantsFromAon();
       } catch (error) {
-        campaignBestiaryEntries = [];
+        visibleCampaignBestiaryEntries = [];
         renderBestiaryOverview();
         if (list) list.innerHTML = `<div class="empty">${escapeHtml(error.message || "Could not load campaign bestiary.")}</div>`;
       }
@@ -11666,7 +11866,79 @@
     });
     document.getElementById("map-room-back").addEventListener("click", navigateBackRoom);
     document.getElementById("map-room-search").addEventListener("input", renderRoomKey);
-    document.getElementById("map-encounter-icons-toggle").addEventListener("change", refreshMapEncounterOverlay);
+    document.getElementById("maptool-calibration-room").addEventListener("change", drawMaptoolRoomRect);
+    document.getElementById("maptool-add-area").addEventListener("click", (event) => {
+      appendMaptoolArea = !appendMaptoolArea;
+      event.target.textContent = appendMaptoolArea ? "Adding area..." : "Add area";
+    });
+    document.getElementById("map-room-list").addEventListener("change", async (event) => {
+      const select = event.target.closest("[data-room-status]");
+      if (!select || !activeRoomKey) return;
+      try {
+        const room = await fetchJson(`${endpoints.maptoolRoom}/status`, {
+          method: "PATCH", body: JSON.stringify({ map_id: activeRoomKey.map_id, room_id: select.dataset.roomStatus, status: select.value }),
+        });
+        maptoolRoomState.rooms[select.dataset.roomStatus] = room;
+        updateRoomVisitLabels();
+      } catch (error) { window.alert(error.message); }
+    });
+    document.getElementById("maptool-import-fog").addEventListener("click", async () => {
+      if (!activeRoomKey) return;
+      const status = document.getElementById("maptool-calibration-status");
+      try {
+        const result = await fetchJson(`${endpoints.maptoolRoom}/import-fog?map_id=${encodeURIComponent(activeRoomKey.map_id)}`, { method: "POST" });
+        await loadMaptoolRoomState(activeRoomKey.map_id);
+        updateRoomVisitLabels();
+        status.textContent = `${result.changed.length} room(s) marked seen from saved fog.`;
+      } catch (error) { status.textContent = error.message; }
+    });
+    const calibrationCanvas = document.getElementById("maptool-calibration-canvas");
+    let calibrationStart = null;
+    const calibrationPoint = (event) => {
+      const image = calibrationCanvas.querySelector("img");
+      const bounds = image.getBoundingClientRect();
+      return {
+        x: Math.round(Math.max(0, Math.min(image.naturalWidth, (event.clientX - bounds.left) * image.naturalWidth / bounds.width))),
+        y: Math.round(Math.max(0, Math.min(image.naturalHeight, (event.clientY - bounds.top) * image.naturalHeight / bounds.height))),
+      };
+    };
+    calibrationCanvas.addEventListener("pointerdown", (event) => {
+      if (!calibrationCanvas.querySelector("img")?.naturalWidth) return;
+      calibrationStart = calibrationPoint(event);
+      calibrationCanvas.setPointerCapture(event.pointerId);
+    });
+    calibrationCanvas.addEventListener("pointermove", (event) => {
+      if (!calibrationStart) return;
+      const image = calibrationCanvas.querySelector("img");
+      const overlay = calibrationCanvas.querySelector(".maptool-calibration-preview");
+      const end = calibrationPoint(event);
+      const left = Math.min(calibrationStart.x, end.x);
+      const top = Math.min(calibrationStart.y, end.y);
+      const scaleX = image.clientWidth / image.naturalWidth;
+      const scaleY = image.clientHeight / image.naturalHeight;
+      Object.assign(overlay.style, {
+        left: `${left * scaleX}px`, top: `${top * scaleY}px`,
+        width: `${Math.abs(end.x - calibrationStart.x) * scaleX}px`,
+        height: `${Math.abs(end.y - calibrationStart.y) * scaleY}px`,
+      });
+      overlay.hidden = false;
+    });
+    calibrationCanvas.addEventListener("pointerup", (event) => {
+      if (!calibrationStart) return;
+      const start = calibrationStart;
+      calibrationStart = null;
+      void saveMaptoolRegion(start, calibrationPoint(event));
+    });
+    calibrationCanvas.addEventListener("pointercancel", () => {
+      calibrationStart = null;
+      drawMaptoolRoomRect();
+    });
+    window.setInterval(async () => {
+      if (!activeRoomKey || document.visibilityState !== "visible") return;
+      await loadMaptoolRoomState(activeRoomKey.map_id);
+      updateRoomVisitLabels();
+    }, 5000);
+    document.getElementById("map-encounter-icons-toggle")?.addEventListener("change", refreshMapEncounterOverlay);
     document.getElementById("town-square-form").addEventListener("submit", (event) => {
       event.preventDefault();
       loadTownSquare();
@@ -11822,9 +12094,7 @@
       const roomLink = event.target.closest("[data-room-link]");
       if (roomLink) {
         event.preventDefault();
-        const currentCard = roomLink.closest(".room-card");
-        const currentMode = currentCard?.dataset.roomTextMode || "literal";
-        openRoomCard(roomLink.dataset.roomLink, { mode: currentMode });
+        openRoomCard(roomLink.dataset.roomLink);
         return;
       }
       const combatButton = event.target.closest("[data-room-combat-add]");
@@ -11868,17 +12138,6 @@
         speakMapRoomReadAloud(readAloudButton.dataset.roomReadAloud);
         return;
       }
-      const button = event.target.closest("[data-room-mode-toggle]");
-      if (!button) {
-        return;
-      }
-      event.preventDefault();
-      const card = button.closest(".room-card");
-      if (!card) {
-        return;
-      }
-      const nextMode = card.dataset.roomTextMode === "literal" ? "summary" : "literal";
-      setRoomCardMode(card, nextMode);
     });
     document.getElementById("campaign-overview-refresh").addEventListener("click", loadCampaignOverview);
     document.getElementById("campaign-overview-edit").addEventListener("click", () => {

@@ -240,7 +240,10 @@ class AonCreatureService:
             content,
             self._rarity_tokens(),
         )
-        payload.setdefault("senses", "")
+        if not payload.get("senses") and content:
+            payload["senses"] = self._senses(content)
+        else:
+            payload.setdefault("senses", "")
         payload.setdefault("languages", "")
         payload.setdefault("skills", [])
         payload.setdefault("ability_mods", {})
@@ -402,7 +405,7 @@ class AonCreatureService:
     def _clean_attack_damage_continuation(self, line: str) -> str:
         text = str(line or "").strip()
         match = re.search(
-            r"\s+(Consume Flesh|Swift Leap)\b",
+            r"\s+(Consume Flesh|Swift Leap|Scalathrax Venom|Animate Chains|Grip Throat|Mark Quarry)\b",
             text,
         )
         if match and match.start() > 0:
@@ -443,6 +446,20 @@ class AonCreatureService:
             ["Swift Leap"],
         )
         self._append_named_action_block(actions, compact, "Swift Leap", [])
+        for name, stops in (
+            ("Oily Scales", ["Speed"]),
+            ("Scalathrax Venom", ["Spray Toxic Oil"]),
+            ("Spray Toxic Oil", ["Scalathrax Oil"]),
+            ("Painsight", ["AC"]),
+            ("Unnerving Gaze", ["Attack of Opportunity"]),
+            ("Animate Chains", ["Focus Gaze"]),
+            ("Focus Gaze", ["Impaling Chain"]),
+            ("Impaling Chain", []),
+            ("Grip Throat", ["Mark Quarry"]),
+            ("Mark Quarry", ["Throat Grab"]),
+            ("Throat Grab", []),
+        ):
+            self._append_named_action_block(actions, compact, name, stops)
         deduped: list[str] = []
         seen: set[str] = set()
         for action in actions:
@@ -516,11 +533,8 @@ class AonCreatureService:
         return {key: match.group(index + 1) for index, key in enumerate(keys)}
 
     def _senses(self, content: str) -> str:
-        perception = self._stat_value(content, "Perception")
-        if not perception:
-            return ""
-        parts = [part.strip() for part in perception.split(",")[1:] if part.strip()]
-        return ", ".join(parts)
+        match = re.search(r"\bPerception\s+[+-]\d+[^\n;,]*[;,]\s*([^\n]+)", content)
+        return match.group(1).strip() if match else ""
 
     def _is_remastered_source(self, source: str) -> bool:
         return any(name in source for name in ("Monster Core", "Player Core", "GM Core", "NPC Core"))

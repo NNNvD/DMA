@@ -134,8 +134,13 @@ Use `Map Room` when the party is exploring a numbered dungeon map.
 2. load the map image
 3. use the printed room labels on the map to find the matching collapsed room card
 4. expand only the room card you need
-5. read `What PCs see first` for safe table description
-6. use the GM-only sections for monsters, NPCs, traps, haunts, loot, secret doors, visibility, detection, and dependencies
+5. read the coloured opening passage for the PDF's read-aloud description, when present
+6. use the general PDF text and formatted encounter stats below it for GM information
+
+Room cards always show the stored PDF text, with no summary toggle. Tags above it
+identify Monsters, NPC, Trap, Haunt, Hazard, Loot, and Secret door from the room-key
+metadata and explicit PDF text markers such as `Treasure:`. Rooms without
+extracted PDF text display a missing-text notice.
 
 Room-key files are JSON documents under `DUNGEON_ROOM_KEY_ROOT`. The first supported example is:
 
@@ -174,9 +179,13 @@ Use `Current Combat` when initiative starts.
 9. use the compact cards during play; only the active combatant opens automatically
 10. open the `Strategy`, `Look`, `Recall`, and `AoN` pills only when you need extra detail
 
-The module enriches known creatures from the local Archives of Nethys creature index.
-If AoN cannot be reached, it keeps the local room encounter snippet and marks missing
-details so the GM can retry from `Find Monster`.
+Room encounter text and curated campaign bestiary stats take priority over Archives
+of Nethys for each field they provide, including encounter level, initiative,
+defenses, attacks, spells, and abilities. AoN fills fields absent from the PDF;
+the room's PDF block remains available as the source text. If AoN cannot be
+reached, DMA keeps the campaign values and marks missing details so the GM can
+retry from `Find Monster`. Review and structure full unique stat blocks in the
+private bestiary JSON when PDF line wrapping makes attacks or abilities ambiguous.
 
 If a combat has several monsters of the same type, DMA splits them into separate cards
 and labels them `A`, `B`, `C`, and so on. Timed conditions with numeric durations count

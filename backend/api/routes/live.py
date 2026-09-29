@@ -15,7 +15,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config.settings import settings
-from backend.config.local_paths import private_child_root, project_path, vault_root
+from backend.config.local_paths import (
+    OVERLAY_PROJECT_ROOT,
+    private_child_root,
+    project_path,
+    vault_root,
+)
 from backend.models.base import get_db
 from backend.services.campaign_service import campaign_service
 from backend.services.aon_creature_service import aon_creature_service
@@ -1518,12 +1523,22 @@ def _extract_json_block(body: str) -> dict[str, Any]:
 
 def _source_json_payload(frontmatter: dict[str, Any]) -> dict[str, Any]:
     candidates = []
+    source_name = frontmatter.get("source_name")
+    if isinstance(source_name, str) and source_name.strip():
+        overlay_imports = _project_root() / OVERLAY_PROJECT_ROOT / "assets" / "imports"
+        try:
+            candidates.append(_safe_child(overlay_imports, source_name.strip()))
+        except ValueError:
+            pass
     source_url = frontmatter.get("source_url")
     if isinstance(source_url, str) and source_url.strip():
         candidates.append(Path(source_url.strip()))
-    source_name = frontmatter.get("source_name")
     if isinstance(source_name, str) and source_name.strip():
-        candidates.append(Path("assets/imports") / source_name.strip())
+        legacy_imports = _project_root() / "assets" / "imports"
+        try:
+            candidates.append(_safe_child(legacy_imports, source_name.strip()))
+        except ValueError:
+            pass
     for candidate in candidates:
         if candidate.suffix.lower() != ".json" or not candidate.exists():
             continue
@@ -2952,7 +2967,7 @@ def _dungeon_map_item(
             if path.parent != root
             else ""
         ),
-        "url": f"/api/live/dungeon-map?path={quote(relative)}",
+        "url": f"/api/live/dungeon-map?path={quote(relative)}&v={path.stat().st_mtime_ns}",
     }
 
 

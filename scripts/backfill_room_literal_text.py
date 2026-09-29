@@ -19,10 +19,27 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.api.routes.live import _enrich_room_key_literal_text
+from backend.api.routes.live import (  # noqa: E402
+    _enrich_room_key_literal_text,
+    _room_key_root,
+)
+from backend.config.local_paths import (  # noqa: E402
+    LEGACY_PRIVATE_ROOT,
+    OVERLAY_PRIVATE_ROOT,
+)
 
 
-DEFAULT_ROOM_KEY_ROOT = Path("assets/imports/misc/private-local/room-keys")
+DEFAULT_ROOM_KEY_ROOT = _room_key_root()
+
+
+def _is_private_write_path(path: Path) -> bool:
+    resolved = path.resolve()
+    if not resolved.is_relative_to(PROJECT_ROOT):
+        return True
+    return any(
+        resolved.is_relative_to((PROJECT_ROOT / private_root).resolve())
+        for private_root in (OVERLAY_PRIVATE_ROOT, LEGACY_PRIVATE_ROOT)
+    )
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -40,7 +57,9 @@ def _literal_count(payload: dict[str, Any]) -> tuple[int, int]:
     rooms = payload.get("rooms") or []
     if not isinstance(rooms, list):
         return 0, 0
-    return sum(1 for room in rooms if isinstance(room, dict) and room.get("literal_text")), len(rooms)
+    return sum(
+        1 for room in rooms if isinstance(room, dict) and room.get("literal_text")
+    ), len(rooms)
 
 
 def _iter_room_keys(root: Path, map_id: str | None) -> list[Path]:
@@ -81,6 +100,9 @@ def main() -> int:
     args = parser.parse_args()
 
     root = args.room_key_root
+    if args.apply and not _is_private_write_path(root):
+        print(f"Refusing to write PDF text outside a private root: {root}")
+        return 1
     if not root.exists():
         print(f"Room-key root not found: {root}")
         return 1
@@ -98,8 +120,14 @@ def main() -> int:
         enriched = _enrich_room_key_literal_text(payload)
         after_count, _total = _literal_count(enriched)
         needs_write = after_count > before_count
-        status = "would update" if needs_write and not args.apply else "updated" if needs_write else "unchanged"
-        print(f"{status}: {path} ({before_count}/{total} -> {after_count}/{total} rooms)")
+        status = (
+            "would update"
+            if needs_write and not args.apply
+            else "updated" if needs_write else "unchanged"
+        )
+        print(
+            f"{status}: {path} ({before_count}/{total} -> {after_count}/{total} rooms)"
+        )
         if needs_write and args.apply:
             _write_json(path, enriched)
             changed += 1
@@ -107,7 +135,9 @@ def main() -> int:
     if args.apply:
         print(f"Applied updates to {changed} file(s).")
     else:
-        print("Dry run only. Re-run with --apply to write private literal_text to disk.")
+        print(
+            "Dry run only. Re-run with --apply to write private literal_text to disk."
+        )
     return 0
 
 
