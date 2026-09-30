@@ -12,6 +12,9 @@ from urllib.request import Request, urlopen
 
 import certifi
 
+from backend.config.local_paths import private_data_root
+from backend.config.settings import settings
+
 
 @dataclass(frozen=True)
 class AonCreatureIndexItem:
@@ -97,7 +100,11 @@ class AonCreatureService:
             project_root or Path(__file__).resolve().parents[2]
         ).resolve()
         self.cache_root = (
-            self.project_root / "assets" / "imports" / "misc" / "aon-creatures" / "raw"
+            private_data_root(self.project_root, settings.dma_private_data_root)
+            / "reference"
+            / "aon"
+            / "creatures"
+            / "raw"
         )
 
     def search_creatures(self, query: str = "", limit: int = 30) -> list[dict[str, Any]]:

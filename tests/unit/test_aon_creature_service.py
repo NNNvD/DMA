@@ -1,6 +1,29 @@
 from backend.services.aon_creature_service import AonCreatureIndexItem, AonCreatureService
 
 
+def test_aon_creature_cache_prefers_private_overlay_when_present(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "backend.services.aon_creature_service.settings.dma_private_data_root",
+        "./assets/imports/misc/private-local",
+    )
+    overlay_cache = (
+        tmp_path
+        / "local-private-overlay"
+        / "project-root"
+        / "assets"
+        / "imports"
+        / "misc"
+        / "private-local"
+        / "reference"
+        / "aon"
+        / "creatures"
+        / "raw"
+    )
+    overlay_cache.mkdir(parents=True)
+    service = AonCreatureService(project_root=tmp_path)
+    assert service.cache_root == overlay_cache.resolve()
+
+
 def test_aon_creature_parser_extracts_monster_image_url():
     service = AonCreatureService()
     html = """
