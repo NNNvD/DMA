@@ -182,7 +182,11 @@ class CampaignNoteImportService:
         }
 
     async def apply_parsed_entities(
-        self, db: AsyncSession, parsed_entities: list[ParsedEntityNote]
+        self,
+        db: AsyncSession,
+        parsed_entities: list[ParsedEntityNote],
+        *,
+        commit: bool = True,
     ) -> dict[str, Any]:
         created_entities = 0
         updated_entities = 0
@@ -197,6 +201,7 @@ class CampaignNoteImportService:
                 description=parsed_entity.description,
                 details=parsed_entity.details,
                 tags=parsed_entity.tags,
+                commit=commit,
             )
             imported_entities.append(entity)
             if created:
@@ -245,6 +250,7 @@ class CampaignNoteImportService:
                     parent_entity_id=parent_entity_id,
                     current_location_id=current_location_id,
                     owner_entity_id=owner_entity_id,
+                    commit=commit,
                 )
 
             for relationship in parsed_entity.relationships:
@@ -262,6 +268,7 @@ class CampaignNoteImportService:
                     target_entity_id=target.id,
                     relationship_type=relationship.relationship_type,
                     notes=relationship.notes,
+                    commit=commit,
                 )
                 if created:
                     created_relationships += 1

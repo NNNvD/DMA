@@ -1,6 +1,7 @@
-.PHONY: help install dev test lint format format-check typecheck ci phase1-check phase2-check phase3-check phase4-check phase1-benchmark db-revision db-upgrade fetch-aon-rules import-assets preview-assets export-ingestion-metadata export-obsidian-vault export-player-prep-pdf sync-obsidian-vault maptool-bridge push-maptool-fixture push-maptool-payload watch-maptool-payloads
+.PHONY: help install dev test frontend-test lint format format-check typecheck ci phase1-check phase2-check phase3-check phase4-check phase1-benchmark db-revision db-upgrade fetch-aon-rules import-assets preview-assets export-ingestion-metadata export-obsidian-vault export-player-prep-pdf sync-obsidian-vault maptool-bridge push-maptool-fixture push-maptool-payload watch-maptool-payloads
 
 PYTHON ?= python3
+AGENT_PYTHON ?= python3
 UVICORN ?= uvicorn
 APP_MODULE ?= backend.api.main:app
 PHASE1_TESTS ?= tests/unit/test_ingestion_service.py tests/unit/test_retrieval_service.py tests/unit/test_metrics_service.py tests/integration/test_documents_api.py tests/integration/test_admin_metrics_api.py tests/acceptance/test_phase1_acceptance.py
@@ -15,6 +16,8 @@ help:
 	@echo "  make install        Install runtime + dev dependencies"
 	@echo "  make dev            Run FastAPI app locally"
 	@echo "  make test           Run test suite"
+	@echo "  make agent-test     Run read-only agent tests in the isolated MCP environment"
+	@echo "  make frontend-test  Run frontend logic tests (requires Node.js)"
 	@echo "  make lint           Run Ruff lint checks"
 	@echo "  make format         Format code with Black"
 	@echo "  make format-check   Check formatting with Black"
@@ -48,6 +51,19 @@ dev:
 
 test:
 	$(PYTHON) -m pytest -q
+
+.PHONY: agent-test agent-review-test
+agent-test:
+	"$(AGENT_PYTHON)" -c "import mcp"
+	"$(AGENT_PYTHON)" -m pytest -q tests/unit/test_campaign_agent_reader.py tests/integration/test_campaign_agent_mcp.py
+
+agent-review-test:
+	"$(AGENT_PYTHON)" -c "import mcp"
+	"$(AGENT_PYTHON)" -c "import os; assert os.getenv('DMA_W1_FIXTURE_BINDING') and os.getenv('DMA_TEST_BACKEND_PYTHON'), 'Set the generated fixture binding and backend Python first'"
+	"$(AGENT_PYTHON)" -m pytest -q tests/integration/test_campaign_agent_review_mcp.py
+
+frontend-test:
+	node --test tests/frontend/*.test.js
 
 lint:
 	$(PYTHON) -m ruff check backend tests scripts
@@ -84,7 +100,7 @@ phase4-check: lint
 phase1-benchmark:
 	$(PYTHON) -m scripts.benchmark_phase1
 
-ci: lint format-check typecheck test
+ci: lint format-check typecheck test frontend-test
 
 db-upgrade:
 	$(PYTHON) -m alembic upgrade head

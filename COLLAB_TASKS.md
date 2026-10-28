@@ -1,6 +1,40 @@
 # Collaboration Tasks
 
-Last updated: 2026-04-21
+Planning pointer updated: 2026-10-28. Historical task entries below were last
+updated on 2026-04-21.
+
+## Current Engineering Sequence
+
+Use W0-W6 in [the roadmap](docs/05-roadmap-and-milestones.md) and
+[the session-cycle and Discord plan](docs/22-agent-session-cycle-and-discord.md).
+The browser is the session workspace; a dedicated external campaign agent will
+handle preparation, live assistance, and debrief. W0's field-level ownership,
+tool/approval contract, and fictional paired recovery are verified in
+[the W0 contract](docs/23-agent-operating-and-data-contract.md). W1 is sufficient
+for the local fictional GM workflow: [dedicated Codex setup, guarded staging/review
+and restart](docs/25-campaign-agent-review-and-acceptance.md) are verified.
+The [completion record](docs/work-records/2026-10-28-w1-campaign-agent-completion.md)
+distinguishes native host, protocol, operator simulation and platform evidence.
+Next complete W2 guided debrief, reviewed session closure and player reports,
+add approved Discord publishing, connect prep/live context, and rehearse the full
+cycle. Discord player questions follow the core rehearsal and player access tests.
+
+M1-M5 remain supporting engineering workstreams. Implemented combat reliability
+and atomic session-update promotion/provenance are reused. Full CI, prep source
+evidence, live recovery readiness, and post-archive browser checks remain
+open gates. The session review panel stays archived; the external agent is the
+intended review surface. The existing local checkpoint requirements still apply.
+
+No human input is required to start fixture-based W2 implementation.
+Real campaign attachment requires an approved binding/backup plan.
+Before connecting Discord, request the chosen server/channel and publication
+authority; before always-on operation, resolve hosting, model budget, and retention.
+These are future configuration decisions, not blockers to the core local workflow.
+
+The older input requests and completion entries below are historical. Reevaluate
+their need and destination before acting on them: Obsidian is legacy compatibility,
+private campaign data uses the root overlay, and real MapTool work is deferred to
+M5. Available source files should be inspected before requesting new samples.
 
 This file is the shared workboard for human tasks, incoming source material, and handoff notes between you and Codex.
 

@@ -5,9 +5,8 @@ This project is designed to be pushed to GitHub without redistributing copyright
 ## What Goes To GitHub
 
 - DMA source code, tests with synthetic fixtures, scripts, and documentation.
-- Obsidian vault notes written for campaign operation.
-- Metadata, manifests, and placeholders that explain where local assets should be placed.
-- Player and GM prep notes written in our own words.
+- Generic metadata, manifests, and placeholders that explain where local assets should be placed.
+- User-created campaign notes only when explicitly approved for public release and scrubbed of private and identifying details.
 
 ## What Stays Local
 
@@ -20,6 +19,7 @@ The following material must stay out of the public repository:
 - NPC, monster, item, cover, or illustration images from books.
 - Generated PDF/HTML handouts that include protected setting/adventure text or styling built from such material.
 - Archived third-party or older campaign assets.
+- The private campaign overlay and its JSON, notes, imports, manifests, and generated indexes.
 
 These paths are intentionally ignored:
 
@@ -34,7 +34,8 @@ These paths are intentionally ignored:
 Keep PDF parsing rules, data schemas, and validation checks in public code. Put
 the extracted output in the ignored local overlay, not in source files, docs,
 or test fixtures. Public tests should use invented room text and stat blocks;
-tests may read the local overlay when it exists without copying its contents.
+optional campaign-data assertions require explicit permission to use the local
+overlay and `DMA_TEST_PRIVATE_OVERLAY=1`. Routine test runs use synthetic fixtures.
 
 ## Local Overlay Folder
 
@@ -54,22 +55,22 @@ DMA-main/
   local-private-overlay/
     project-root/
       assets/imports/misc/private-local/
-      obsidian-abomination-vaults-vault/
 ```
 
-When `.env` leaves the standard local paths at their defaults, DMA automatically
-prefers matching paths under `local-private-overlay/project-root/`. This lets a
-fresh GitHub pull update public code while the ignored overlay remains a separate
-manual private update.
+When `.env` leaves the standard private-data paths at their defaults, DMA
+automatically prefers matching paths under `local-private-overlay/project-root/`.
+The overlay remains separate from Git and must be acquired through the approved
+private distribution channel. The active campaign workflow does not require an
+Obsidian vault; compatibility code and legacy export/import guides are retired
+unless a workflow is explicitly reinstated.
 
 Collaborators must manually acquire the latest `local-private-overlay/` bundle
 from the GM or approved private distribution channel. GitHub updates alone will
-never update private maps, PDFs, monster portraits, room keys, or campaign-only
-data.
+never update private maps, PDFs, portraits, room keys, or campaign-only data.
 
-If a helper, LLM, or merge tool suggests copying `local-private-overlay/` into
-`assets/`, reject that suggestion unless the GM explicitly asks for a one-off
-migration.
+Do not copy or unpack the overlay into `assets/imports/...` or over the
+repository root. A migration requires a reviewed copy map, retained originals,
+and a recovery path.
 
 ## Combat UI Guardrail
 

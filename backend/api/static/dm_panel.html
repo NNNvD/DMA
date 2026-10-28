@@ -58,6 +58,30 @@
       box-shadow: var(--shadow);
     }
 
+    .session-header { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 28px; align-items: start; }
+    .game-state { min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255, 251, 242, 0.85); }
+    .game-state-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .game-state-heading h2 { margin: 0; font-size: 1.35rem; }
+    .game-state-heading button { padding: 8px 14px; }
+    .game-state-overview { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; margin: 16px 0 0; }
+    .game-state-overview > div { min-width: 0; }
+    .game-state-overview .wide { grid-column: 1 / -1; }
+    .game-state-overview dt { margin-bottom: 4px; font-size: 0.77rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+    .game-state-overview dd { margin: 0; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-line; }
+    .game-state-overview small { display: block; color: var(--ink-soft); margin-top: 3px; }
+    .game-state-source { font-size: 0.75rem; font-family: system-ui, sans-serif; color: var(--ink-soft); }
+    #game-state-form { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+    #game-state-form fieldset { margin: 0 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+    #game-state-form .grid-two { gap: 10px; }
+    #game-state-form input, #game-state-form select, #game-state-form textarea { width: 100%; min-width: 0; }
+    #game-state-form textarea { min-height: 75px; }
+    #game-state-form [hidden] { display: none !important; }
+    #game-state-status { margin-top: 10px; font-size: 0.86rem; color: var(--ink-soft); }
+    .panel { scroll-margin-top: 125px; }
+    .shell { padding-bottom: 80px; }
+    @media (max-width: 1000px) { .session-header { grid-template-columns: 1fr; gap: 18px; } }
+    @media (max-width: 600px) { .hero.session-header { padding: 20px; } .game-state { padding: 14px; } #game-state-form .grid-two { grid-template-columns: 1fr; } }
+
     .eyebrow {
       margin: 0 0 10px;
       font-size: 0.82rem;
@@ -1672,6 +1696,14 @@
       margin-top: 12px;
     }
 
+    .module-current-combat button:focus-visible,
+    .module-current-combat input:focus-visible,
+    .module-current-combat select:focus-visible,
+    .module-current-combat summary:focus-visible {
+      outline: 3px solid rgba(176, 92, 25, 0.78);
+      outline-offset: 2px;
+    }
+
     .combat-turn-panel {
       display: grid;
       gap: 10px;
@@ -1755,6 +1787,24 @@
     .combat-card.is-active {
       border-color: rgba(138, 47, 29, 0.34);
       background: rgba(255, 249, 239, 0.98);
+    }
+
+    .combat-card.is-low-hp,
+    .combat-strip-chip.is-low-hp {
+      border-color: rgba(176, 92, 25, 0.55);
+      background: rgba(255, 244, 220, 0.96);
+    }
+
+    .combat-card.is-defeated,
+    .combat-strip-chip.is-defeated {
+      border-color: rgba(105, 92, 86, 0.42);
+      background: rgba(235, 231, 226, 0.88);
+      color: rgba(70, 62, 57, 0.78);
+    }
+
+    .combat-card.is-defeated .combat-card-name strong,
+    .combat-strip-chip.is-defeated strong {
+      text-decoration: line-through;
     }
 
     .combat-card-header {
@@ -2019,7 +2069,7 @@
     }
 
     .combat-pc-hp .combat-condition-add {
-      grid-template-columns: minmax(0, 1fr) 54px auto;
+      grid-template-columns: minmax(0, 1fr) 54px 66px auto;
     }
 
     .combat-pc-condition-drawer {
@@ -2341,7 +2391,7 @@
 
     .combat-condition-add {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 64px auto;
+      grid-template-columns: minmax(0, 1fr) 64px 74px auto;
       gap: 5px;
       align-items: end;
     }
@@ -2853,7 +2903,7 @@
     <header class="status-strip">
       <div class="status-strip-main">
         <span class="eyebrow">DMA Command Center</span>
-        <strong id="shell-scene-title">No active scene</strong>
+        <strong id="shell-location-title">In-Game State</strong>
         <div class="status-strip-meta" id="shell-status-meta">
           <span class="stat-badge">Loading session context…</span>
         </div>
@@ -2905,27 +2955,12 @@
     </div>
     <div class="result-box" id="sketch-status"><span class="empty">Saved locally in this browser.</span></div>
   </section>
-  <button type="button" class="floating-launcher" id="chat-launcher" aria-label="Open DMA Chat">
-    <svg class="shell-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="5" y="7" width="14" height="12" rx="3"></rect>
-      <path d="M12 3v4"></path>
-      <path d="M8 3h8"></path>
-      <path d="M8.5 12h.01M15.5 12h.01"></path>
-      <path d="M9 16h6"></path>
-    </svg>
-  </button>
-  <section class="chat-float" id="chat-float" hidden></section>
   <main class="shell">
-    <section class="hero">
-      <p class="eyebrow">Phase 4 Live Assistance</p>
+    <section class="hero session-header">
+      <div class="session-header-intro">
+      <p class="eyebrow">Your session workspace</p>
       <h1>DMA DM Panel</h1>
-      <p>
-        Keep the current scene, active cast, and fast lookup tools in one place while you run the session.
-        This panel is intentionally small: save live context, run slash-style commands, sync session mechanics, query rules, pull continuity, and spin up a quick prep brief.
-      </p>
-      <div class="summary-row" id="summary-row">
-        <div class="summary-card"><span class="summary-label">Scene</span><span class="summary-value">Loading…</span></div>
-      </div>
+      <p>Maps, encounters and campaign notes for your table. Talk to your DMA agent in Codex or your IDE.</p>
       <div class="actions">
         <button type="button" id="launch-session-button">Launch Current Session</button>
         <button type="button" class="ghost" id="open-player-recap-button">Open PC Summary</button>
@@ -2935,8 +2970,53 @@
         <button type="button" id="reset-button" class="secondary">Reset Live State</button>
       </div>
       <div class="launch-status" id="launch-status">
-        Session Launch Mode will open the active session prep, spoiler-safe recap, GM recap, Level 3 map at C7, party overview, and NPC dossier.
+        Open your selected session note, party overview and campaign references.
       </div>
+      </div>
+      <section class="game-state" aria-labelledby="game-state-title">
+        <div class="game-state-heading">
+          <h2 id="game-state-title">In-Game State</h2>
+          <button type="button" class="ghost" id="game-state-edit" aria-expanded="false" aria-controls="game-state-form">Edit state</button>
+        </div>
+        <dl class="game-state-overview" id="game-state-overview"><div class="wide"><dt>Location</dt><dd>Loading…</dd></div></dl>
+        <form id="game-state-form" hidden>
+          <fieldset><legend>Location</legend>
+            <label>Place or room <input id="ig-location" list="ig-location-options" maxlength="200" placeholder="Settlement, dungeon, room…" /></label>
+            <datalist id="ig-location-options"></datalist>
+            <label>Linked map <select id="ig-map"><option value="">No linked map</option></select></label>
+            <div class="grid-two">
+              <label>Exposure <select id="ig-location-type"><option value="outdoors">Outdoors</option><option value="indoors">Indoors / sheltered</option><option value="underground">Underground</option></select></label>
+              <label>Climate <select id="ig-climate"><option value="temperate">Temperate</option><option value="cold">Cold</option><option value="arid">Arid</option><option value="tropical">Tropical</option></select></label>
+            </div>
+          </fieldset>
+          <fieldset><legend>Day and time</legend>
+            <label>Campaign calendar <select id="ig-calendar"><option value="">Custom / manual calendar</option></select></label>
+            <label>Calendar name <input id="ig-calendar-name" maxlength="100" placeholder="Campaign calendar" /></label>
+            <div class="grid-two">
+              <label>Day of month <input id="ig-day" type="number" min="1" max="400" /></label>
+              <label>Month <input id="ig-month" list="ig-month-options" maxlength="80" placeholder="Campaign month name" /></label>
+              <label>Year <input id="ig-year" type="number" min="0" max="9999999" /></label>
+              <label>Weekday override <input id="ig-weekday" maxlength="80" placeholder="Automatic if calendar defines it" /></label>
+            </div>
+            <datalist id="ig-month-options"></datalist>
+            <div class="grid-two">
+              <label>Season <select id="ig-season"><option value="auto">Use calendar season</option><option value="spring">Spring</option><option value="summer">Summer</option><option value="autumn">Autumn</option><option value="winter">Winter</option></select></label>
+              <label>Time of day <select id="ig-time"><option value="unspecified">Not set</option><option value="dawn">Dawn</option><option value="morning">Morning</option><option value="afternoon">Afternoon</option><option value="evening">Evening</option><option value="night">Night</option></select></label>
+            </div>
+            <small>Custom calendar names are welcome. Set the season or weekday if your calendar does not define them.</small>
+          </fieldset>
+          <fieldset><legend>Weather and environment</legend>
+            <label>Weather <select id="ig-weather-mode"><option value="auto">Automatic</option><option value="manual">Manual override</option></select></label>
+            <label id="ig-weather-label" hidden>Manual weather <textarea id="ig-weather" maxlength="1000" placeholder="Fog, steady rain, unusual indoor conditions…"></textarea></label>
+            <button type="button" class="ghost" id="ig-reroll">Generate new weather</button>
+            <label>Environmental effects <select id="ig-effects-mode"><option value="auto">Automatic</option><option value="manual">Manual override</option></select></label>
+            <label id="ig-effects-label" hidden>Manual environmental effects <textarea id="ig-effects" maxlength="2000" placeholder="Lighting, difficult terrain, local hazards…"></textarea></label>
+            <small>Automatic conditions update when place, date or time changes. Manual overrides stay pinned. Suggestions describe conditions; the DM decides any rules effects.</small>
+          </fieldset>
+          <div class="actions"><button type="submit" id="game-state-save">Save In-Game State</button><button type="button" class="ghost" id="game-state-done">Done</button></div>
+        </form>
+        <div id="game-state-status" role="status" aria-live="polite">Loading saved state…</div>
+      </section>
     </section>
 
     <section class="layout">
@@ -3080,6 +3160,8 @@
               <div class="stat-line" id="combat-meta" style="margin-top: 12px;">
                 <span class="stat-badge">No combat loaded</span>
               </div>
+              <div id="combat-save-status" class="subtle" aria-live="polite">Combat state is not yet loaded.</div>
+              <button type="button" class="ghost" id="combat-save-retry" hidden>Retry Save</button>
             </div>
             <div class="combat-body">
               <div class="combat-turn-panel" id="combat-turn-panel">
@@ -3223,6 +3305,26 @@
           </div>
           <textarea class="command-note-editor" id="session-overview-editor" hidden></textarea>
           <div class="result-box" id="session-overview-status"><span class="empty">No session overview edits saved yet.</span></div>
+        </article>
+
+        <article class="panel full-width module-session-update-review" data-module-id="session-update-review">
+          <h2>Session Update Review</h2>
+          <p class="subtle">Review extracted session changes before they enter campaign memory. Candidate facts are decided individually; the session log is approved separately.</p>
+          <div class="command-note-toolbar">
+            <button type="button" id="session-update-review-refresh">Refresh Pending Drafts</button>
+          </div>
+          <div class="stat-line" id="session-update-review-meta">
+            <span class="stat-badge">Pending session updates have not been loaded</span>
+          </div>
+          <div class="sheet-browser">
+            <div class="list scroll-list" id="session-update-review-list" aria-label="Pending session updates">
+              <div class="empty">Refresh to load pending session updates.</div>
+            </div>
+            <div class="result-box sheet-view" id="session-update-review-detail">
+              <span class="empty">Choose a draft to inspect its source and extracted candidates.</span>
+            </div>
+          </div>
+          <div class="result-box" id="session-update-review-status"><span class="empty">No review actions performed yet.</span></div>
         </article>
 
         <article class="panel full-width module-import-review" data-module-id="import-review">
@@ -3735,8 +3837,43 @@
       </div>
     </section>
   </main>
+  <section id="archived-module-stash" hidden aria-hidden="true"></section>
 
+  <script src="/api/live/combat-conditions.js"></script>
   <script>
+    // Keep the panel shell functional if an older or misconfigured API server
+    // cannot serve the shared combat helper. The standalone file remains the
+    // source of truth whenever it loads successfully.
+    const DmaCombatConditions = window.DmaCombatConditions || (() => {
+      function remainingDurationTurns(condition) {
+        const value = condition?.durationTurns;
+        if (typeof value === "number") return Number.isSafeInteger(value) && value > 0 ? value : null;
+        if (typeof value === "string" && /^\d+$/.test(value.trim())) {
+          const parsed = Number.parseInt(value, 10);
+          return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+        }
+        return null;
+      }
+      function finishCombatantTurn(conditions) {
+        if (!Array.isArray(conditions)) return [];
+        return conditions.flatMap((condition) => {
+          const remaining = remainingDurationTurns(condition);
+          if (remaining === null) return [condition];
+          if (remaining === 1) return [];
+          return [{ ...condition, durationTurns: remaining - 1 }];
+        });
+      }
+      function createSerialWriteQueue() {
+        let tail = Promise.resolve();
+        return function enqueue(write) {
+          const result = tail.then(write);
+          tail = result.then(() => undefined, () => undefined);
+          return result;
+        };
+      }
+      return { remainingDurationTurns, finishCombatantTurn, createSerialWriteQueue };
+    })();
+
     const endpoints = {
       state: "/api/live/session-state",
       maptoolSync: "/api/live/maptool-sync",
@@ -3752,6 +3889,7 @@
       campaignOverview: "/api/live/campaign-overview",
       sessionOverviews: "/api/live/session-overviews",
       sessionOverview: "/api/live/session-overview",
+      sessionUpdateDrafts: "/api/campaign/session-update-drafts",
       playerHandoutExport: "/api/live/player-handout-export",
       referencePdfs: "/api/live/reference-pdfs",
       dungeonMaps: "/api/live/dungeon-maps",
@@ -3794,6 +3932,8 @@
     };
 
     let panelSnapshot = null;
+    let gameStateEditRevision = 0;
+    let gameStateSeed = 0;
     let lastAssistantAnswer = "";
     let chatHistory = [];
     let diceHistory = [];
@@ -3818,6 +3958,9 @@
       afflictions: [],
     };
     let combatSaveTimer = null;
+    let combatEditRevision = 0;
+    let resetInProgress = false;
+    const enqueueSessionWrite = DmaCombatConditions.createSerialWriteQueue();
     let abilityPopoverPinned = false;
     let aonCreatures = [];
     let campaignBestiaryEntries = [];
@@ -3829,6 +3972,8 @@
     let importRoomDrafts = [];
     let activeImportDraftId = "";
     let activeImportAudit = null;
+    let sessionUpdateDrafts = [];
+    let activeSessionUpdateDraft = null;
     let imageCandidates = [];
     let imageAudit = null;
     let privateIndexStatus = null;
@@ -3843,7 +3988,6 @@
     let activeSessionOverview = null;
     let activeNpcDossierId = null;
     let pendingNpcPortraitId = null;
-    const launchSessionPath = "Command Center/Sessions/Session 04 - Level 3 C9 Start.md";
     const campaignOverviewTabs = {
       overview: {
         label: "Overview",
@@ -3868,7 +4012,7 @@
       "Current Scene": "Use this first at the start of play and whenever the table moves to a new situation.\n\nScene Title is the short label for what is happening now. Focus tells DMA what kind of help to prioritize, such as scouting, social tension, combat, or rules friction. Current Location, Active PCs, and Active NPCs give chat, prep, sound recommendations, and continuity tools the right context. MapTool Map ID is used by Session Mechanics when you sync a map. DM Notes are for short reminders that matter right now, not full session notes. Save Live State after changing these fields.",
       "Map Room": "Use this during dungeon exploration when you want the map and room key on one screen.\n\nDungeon Map loads a local map image from the configured campaign media folder. Use the Secret, Loot, Monsters, Trap, Haunt, and NPC checkboxes when you want to surface only rooms with those features. Use Search Room Text to search room summaries and literal source text at the same time. Each room card is collapsed by default. Expand the room the party is entering to see what the PCs notice first, then GM-only contents such as monsters, NPCs, traps, haunts, loot, secret doors, visibility notes, and detection notes. The Read Aloud button speaks the player-facing boxed/read-aloud text with the configured narrator voice. This first version does not place clickable hotspots on the map yet; use the printed room labels on the image and the sidebar together.",
       "Town Square": "Use this when the party returns to Otari or another settlement.\n\nChoose a settlement to load its town map if one is available, then scan the settlement overview, look and feel, demographics, gather-information results, quest hooks, and location cards. Use Search Town Notes to narrow to shops, NPCs, rumors, hooks, or services. This module is for social and downtime navigation: who is where, what the town feels like, what the PCs can learn, and which hooks are available outside the dungeon.",
-      "Current Combat": "Use this when initiative starts.\n\nOpen the relevant Map Room card, then press Start From Open Room. The roster adds the party PCs from the PC Sheet Viewer, pulls room creatures, enriches known monsters from the local Archives of Nethys index, and opens the active combatant while keeping everyone else compact. The initiative strip gives the full turn order at a glance. Collapsed cards show the essentials only: name, HP, AC, and current conditions. Use Add Party PCs if you started with a custom monster or want to restore missing PCs. Use Next Turn and Previous Turn to track the active combatant and round; timed conditions count down automatically when turns advance. Edit current or max HP directly if you want to tune difficulty during play. Duplicate creatures receive letter labels such as A and B so you can keep them apart. Monster cards expose Strategy, Look, Recall, and AoN detail pills when you need more context.",
+      "Current Combat": "Use this when initiative starts.\n\nOpen the relevant Map Room card, then press Start From Open Room. The roster adds the party PCs from the PC Sheet Viewer, pulls room creatures, enriches known monsters from the local Archives of Nethys index, and opens the active combatant while keeping everyone else compact. The initiative strip gives the full turn order at a glance. Collapsed cards show the essentials only: name, HP, AC, and current conditions. Use Add Party PCs if you started with a custom monster or want to restore missing PCs. Use Next Turn and Previous Turn to track the active combatant and round. Enter condition magnitude in Value and an optional duration in affected creature turns; only the separate duration counts down at the end of that creature's turn. Previous Turn navigates without undoing completed effects. Edit current or max HP directly if you want to tune difficulty during play. Duplicate creatures receive letter labels such as A and B so you can keep them apart. Monster cards expose Strategy, Look, Recall, and AoN detail pills when you need more context.",
       "Campaign Overview": "Use this as the campaign-level compass.\n\nThis module has tabs for the main campaign overview, GM-facing recap, PC-facing recap, and Treasure Tracker / item tracking. The notes are stored in the private-local campaign JSON bundle, so edits here are part of the shareable DMA campaign data. Keep the prose human-readable: campaign premise, hidden backstory, current state, major threats, future trajectory, open threads, DM notes, and table-useful item reminders. Use Edit Text when the campaign state changes or when you want to add table-specific reminders.",
       "Session Overview": "Use this as the immediate session command center.\n\nEach tab opens a session note from the private-local campaign JSON bundle. Next Session is the working prep tab; other Session tabs can hold runbooks, recaps, or future prep. Keep each session note organized around goal, starting situation, likely scenes, important NPCs, monsters/hazards/treasure, secrets, unexpected-player contingencies, live notes, and after-session recap. Use Edit Text during or after play to keep the DMA memory fresh.",
       "Import Review": "Use this before new extracted PDF material becomes live campaign data.\n\nCreate a room import run, inspect the room checklist, resolve missing or uncertain fields, approve drafts that look correct, and then promote reviewed rooms into the live private-local room-key JSON. Unreviewed drafts stay quarantined here and do not appear in Map Room.",
@@ -4001,7 +4145,9 @@
         } catch (_error) {
           detail = await response.text();
         }
-        throw new Error(detail || "Request failed");
+        const error = new Error(detail || "Request failed");
+        error.status = response.status;
+        throw error;
       }
       return response.json();
     }
@@ -4049,6 +4195,21 @@
       return `dma.dmPanel.module.${title.replace(/\s+/g, "-").toLowerCase()}.collapsed`;
     }
 
+    // Intentional archive list. Reactivation requires updating docs/21 and its
+    // regression test as well as the module/menu registration below.
+    const ARCHIVED_MODULE_IDS = new Set([
+      "current-scene",
+      "session-update-review",
+      "import-review",
+      "quick-rules",
+      "quick-prep",
+      "session-soundboard",
+      "voice-reader",
+      "reference-pdfs",
+      "continuity-search",
+      "session-context",
+      "dma-chat-workbench",
+    ]);
     const moduleOrderKey = "dma.dmPanel.module.order";
     const mapCombatOrderKey = "dma.dmPanel.module.order.map-combat-v1";
     const defaultTopModuleIds = [
@@ -4057,7 +4218,6 @@
       "town-square",
       "campaign-overview",
       "session-overview",
-      "import-review",
       "campaign-bestiary",
       "pc-sheet-viewer",
       "npc-dossier-viewer",
@@ -4065,7 +4225,7 @@
     const pinnedToolsKey = "dma.dmPanel.tools.pinned";
     const activeToolKey = "dma.dmPanel.tools.active";
     const sketchPadKey = "dma.dmPanel.sketchPad";
-    const defaultPinnedToolIds = ["dice-roller", "session-soundboard"];
+    const defaultPinnedToolIds = ["dice-roller"];
     const partyLevelForMapMarkers = 3;
     const mapEncounterMarkerPositions = {
       level3: {
@@ -4093,16 +4253,8 @@
       },
     };
     const toolDefinitions = [
-      { id: "current-scene", title: "Current Scene", icon: "scene" },
-      { id: "quick-rules", title: "Quick Rules", icon: "book-open" },
-      { id: "quick-prep", title: "Quick Prep", icon: "sparkles" },
       { id: "dice-roller", title: "Dice Roller", icon: "dice" },
-      { id: "session-soundboard", title: "Session Soundboard", icon: "music" },
-      { id: "voice-reader", title: "Voice Reader", icon: "mic" },
-      { id: "reference-pdfs", title: "Reference PDFs", icon: "file-text" },
       { id: "session-mechanics", title: "Session Mechanics", icon: "sliders" },
-      { id: "continuity-search", title: "Continuity Search", icon: "search" },
-      { id: "session-context", title: "Session Context", icon: "layers" },
     ];
     let activeToolId = "";
 
@@ -4140,7 +4292,11 @@
       try {
         const saved = JSON.parse(window.localStorage.getItem(pinnedToolsKey) || "[]");
         if (Array.isArray(saved) && saved.length) {
-          return saved.filter((id) => toolDefinition(id));
+          const pinned = saved.filter((id) => toolDefinition(id));
+          defaultPinnedToolIds.forEach((id) => {
+            if (!pinned.includes(id)) pinned.push(id);
+          });
+          return pinned;
         }
       } catch (_error) {
         // Fall through to defaults.
@@ -4162,10 +4318,6 @@
         drawer.appendChild(panel);
       });
 
-      const chatPanel = document.querySelector('.layout > .panel[data-module-id="dma-chat-workbench"]');
-      if (chatPanel) {
-        document.getElementById("chat-float").appendChild(chatPanel);
-      }
       renderToolChrome();
       hydrateSketchPad();
       const rememberedTool = window.localStorage.getItem(activeToolKey);
@@ -4264,6 +4416,18 @@
 
     function moduleIdFromTitle(title) {
       return title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+
+    function archiveModulesFromActiveLayout() {
+      const stash = document.getElementById("archived-module-stash");
+      document.querySelectorAll(".layout .panel").forEach((panel) => {
+        const heading = panel.querySelector("h2");
+        const moduleId = panel.dataset.moduleId || (heading ? moduleIdFromTitle(heading.textContent) : "");
+        if (!ARCHIVED_MODULE_IDS.has(moduleId)) return;
+        panel.dataset.moduleId = moduleId;
+        panel.dataset.moduleArchived = "true";
+        stash.appendChild(panel);
+      });
     }
 
     function panelsInVisualOrder() {
@@ -4401,7 +4565,7 @@
     }
 
     function setupCollapsiblePanels() {
-      document.querySelectorAll(".panel").forEach((panel) => {
+      document.querySelectorAll(".layout > .panel").forEach((panel) => {
         if (panel.dataset.panelReady === "true") {
           return;
         }
@@ -5020,8 +5184,10 @@
         );
         renderSessionOverview();
         status.innerHTML = "<span>Session overview loaded.</span>";
+        return true;
       } catch (error) {
         status.innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+        return false;
       }
     }
 
@@ -5072,16 +5238,8 @@
         `<span class="${isError ? "error" : ""}">${escapeHtml(message)}</span>`;
     }
 
-    function findLevelThreeMapId() {
-      const candidates = ["level3", "level-3", "level-03", "level03"];
-      return (
-        dungeonMaps.find((item) => candidates.includes(item.map_id)) ||
-        dungeonMaps.find((item) => /level\s*3|level3|floor\s*3/i.test(`${item.title} ${item.path || ""}`)) ||
-        dungeonMaps.find((item) => /c[0-9]|cult|canker/i.test(`${item.title} ${item.path || ""}`))
-      )?.map_id || "";
-    }
-
     function focusModule(moduleId) {
+      if (ARCHIVED_MODULE_IDS.has(moduleId)) return;
       const panel = document.querySelector(`[data-module-id="${moduleId}"]`);
       if (!panel) {
         return;
@@ -5100,7 +5258,12 @@
     }
 
     async function launchCurrentSession() {
-      setLaunchStatus("Launching the C7 session cockpit…");
+      if (!document.getElementById("game-state-form").hidden && !await saveGameState()) {
+        setLaunchStatus("Save or reconcile In-Game State before opening the session.", true);
+        return;
+      }
+      const selectedSessionPath = activeSessionOverview?.path;
+      setLaunchStatus("Opening the selected session workspace…");
       try {
         await Promise.all([
           loadCampaignOverview(),
@@ -5111,20 +5274,15 @@
           loadNpcSheets(),
           loadPanel(),
         ]);
-        await openSessionOverview(launchSessionPath);
-        document.getElementById("session-track-room").value = "C7";
-        document.getElementById("session-track-explored").value = "C7";
-        document.getElementById("session-track-next").value = "Choose first route from C7";
-
-        const levelThreeMapId = findLevelThreeMapId();
-        if (levelThreeMapId) {
-          document.getElementById("map-room-select").value = levelThreeMapId;
-          document.getElementById("map-room-search").value = "c7";
-          await loadMapRoom(levelThreeMapId);
+        const sessionPath = selectedSessionPath || activeSessionOverview?.path;
+        if (!sessionPath || !await openSessionOverview(sessionPath)) {
+          throw new Error("The selected session note could not be opened. Choose an available session and retry.");
         }
+        const linkedMap = panelSnapshot?.in_game_state?.map_id;
+        if (linkedMap) await loadMapRoom(linkedMap);
         await loadTownSquare();
 
-        setLaunchStatus("Session Launch Mode ready: Session 04, C7 map context, party overview, NPC dossier, and campaign overview are loaded.");
+        setLaunchStatus(`Session workspace ready: ${activeSessionOverview.title || "selected session"}. Your In-Game State and tracker entries are preserved.`);
         focusModule("session-overview");
       } catch (error) {
         setLaunchStatus(error.message || "Could not launch current session.", true);
@@ -5620,6 +5778,135 @@
           </div>
         </div>
       `;
+    }
+
+    function renderSessionUpdateDraftList() {
+      const list = document.getElementById("session-update-review-list");
+      const meta = document.getElementById("session-update-review-meta");
+      if (meta) meta.innerHTML = `<span class="stat-badge">${sessionUpdateDrafts.length} pending draft${sessionUpdateDrafts.length === 1 ? "" : "s"}</span>`;
+      if (!list) return;
+      if (!sessionUpdateDrafts.length) {
+        list.innerHTML = '<div class="empty">No pending session updates for this campaign.</div>';
+        return;
+      }
+      list.innerHTML = sessionUpdateDrafts.map((draft) => `
+        <button type="button" class="note-button ${String(activeSessionUpdateDraft?.id) === String(draft.id) ? "selected" : ""}" data-session-update-open="${escapeHtml(draft.id)}">
+          <strong>${escapeHtml(draft.title || `Session update ${draft.id}`)}</strong>
+          <span>${escapeHtml(draft.source_name || "No source name")} · ${draft.candidates?.length || 0} candidates</span>
+        </button>
+      `).join("");
+    }
+
+    function renderSessionUpdateDraftDetail() {
+      const host = document.getElementById("session-update-review-detail");
+      const draft = activeSessionUpdateDraft;
+      if (!host) return;
+      if (!draft) {
+        host.innerHTML = '<span class="empty">Choose a draft to inspect its source and extracted candidates.</span>';
+        renderSessionUpdateDraftList();
+        return;
+      }
+      const decisions = draft.decisions || {};
+      const allDecided = (draft.candidates || []).every((candidate) => ["accepted", "rejected", "deferred"].includes(decisions[candidate.id]?.decision));
+      const candidatesHtml = (draft.candidates || []).map((candidate) => {
+        const decision = decisions[candidate.id] || {};
+        const settled = ["accepted", "rejected"].includes(decision.decision);
+        return `<section class="result-box">
+          <h3>${escapeHtml(candidate.payload?.name || candidate.candidate_type || "Candidate")}</h3>
+          <p class="subtle">${escapeHtml(candidate.candidate_type)} · Decision: <strong>${escapeHtml(decision.decision || "pending")}</strong>${decision.reason ? ` · ${escapeHtml(decision.reason)}` : ""}</p>
+          <details><summary>Captured baseline</summary><pre>${escapeHtml(JSON.stringify(candidate.baseline ?? null, null, 2))}</pre></details>
+          <details><summary>Extracted candidate data</summary><pre>${escapeHtml(JSON.stringify(candidate.payload || {}, null, 2))}</pre></details>
+          ${!settled && draft.status === "pending" ? `<label>Reason (required to reject)<textarea data-session-update-reason="${escapeHtml(candidate.id)}" placeholder="Why accept, reject, or defer this candidate?"></textarea></label>
+            <div class="small-actions">
+              <button type="button" data-session-update-decision="accepted" data-candidate-id="${escapeHtml(candidate.id)}">Accept Fact</button>
+              <button type="button" class="secondary" data-session-update-decision="rejected" data-candidate-id="${escapeHtml(candidate.id)}">Reject Fact</button>
+              <button type="button" class="ghost" data-session-update-decision="deferred" data-candidate-id="${escapeHtml(candidate.id)}">Defer</button>
+            </div>` : ""}
+        </section>`;
+      }).join("");
+      host.innerHTML = `
+        <h3>${escapeHtml(draft.title || `Session update ${draft.id}`)}</h3>
+        <p class="subtle">Source: ${escapeHtml(draft.source_name || "Not named")} · Status: ${escapeHtml(draft.status)} · Hash: ${escapeHtml(draft.source_hash || "unavailable")}</p>
+        <details open><summary>Original session source</summary><pre>${escapeHtml(draft.content || "")}</pre></details>
+        <h3>Extracted candidates</h3>
+        ${candidatesHtml || '<p class="empty">No candidates were extracted. The session log can be reviewed directly.</p>'}
+        <section class="result-box">
+          <h3>Session log decision</h3>
+          <p class="subtle">This controls whether the source enters approved session history. Candidate facts above are promoted separately.</p>
+          ${draft.session_log_decision ? `<p>Log ${escapeHtml(draft.session_log_decision)}.</p>` : draft.status === "pending" ? `
+            <label>Reason (required to reject the log)<textarea id="session-update-log-reason" placeholder="Reason for rejecting this session log, if applicable"></textarea></label>
+            <div class="small-actions">
+              <button type="button" data-session-update-finalize="approved" ${allDecided ? "" : "disabled"}>Approve Session Log</button>
+              <button type="button" class="secondary" data-session-update-finalize="rejected" ${allDecided ? "" : "disabled"}>Reject Session Log</button>
+            </div>
+            ${allDecided ? "" : '<p class="subtle">Decide or defer every candidate before finalizing the log.</p>'}` : ""}
+        </section>`;
+      renderSessionUpdateDraftList();
+    }
+
+    async function openSessionUpdateDraft(draftId) {
+      const status = document.getElementById("session-update-review-status");
+      try {
+        activeSessionUpdateDraft = await fetchJson(`${endpoints.sessionUpdateDrafts}/${encodeURIComponent(draftId)}`);
+        renderSessionUpdateDraftDetail();
+        if (status) status.innerHTML = "<span>Draft loaded. Review facts and session log separately.</span>";
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not open session update.")}</span>`;
+      }
+    }
+
+    async function loadSessionUpdateDrafts() {
+      const status = document.getElementById("session-update-review-status");
+      try {
+        sessionUpdateDrafts = await fetchJson(`${endpoints.sessionUpdateDrafts}?status=pending&limit=50`);
+        if (activeSessionUpdateDraft && !sessionUpdateDrafts.some((item) => String(item.id) === String(activeSessionUpdateDraft.id))) {
+          activeSessionUpdateDraft = null;
+        }
+        renderSessionUpdateDraftList();
+        if (activeSessionUpdateDraft) await openSessionUpdateDraft(activeSessionUpdateDraft.id);
+        else {
+          renderSessionUpdateDraftDetail();
+          if (status) status.innerHTML = "<span>Pending session updates loaded.</span>";
+        }
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not load pending session updates.")}</span>`;
+      }
+    }
+
+    async function decideSessionUpdateCandidate(candidateId, decision) {
+      const status = document.getElementById("session-update-review-status");
+      const reason = document.querySelector(`[data-session-update-reason="${CSS.escape(candidateId)}"]`)?.value.trim() || "";
+      if (decision === "rejected" && !reason) {
+        if (status) status.innerHTML = '<span class="error">Add a reason before rejecting this candidate.</span>';
+        return;
+      }
+      try {
+        await fetchJson(`${endpoints.sessionUpdateDrafts}/${activeSessionUpdateDraft.id}/candidates/${encodeURIComponent(candidateId)}/decision`, {
+          method: "POST", body: JSON.stringify({ decision, reason: reason || null }),
+        });
+        await openSessionUpdateDraft(activeSessionUpdateDraft.id);
+        if (status) status.innerHTML = `<span>Candidate ${escapeHtml(decision)}.</span>`;
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${error.status === 409 ? "Campaign data changed after preview. " : ""}${escapeHtml(error.message || "Could not save candidate decision.")}</span>`;
+      }
+    }
+
+    async function finalizeSessionUpdateLog(decision) {
+      const status = document.getElementById("session-update-review-status");
+      const reason = document.getElementById("session-update-log-reason")?.value.trim() || "";
+      if (decision === "rejected" && !reason) {
+        if (status) status.innerHTML = '<span class="error">Add a reason before rejecting this session log.</span>';
+        return;
+      }
+      try {
+        await fetchJson(`${endpoints.sessionUpdateDrafts}/${activeSessionUpdateDraft.id}/finalize`, {
+          method: "POST", body: JSON.stringify({ decision, reason: reason || null }),
+        });
+        await loadSessionUpdateDrafts();
+        if (status) status.innerHTML = `<span>Session log ${escapeHtml(decision)}. Candidate decisions remain recorded separately.</span>`;
+      } catch (error) {
+        if (status) status.innerHTML = `<span class="error">${escapeHtml(error.message || "Could not finalize session log.")}</span>`;
+      }
     }
 
     async function loadImportRuns() {
@@ -7013,7 +7300,11 @@
     }
 
     function refreshPartyCombatantsFromSheets() {
-      if (!pcSheets.length || !currentCombat.combatants?.length) return;
+      if (
+        !pcSheets.length
+        || !currentCombat.combatants?.length
+        || !currentCombat.combatants.some((combatant) => combatant.kind === "pc")
+      ) return;
       const latestById = new Map(partyCombatants().map((combatant) => [combatant.id, combatant]));
       currentCombat.combatants = currentCombat.combatants.map((combatant) => {
         if (combatant.kind !== "pc" || !latestById.has(combatant.id)) {
@@ -7218,11 +7509,13 @@
       const conditions = Array.isArray(combatant.conditions) ? combatant.conditions : [];
       const badges = conditions.map((condition, conditionIndex) => {
         const value = condition.value ? ` ${condition.value}` : "";
+        const durationTurns = DmaCombatConditions.remainingDurationTurns(condition);
+        const duration = durationTurns ? ` · ${durationTurns} turn(s) remaining` : "";
         const timing = condition.timing ? ` · ${condition.timing}` : "";
         return `
           <span class="combat-condition-badge">
-            ${escapeHtml(titleCaseName(condition.name || "") + value + timing)}
-            <button type="button" class="ghost" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>
+            ${escapeHtml(titleCaseName(condition.name || "") + value + duration + timing)}
+            <button type="button" class="ghost" aria-label="Remove condition" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>
           </span>
         `;
       }).join("");
@@ -7231,9 +7524,11 @@
           <div class="combat-condition-badges">${badges || '<span class="empty">No conditions.</span>'}</div>
           <div class="combat-condition-add">
             <select data-combat-condition-select="${combatantIndex}">${conditionOptions()}</select>
-            <input data-combat-condition-value="${combatantIndex}" placeholder="value" />
+            <input data-combat-condition-value="${combatantIndex}" aria-label="Condition value" placeholder="value" />
+            <input data-combat-condition-duration="${combatantIndex}" type="number" min="1" step="1" aria-label="Condition duration in affected creature turns" placeholder="turns" />
             <button type="button" class="ghost combat-hp-btn" data-combat-condition-add="${combatantIndex}">Add</button>
           </div>
+          <small>Value is condition strength or detail. Optional duration counts down after this creature's turns.</small>
         </div>
       `;
     }
@@ -7247,9 +7542,9 @@
         return `
           <div class="combat-hp-line">
             <span class="combat-hp-value">${escapeHtml(label)}HP</span>
-            <input class="combat-hp-input" type="number" value="${escapeHtml(currentHp ?? "")}" data-combat-hp-current="${combatantIndex}" data-combat-target="${targetIndex}" />
+            <input class="combat-hp-input" type="number" aria-label="${escapeHtml(`${combatantDisplayName(combatant)} current HP${label ? ` ${targetIndex + 1}` : ""}`)}" value="${escapeHtml(currentHp ?? "")}" data-combat-hp-current="${combatantIndex}" data-combat-target="${targetIndex}" />
             <span class="combat-hp-value">Max</span>
-            <input class="combat-hp-input" type="number" value="${escapeHtml(max ?? "")}" data-combat-hp-max="${combatantIndex}" />
+            <input class="combat-hp-input" type="number" aria-label="${escapeHtml(`${combatantDisplayName(combatant)} maximum HP`)}" value="${escapeHtml(max ?? "")}" data-combat-hp-max="${combatantIndex}" />
             <div class="combat-hp-buttons">
               <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-1">-1</button>
               <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="${targetIndex}" data-combat-delta="-5">-5</button>
@@ -7275,10 +7570,12 @@
       const conditions = Array.isArray(combatant.conditions) ? combatant.conditions : [];
       const badges = conditions.map((condition, conditionIndex) => {
         const value = condition.value ? ` ${condition.value}` : "";
+        const durationTurns = DmaCombatConditions.remainingDurationTurns(condition);
+        const duration = durationTurns ? ` · ${durationTurns} turn(s) remaining` : "";
         const timing = condition.timing ? ` · ${condition.timing}` : "";
         return `
           <span class="combat-condition-badge">
-            ${escapeHtml(titleCaseName(condition.name || "") + value + timing)}
+            ${escapeHtml(titleCaseName(condition.name || "") + value + duration + timing)}
             <button type="button" class="ghost" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>
           </span>
         `;
@@ -7286,9 +7583,9 @@
       return `
         <div class="combat-hp-line">
           <span class="combat-hp-value">HP</span>
-          <input class="combat-hp-input" type="number" value="${escapeHtml(currentHp ?? "")}" data-combat-hp-current="${combatantIndex}" data-combat-target="0" />
+          <input class="combat-hp-input" type="number" aria-label="${escapeHtml(`${combatantDisplayName(combatant)} current HP`)}" value="${escapeHtml(currentHp ?? "")}" data-combat-hp-current="${combatantIndex}" data-combat-target="0" />
           <span class="combat-hp-value">Max</span>
-          <input class="combat-hp-input" type="number" value="${escapeHtml(max ?? "")}" data-combat-hp-max="${combatantIndex}" />
+          <input class="combat-hp-input" type="number" aria-label="${escapeHtml(`${combatantDisplayName(combatant)} maximum HP`)}" value="${escapeHtml(max ?? "")}" data-combat-hp-max="${combatantIndex}" />
           <div class="combat-hp-buttons">
             <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="0" data-combat-delta="-1">-1</button>
             <button type="button" class="ghost combat-hp-btn" data-combat-hp="${combatantIndex}" data-combat-target="0" data-combat-delta="-5">-5</button>
@@ -7300,9 +7597,11 @@
           <summary>Add condition</summary>
           <div class="combat-condition-add">
             <select data-combat-condition-select="${combatantIndex}">${conditionOptions()}</select>
-            <input data-combat-condition-value="${combatantIndex}" placeholder="value" />
+            <input data-combat-condition-value="${combatantIndex}" aria-label="Condition value" placeholder="value" />
+            <input data-combat-condition-duration="${combatantIndex}" type="number" min="1" step="1" aria-label="Condition duration in affected creature turns" placeholder="turns" />
             <button type="button" class="ghost combat-hp-btn" data-combat-condition-add="${combatantIndex}">Add</button>
           </div>
+          <small>Value is condition strength or detail. Optional duration counts down after this creature's turns.</small>
         </details>
       `;
     }
@@ -8063,7 +8362,7 @@
       return `
         <div class="combat-init-cell">
           ${renderInitiativeSkillSelect(combatant, combatantIndex)}
-          <input class="combat-init-input" type="number" value="${escapeHtml(Number.isFinite(combatant.initiativeRoll) ? String(combatant.initiativeRoll) : "")}" placeholder="${escapeHtml(signedNumber(bonus))}" data-combat-init-manual="${combatantIndex}" />
+          <input class="combat-init-input" type="number" aria-label="${escapeHtml(`${combatantDisplayName(combatant)} initiative`)}" value="${escapeHtml(Number.isFinite(combatant.initiativeRoll) ? String(combatant.initiativeRoll) : "")}" placeholder="${escapeHtml(signedNumber(bonus))}" data-combat-init-manual="${combatantIndex}" />
           <div class="combat-init-roll">${escapeHtml(rollText || shortInitiativeLabel(combatant, bonus))}</div>
           <button type="button" class="ghost combat-hp-btn" data-combat-init-roll="${combatantIndex}">Roll</button>
         </div>
@@ -8113,34 +8412,28 @@
       if (!combatant) return;
       const select = document.querySelector(`[data-combat-condition-select="${combatantIndex}"]`);
       const input = document.querySelector(`[data-combat-condition-value="${combatantIndex}"]`);
+      const durationInput = document.querySelector(`[data-combat-condition-duration="${combatantIndex}"]`);
       const name = select?.value || "frightened";
       const value = (input?.value || conditionValueHints[name] || "").trim();
+      const durationValue = Number(durationInput?.value || "");
       combatant.conditions = Array.isArray(combatant.conditions) ? combatant.conditions : [];
-      combatant.conditions.push({
+      const condition = {
         name,
         value,
         timing: "turn",
-      });
+      };
+      if (Number.isSafeInteger(durationValue) && durationValue > 0) {
+        condition.durationTurns = durationValue;
+      }
+      combatant.conditions.push(condition);
       commitCombatState();
-    }
-
-    function conditionTurnsRemaining(condition) {
-      const value = String(condition?.value || "").trim();
-      return /^\d+$/.test(value) ? Number.parseInt(value, 10) : null;
     }
 
     function tickConditionsForCombatant(combatant) {
       if (!combatant || !Array.isArray(combatant.conditions)) return;
-      combatant.conditions = combatant.conditions
-        .map((condition) => {
-          const turns = conditionTurnsRemaining(condition);
-          if (turns === null) return condition;
-          return {
-            ...condition,
-            value: String(Math.max(0, turns - 1)),
-          };
-        })
-        .filter((condition) => conditionTurnsRemaining(condition) !== 0);
+      combatant.conditions = DmaCombatConditions.finishCombatantTurn(
+        combatant.conditions,
+      );
     }
 
     function removeCombatCondition(combatantIndex, conditionIndex) {
@@ -8178,6 +8471,7 @@
       const host = document.getElementById("combat-turn-meta");
       if (!host) return;
       const active = activeCombatant();
+      host.setAttribute("aria-live", "polite");
       host.innerHTML = `
         <span class="stat-badge">Round ${escapeHtml(currentCombat.round || 1)}</span>
         <span class="stat-badge">${active ? `Turn: ${escapeHtml(active.name)}` : "No active turn"}</span>
@@ -8286,7 +8580,9 @@
         const leftRoll = Number.isFinite(left.initiativeRoll) ? left.initiativeRoll : -999;
         const rightRoll = Number.isFinite(right.initiativeRoll) ? right.initiativeRoll : -999;
         if (rightRoll !== leftRoll) return rightRoll - leftRoll;
-        return initiativeBonus(right) - initiativeBonus(left);
+        const bonusDifference = initiativeBonus(right) - initiativeBonus(left);
+        if (bonusDifference) return bonusDifference;
+        return String(left.name || "").localeCompare(String(right.name || ""), undefined, { sensitivity: "base" });
       });
       currentCombat.activeIndex = 0;
       syncActiveCombatExpansion();
@@ -8305,7 +8601,7 @@
       return conditions.map((condition, conditionIndex) => {
         const value = condition.value ? ` ${condition.value}` : "";
         const remove = removable
-          ? `<button type="button" class="ghost" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>`
+          ? `<button type="button" class="ghost" aria-label="Remove condition" data-combat-condition-remove="${combatantIndex}" data-condition-index="${conditionIndex}">x</button>`
           : "";
         return `<span class="combat-condition-badge">${escapeHtml(titleCaseName(condition.name || "") + value)}${remove}</span>`;
       }).join("");
@@ -8380,6 +8676,15 @@
       `;
     }
 
+    function combatantHpState(combatant) {
+      const current = Number(combatant?.hpTrack?.[0]);
+      const maximum = Number(combatant?.maxHp);
+      if (!Number.isFinite(current) || !Number.isFinite(maximum) || maximum <= 0) return "healthy";
+      if (current <= 0) return "defeated";
+      if (current / maximum <= 0.25) return "low";
+      return "healthy";
+    }
+
     function renderCombatantCard(combatant, combatantIndex) {
       withCombatHp(combatant);
       const levelLabel = combatant.level !== "" && combatant.level !== undefined
@@ -8388,6 +8693,12 @@
       const active = combatantIndex === (currentCombat.activeIndex || 0);
       const expanded = Boolean(combatant.isExpanded);
       const displayName = combatantDisplayName(combatant);
+      const hpState = combatantHpState(combatant);
+      const hpStatus = hpState === "defeated"
+        ? "Defeated"
+        : hpState === "low"
+          ? "Low HP"
+          : "Healthy";
       const duplicateBadge = combatant.instanceLabel
         ? `<span class="combat-duplicate-badge">${escapeHtml(combatant.instanceLabel)}</span>`
         : "";
@@ -8395,7 +8706,7 @@
         ? renderPcCombatantBody(combatant, combatantIndex)
         : renderMonsterCombatantBody(combatant, combatantIndex);
       return `
-        <article class="combat-card ${active ? "is-active" : ""}">
+        <article class="combat-card ${[active ? "is-active" : "", hpState === "low" ? "is-low-hp" : "", hpState === "defeated" ? "is-defeated" : ""].filter(Boolean).join(" ")}" aria-label="${escapeHtml(`${displayName}: ${hpStatus}`)}">
           <div class="combat-card-header">
           <button type="button" class="combat-card-summary" data-combat-toggle="${combatantIndex}">
             ${renderCombatSummaryPortrait(combatant)}
@@ -8409,7 +8720,7 @@
             </span>
             <span class="combat-card-summary-stat">HP ${escapeHtml(combatantHpSummary(combatant))}</span>
             <span class="combat-card-summary-stat">AC ${escapeHtml(formatValue(combatant.ac))}</span>
-            <span class="combat-card-status">${combatantConditionSummary(combatant)}</span>
+            <span class="combat-card-status">${escapeHtml(hpStatus)}${Array.isArray(combatant.conditions) && combatant.conditions.length ? ` · ${combatantConditionSummary(combatant)}` : ""}</span>
           </button>
           <button type="button" class="combat-remove-button" data-combat-remove="${combatantIndex}" title="Remove from combat" aria-label="Remove ${escapeHtml(displayName)} from combat">&times;</button>
           </div>
@@ -8514,7 +8825,7 @@
       return `
         <div class="combat-initiative-strip">
           ${combatants.map((combatant, index) => `
-            <button type="button" class="combat-strip-chip ${index === (currentCombat.activeIndex || 0) ? "is-active" : ""}" data-combat-toggle="${index}">
+            <button type="button" class="combat-strip-chip ${[index === (currentCombat.activeIndex || 0) ? "is-active" : "", combatantHpState(combatant) === "low" ? "is-low-hp" : "", combatantHpState(combatant) === "defeated" ? "is-defeated" : ""].filter(Boolean).join(" ")}" data-combat-toggle="${index}" aria-current="${index === (currentCombat.activeIndex || 0) ? "true" : "false"}" aria-label="${escapeHtml(`${combatantDisplayName(combatant)}: ${combatantHpState(combatant)}`)}">
               <strong>${escapeHtml(combatantDisplayName(combatant))}</strong>
               <span>${Number.isFinite(combatant.initiativeRoll) ? `Init ${combatant.initiativeRoll}` : shortInitiativeLabel(combatant, initiativeBonus(combatant))}</span>
               <span>HP ${escapeHtml(combatantHpSummary(combatant))}</span>
@@ -10599,37 +10910,131 @@
       return null;
     }
 
-    function renderSummary(snapshot) {
-      const state = snapshot.state || {};
-      const currentDate = snapshot.current_date || {};
-      const maptool = snapshot.maptool || {};
-      const mapSummary = maptool.name
-        || state.maptool_map_id
-        || "No map";
-      const currentDateText = currentDate.label
-        || [currentDate.year, currentDate.month, currentDate.day].filter(Boolean).join(" ")
-        || currentDate.calendar_name
-        || "Not set";
-      document.getElementById("summary-row").innerHTML = [
-        summaryCard("Scene", state.scene_title || "No active scene"),
-        summaryCard("Focus", state.focus || "No live focus"),
-        summaryCard("Location", snapshot.current_location?.name || "No location"),
-        summaryCard("Current Date", currentDateText),
-        summaryCard("Active PCs", String((snapshot.active_pcs || []).length)),
-        summaryCard("Active NPCs", String((snapshot.active_npcs || []).length)),
-        summaryCard("Map", mapSummary),
+    const gameStateFields = {
+      location_name: "ig-location", map_id: "ig-map", location_type: "ig-location-type", climate: "ig-climate",
+      calendar_name: "ig-calendar-name", year: "ig-year", month: "ig-month", day: "ig-day", weekday: "ig-weekday",
+      season: "ig-season", time_of_day: "ig-time", weather_mode: "ig-weather-mode", weather_text: "ig-weather",
+      effects_mode: "ig-effects-mode", effects_text: "ig-effects",
+    };
+
+    function updateGameOverrideFields() {
+      const manualWeather = document.getElementById("ig-weather-mode").value === "manual";
+      const manualEffects = document.getElementById("ig-effects-mode").value === "manual";
+      document.getElementById("ig-weather-label").hidden = !manualWeather;
+      document.getElementById("ig-weather").disabled = !manualWeather;
+      document.getElementById("ig-effects-label").hidden = !manualEffects;
+      document.getElementById("ig-effects").disabled = !manualEffects;
+      document.getElementById("ig-reroll").disabled = manualWeather;
+    }
+
+    function populateGameChoices() {
+      const calendarSelect = document.getElementById("ig-calendar");
+      const selectedCalendar = calendarSelect.value;
+      calendarSelect.innerHTML = '<option value="">Custom / manual calendar</option>' + (panelSnapshot?.available?.calendars || [])
+        .map((calendar) => `<option value="${calendar.id}">${escapeHtml(calendar.name)}</option>`).join("");
+      calendarSelect.value = selectedCalendar;
+      const mapSelect = document.getElementById("ig-map");
+      const selectedMap = mapSelect.value || panelSnapshot?.in_game_state?.map_id || "";
+      const maps = [...dungeonMaps];
+      if (selectedMap && !maps.some((map) => map.map_id === selectedMap)) maps.push({map_id: selectedMap, title: `${selectedMap} (unavailable)`});
+      mapSelect.innerHTML = '<option value="">No linked map</option>' + maps.map((map) => `<option value="${escapeHtml(map.map_id)}">${escapeHtml(map.title || map.map_id)}</option>`).join("");
+      mapSelect.value = selectedMap;
+      const names = [...(panelSnapshot?.available?.locations || []).map((item) => item.name), ...townSettlements.map((item) => item.name || item.title), ...dungeonMaps.map((item) => item.title || item.map_id)].filter(Boolean);
+      document.getElementById("ig-location-options").innerHTML = [...new Set(names)].map((name) => `<option value="${escapeHtml(name)}"></option>`).join("");
+      populateGameMonths();
+    }
+
+    function populateGameMonths() {
+      const id = Number(document.getElementById("ig-calendar").value);
+      const calendar = (panelSnapshot?.available?.calendars || []).find((item) => item.id === id);
+      document.getElementById("ig-month-options").innerHTML = (calendar?.details?.months || []).map((month) => `<option value="${escapeHtml(typeof month === "string" ? month : month.name || "")}"></option>`).join("");
+    }
+
+    function populateGameStateForm(game) {
+      populateGameChoices();
+      const inputs = game.inputs || {};
+      Object.entries(gameStateFields).forEach(([key, id]) => {
+        document.getElementById(id).value = inputs[key] ?? "";
+      });
+      document.getElementById("ig-calendar").value = inputs.calendar_id ?? "";
+      document.getElementById("ig-weekday").placeholder = game.weekday || "Automatic if calendar defines it";
+      gameStateSeed = inputs.weather_seed || 0;
+      populateGameMonths();
+      updateGameOverrideFields();
+    }
+
+    function renderGameState(snapshot) {
+      const game = snapshot?.in_game_state || {};
+      const map = dungeonMaps.find((item) => item.map_id === game.map_id);
+      const mapLabel = game.map_id ? (map?.title || game.map_id) : "";
+      const entry = (label, value, detail = "", wide = false) => `<div class="${wide ? "wide" : ""}"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || "Not set")}${detail ? `<small>${escapeHtml(detail)}</small>` : ""}</dd></div>`;
+      document.getElementById("game-state-overview").innerHTML = [
+        entry("Location", game.location_name, [game.location_type ? titleCaseName(game.location_type) : "", mapLabel].filter(Boolean).join(" · "), true),
+        entry("Day", game.day_label, [game.calendar_name, ...(game.warnings || [])].filter(Boolean).join(" · ")),
+        entry("Time", game.time_of_day === "unspecified" ? "Not set" : titleCaseName(game.time_of_day || "")),
+        entry("Weather", game.weather, game.weather_mode === "manual" ? "Pinned manual override" : `Automatic · ${game.generation_basis || ""}`, true),
+        entry("Environmental effects", game.environmental_effects, game.effects_mode === "manual" ? "Pinned manual override" : "Automatic · descriptive suggestions", true),
       ].join("");
+      if (document.getElementById("game-state-form").hidden) populateGameStateForm(game);
+    }
+
+    function captureGameState() {
+      const result = {};
+      Object.entries(gameStateFields).forEach(([key, id]) => { result[key] = document.getElementById(id).value; });
+      for (const key of ["year", "day"]) result[key] = result[key] === "" ? null : Number(result[key]);
+      result.calendar_id = document.getElementById("ig-calendar").value ? Number(document.getElementById("ig-calendar").value) : null;
+      result.weather_seed = gameStateSeed;
+      return result;
+    }
+
+    async function saveGameState() {
+      if (!panelSnapshot || resetInProgress) return false;
+      const form = document.getElementById("game-state-form");
+      if (!form.reportValidity()) return false;
+      const inputs = captureGameState();
+      const revision = gameStateEditRevision;
+      const status = document.getElementById("game-state-status");
+      status.textContent = "Saving In-Game State…";
+      try {
+        await enqueueSessionWrite(async () => {
+          panelSnapshot = await fetchJson("/api/live/in-game-state", {
+            method: "PATCH", body: JSON.stringify({expected_revision: panelSnapshot.revision, state: inputs}),
+          });
+        });
+        renderSummary(panelSnapshot);
+        status.textContent = revision === gameStateEditRevision ? "Saved. Automatic conditions follow your location, date and time." : "Newer edits are not saved yet.";
+        return revision === gameStateEditRevision;
+      } catch (error) {
+        status.textContent = error.status === 409
+          ? "Another panel saved newer state. Your edits remain here; refresh and reconcile before saving."
+          : `Not saved: ${error.message}. Your edits remain here; use Save to retry.`;
+        return false;
+      }
+    }
+
+    function showGameStateEditor(show) {
+      const form = document.getElementById("game-state-form");
+      if (show) populateGameStateForm(panelSnapshot?.in_game_state || {});
+      form.hidden = !show;
+      document.getElementById("game-state-edit").setAttribute("aria-expanded", String(show));
+      document.getElementById("game-state-edit").textContent = show ? "Editing state" : "Edit state";
+      if (show) document.getElementById("ig-location").focus();
+      else document.getElementById("game-state-edit").focus();
+    }
+
+    function renderSummary(snapshot) {
+      renderGameState(snapshot);
       renderShellStatus(snapshot);
     }
 
     function renderShellStatus(snapshot) {
-      const state = snapshot?.state || {};
+      const game = snapshot?.in_game_state || {};
       const active = activeCombatant();
-      document.getElementById("shell-scene-title").textContent =
-        state.scene_title || "No active scene";
+      document.getElementById("shell-location-title").textContent =
+        game.location_name || "In-Game State";
       document.getElementById("shell-status-meta").innerHTML = [
-        `<span class="stat-badge">${escapeHtml(snapshot?.current_location?.name || "No location")}</span>`,
-        `<span class="stat-badge">${escapeHtml(state.focus || "No live focus")}</span>`,
+        `<span class="stat-badge">${escapeHtml(game.day_label || "Day not set")}</span>`,
+        `<span class="stat-badge">${escapeHtml(game.time_of_day === "unspecified" ? "Time not set" : titleCaseName(game.time_of_day || "Time not set"))}</span>`,
         active
           ? `<span class="stat-badge">Round ${escapeHtml(currentCombat.round || 1)} · ${escapeHtml(active.name)}</span>`
           : '<span class="stat-badge">No active combat</span>',
@@ -11562,19 +11967,77 @@
         notes: document.getElementById("scene-notes").value || null,
         frugal_mode: document.getElementById("frugal-mode").checked,
         combat_state: normalizedCombatState(currentCombat),
+        expected_revision: panelSnapshot?.revision ?? 0,
       };
     }
 
+    function setSessionControlsDisabled(disabled) {
+      const controls = document.querySelectorAll(
+        "#state-form input, #state-form select, #state-form textarea, #state-form button, " +
+        ".module-current-combat input, .module-current-combat select, .module-current-combat textarea, .module-current-combat button, #game-state-form input, #game-state-form select, #game-state-form textarea, #game-state-form button, #game-state-edit, #reset-button",
+      );
+      controls.forEach((control) => {
+        if (disabled) {
+          if (!Object.hasOwn(control.dataset, "resetPreviousDisabled")) {
+            control.dataset.resetPreviousDisabled = String(control.disabled);
+          }
+          control.disabled = true;
+        } else if (Object.hasOwn(control.dataset, "resetPreviousDisabled")) {
+          control.disabled = control.dataset.resetPreviousDisabled === "true";
+          delete control.dataset.resetPreviousDisabled;
+        }
+      });
+    }
+
+    function showSessionSaveFailure(error) {
+      const saveStatus = document.getElementById("combat-save-status");
+      const retryButton = document.getElementById("combat-save-retry");
+      if (error.status === 409) {
+        if (saveStatus) saveStatus.textContent = "Another panel saved newer session state. Your edits remain here; reload and reconcile before saving.";
+        if (retryButton) retryButton.hidden = true;
+      } else {
+        if (saveStatus) saveStatus.textContent = `Session state could not be saved: ${error.message}`;
+        if (retryButton) retryButton.hidden = false;
+      }
+    }
+
+    async function enqueueSessionStateSave() {
+      return enqueueSessionWrite(async () => {
+        if (!panelSnapshot || resetInProgress) return null;
+        const requestRevision = combatEditRevision;
+        try {
+          const savedSnapshot = await fetchJson(endpoints.state, {
+            method: "PUT",
+            body: JSON.stringify(liveStatePayload()),
+          });
+          panelSnapshot = savedSnapshot;
+          renderSummary(panelSnapshot);
+          document.getElementById("combat-save-retry").hidden = true;
+          return {
+            snapshot: savedSnapshot,
+            current: requestRevision === combatEditRevision,
+          };
+        } catch (error) {
+          showSessionSaveFailure(error);
+          throw error;
+        }
+      });
+    }
+
     async function persistCombatState() {
-      if (!panelSnapshot) return;
+      if (!panelSnapshot || resetInProgress) return;
+      const saveStatus = document.getElementById("combat-save-status");
       try {
-        panelSnapshot = await fetchJson(endpoints.state, {
-          method: "PUT",
-          body: JSON.stringify(liveStatePayload()),
-        });
+        const result = await enqueueSessionStateSave();
+        if (!result) return;
+        if (result.current && saveStatus) {
+          saveStatus.textContent = `Session state saved at ${new Date().toLocaleTimeString()}.`;
+        } else if (saveStatus) {
+          saveStatus.textContent = "Saving newer session edits…";
+        }
       } catch (error) {
         document.getElementById("combat-meta").innerHTML =
-          `<span class="error">Combat state was not saved: ${escapeHtml(error.message)}</span>`;
+          `<span class="error">Session state was not saved: ${escapeHtml(error.message)}</span>`;
       }
     }
 
@@ -11586,7 +12049,11 @@
     }
 
     function commitCombatState() {
+      if (resetInProgress) return;
+      combatEditRevision += 1;
       renderCombatPanel();
+      const saveStatus = document.getElementById("combat-save-status");
+      if (saveStatus) saveStatus.textContent = "Saving combat state…";
       scheduleCombatPersist();
     }
 
@@ -11594,29 +12061,35 @@
       try {
         panelSnapshot = await fetchJson(endpoints.state);
         renderSummary(panelSnapshot);
+        populateGameStateForm(panelSnapshot.in_game_state || {});
+        document.getElementById("game-state-status").textContent = "Saved state loaded. Edit location, day and time to update conditions.";
         populateStateForm(panelSnapshot);
         hydrateCombatState(panelSnapshot);
         renderMapTool(panelSnapshot);
         renderSoundboard(panelSnapshot);
         renderSessionContext(panelSnapshot);
+        const saveStatus = document.getElementById("combat-save-status");
+        if (saveStatus) saveStatus.textContent = "Combat state loaded from the server.";
       } catch (error) {
         document.getElementById("state-message").innerHTML = `<span class="error">${escapeHtml(error.message)}</span>`;
+        document.getElementById("game-state-status").textContent = `Could not load In-Game State: ${error.message}`;
       }
     }
 
     async function saveLiveState(event) {
       event.preventDefault();
+      if (resetInProgress) return;
+      combatEditRevision += 1;
       try {
-        panelSnapshot = await fetchJson(endpoints.state, {
-          method: "PUT",
-          body: JSON.stringify(liveStatePayload()),
-        });
+        const result = await enqueueSessionStateSave();
+        if (!result) return;
         renderSummary(panelSnapshot);
         renderMapTool(panelSnapshot);
         renderSoundboard(panelSnapshot);
         renderSessionContext(panelSnapshot);
-        document.getElementById("state-message").innerHTML =
-          '<span>Live session state saved.</span>';
+        document.getElementById("state-message").innerHTML = result.current
+          ? '<span>Live session state saved.</span>'
+          : '<span>Saving newer session edits…</span>';
       } catch (error) {
         document.getElementById("state-message").innerHTML =
           `<span class="error">${escapeHtml(error.message)}</span>`;
@@ -11624,9 +12097,20 @@
     }
 
     async function resetLiveState() {
+      if (resetInProgress) return;
+      resetInProgress = true;
+      window.clearTimeout(combatSaveTimer);
+      setSessionControlsDisabled(true);
       try {
-        panelSnapshot = await fetchJson(endpoints.state, { method: "DELETE" });
+        await enqueueSessionWrite(async () => {
+          panelSnapshot = await fetchJson(endpoints.state, {
+            method: "DELETE",
+            headers: { "If-Match": String(panelSnapshot?.revision ?? 0) },
+          });
+        });
+        combatEditRevision = 0;
         renderSummary(panelSnapshot);
+        populateGameStateForm(panelSnapshot.in_game_state || {});
         populateStateForm(panelSnapshot);
         hydrateCombatState(panelSnapshot);
         renderMapTool(panelSnapshot);
@@ -11635,8 +12119,12 @@
         document.getElementById("state-message").innerHTML =
           "<span>Live session state reset.</span>";
       } catch (error) {
+        showSessionSaveFailure(error);
         document.getElementById("state-message").innerHTML =
           `<span class="error">${escapeHtml(error.message)}</span>`;
+      } finally {
+        resetInProgress = false;
+        setSessionControlsDisabled(false);
       }
     }
 
@@ -11741,7 +12229,62 @@
       }
     }
 
+    document.getElementById("game-state-edit").addEventListener("click", () => {
+      if (document.getElementById("game-state-form").hidden) showGameStateEditor(true);
+    });
+    document.getElementById("game-state-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await saveGameState();
+    });
+    document.getElementById("game-state-form").addEventListener("input", () => {
+      gameStateEditRevision += 1;
+      document.getElementById("game-state-status").textContent = "Unsaved edit. Changes save when you leave the field, or choose Save.";
+    });
+    document.getElementById("game-state-form").addEventListener("change", async (event) => {
+      if (event.target.id === "ig-calendar") {
+        const calendar = (panelSnapshot?.available?.calendars || []).find((item) => String(item.id) === event.target.value);
+        document.getElementById("ig-calendar-name").value = calendar?.name || "";
+        const date = calendar?.details?.current_date || {};
+        for (const key of ["year", "month", "day"]) document.getElementById(gameStateFields[key]).value = date[key] ?? "";
+        document.getElementById("ig-weekday").value = "";
+        document.getElementById("ig-season").value = "auto";
+        populateGameMonths();
+      }
+      if (event.target.id === "ig-location") {
+        const location = (panelSnapshot?.available?.locations || []).find((item) => item.name === event.target.value);
+        if (["outdoors", "indoors", "underground"].includes(location?.details?.location_type)) document.getElementById("ig-location-type").value = location.details.location_type;
+        if (["temperate", "cold", "arid", "tropical"].includes(location?.details?.climate)) document.getElementById("ig-climate").value = location.details.climate;
+      }
+      if (event.target.id === "ig-calendar-name") {
+        const calendar = (panelSnapshot?.available?.calendars || []).find((item) => String(item.id) === document.getElementById("ig-calendar").value);
+        if (calendar && calendar.name !== event.target.value.trim()) document.getElementById("ig-calendar").value = "";
+        populateGameMonths();
+      }
+      if (event.target.id === "ig-map" && !document.getElementById("ig-location").value) {
+        const map = dungeonMaps.find((item) => item.map_id === event.target.value);
+        if (map) document.getElementById("ig-location").value = map.title || map.map_id;
+      }
+      gameStateEditRevision += 1;
+      updateGameOverrideFields();
+      const saved = await saveGameState();
+      if (saved && event.target.id === "ig-map" && event.target.value) {
+        document.getElementById("map-room-select").value = event.target.value;
+        await loadMapRoom(event.target.value);
+      }
+    });
+    document.getElementById("ig-reroll").addEventListener("click", async () => {
+      gameStateSeed = (gameStateSeed + 1) % 2147483648;
+      gameStateEditRevision += 1;
+      await saveGameState();
+    });
+    document.getElementById("game-state-done").addEventListener("click", async () => {
+      if (await saveGameState()) showGameStateEditor(false);
+    });
     document.getElementById("state-form").addEventListener("submit", saveLiveState);
+    document.getElementById("combat-save-retry").addEventListener("click", () => {
+      void persistCombatState();
+    });
+    if (!ARCHIVED_MODULE_IDS.has("dma-chat-workbench")) {
     document.getElementById("chat-form").addEventListener("submit", sendChatMessage);
     document.getElementById("chat-message").addEventListener("keydown", (event) => {
       if (event.key === "Enter" && !event.shiftKey) {
@@ -11749,6 +12292,7 @@
         document.getElementById("chat-form").requestSubmit();
       }
     });
+    }
     document.getElementById("dice-form").addEventListener("submit", handleDiceRoll);
     document.getElementById("maptool-form").addEventListener("submit", syncMapTool);
     document.getElementById("rules-form").addEventListener("submit", askRules);
@@ -12120,6 +12664,20 @@
       );
     });
     document.getElementById("import-run-create").addEventListener("click", createImportRun);
+    document.getElementById("session-update-review-refresh").addEventListener("click", loadSessionUpdateDrafts);
+    document.getElementById("session-update-review-list").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-session-update-open]");
+      if (button) void openSessionUpdateDraft(button.dataset.sessionUpdateOpen);
+    });
+    document.getElementById("session-update-review-detail").addEventListener("click", (event) => {
+      const decisionButton = event.target.closest("[data-session-update-decision]");
+      if (decisionButton) {
+        void decideSessionUpdateCandidate(decisionButton.dataset.candidateId, decisionButton.dataset.sessionUpdateDecision);
+        return;
+      }
+      const finalizeButton = event.target.closest("[data-session-update-finalize]");
+      if (finalizeButton) void finalizeSessionUpdateLog(finalizeButton.dataset.sessionUpdateFinalize);
+    });
     document.getElementById("import-run-refresh").addEventListener("click", loadImportRuns);
     document.getElementById("import-promote-rooms").addEventListener("click", promoteImportRooms);
     document.getElementById("private-index-rebuild").addEventListener("click", rebuildPrivateIndexes);
@@ -12480,10 +13038,6 @@
       notes.value = [notes.value.trim(), text].filter(Boolean).join("\n\n");
       document.getElementById("sketch-status").innerHTML = "<span>Copied into live session notes. Save the session tracker when ready.</span>";
     });
-    document.getElementById("chat-launcher").addEventListener("click", () => {
-      const chat = document.getElementById("chat-float");
-      chat.hidden = !chat.hidden;
-    });
     document.addEventListener("click", (event) => {
       if (!event.target.closest("#tool-menu") && !event.target.closest("#tool-menu-toggle")) {
         document.getElementById("tool-menu").hidden = true;
@@ -12498,33 +13052,39 @@
       }
     });
 
+    archiveModulesFromActiveLayout();
     initializeModuleLayout();
     setupCollapsiblePanels();
     initializeToolShell();
     setupDraggablePanels();
-    renderChatLog();
+    if (!ARCHIVED_MODULE_IDS.has("dma-chat-workbench")) renderChatLog();
     renderDiceHistory();
     renderCombatPanel();
     loadAonCreatures();
     loadCampaignBestiary();
-    loadImportRuns();
-    loadPrivateIndexAudit();
-    loadImageReview();
-    loadVoices();
-    loadTtsStatus();
-    applyTtsPreset();
-    if ("speechSynthesis" in window && typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
+    if (!ARCHIVED_MODULE_IDS.has("import-review")) {
+      loadImportRuns();
+      loadPrivateIndexAudit();
+      loadImageReview();
+    }
+    if (!ARCHIVED_MODULE_IDS.has("voice-reader")) {
+      loadVoices();
+      loadTtsStatus();
+      applyTtsPreset();
+    }
+    if (!ARCHIVED_MODULE_IDS.has("voice-reader") && "speechSynthesis" in window && typeof window.speechSynthesis.onvoiceschanged !== "undefined") {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
     loadCampaignOverview();
     loadSessionOverviews();
-    loadReferencePdfs();
+    if (!ARCHIVED_MODULE_IDS.has("reference-pdfs")) loadReferencePdfs();
     loadDungeonMaps().then(() => loadMapRoom());
     loadTownSettlements().then(() => loadTownSquare());
     loadPcSheets();
     loadNpcSheets();
     loadPanel();
+    if (!ARCHIVED_MODULE_IDS.has("session-update-review")) loadSessionUpdateDrafts();
   </script>
 </body>
 </html>

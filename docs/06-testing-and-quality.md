@@ -9,6 +9,12 @@ This document specifies how to ensure quality after each roadmap phase, includin
 
 The concrete tools (e.g., `pytest` vs `jest`) depend on the chosen stack; this document is intentionally tooling-agnostic with examples.
 
+The active product delivery order is W0-W6 in
+`22-agent-session-cycle-and-discord.md`; M1-M5 in the roadmap remain supporting
+engineering workstreams. The original
+phase sections below remain coverage guidance for the existing phase-check
+commands. Apply relevant quality gates in every milestone, including M1.
+
 ---
 
 ## 1. General Principles
@@ -312,3 +318,54 @@ not documented.
 The final work record must state which level was achieved and list the concrete
 steps needed to raise a sufficient result to excellent. These criteria are
 completion gates, not permission to expand a task's scope without approval.
+
+## 5. Milestone Evidence Requirements
+
+- Track implemented, automatically verified, browser verified, and play-tested
+  independently using the roadmap's evidence definitions. Record the date, code
+  revision or working-tree scope, runtime, checks, outcomes, and limitations.
+- Python API tests and HTML-content assertions do not verify JavaScript behavior.
+  Combat condition transitions, manual inputs, save ordering, and recovery need
+  focused logic tests and representative browser interactions.
+- Persistence checks must cover rapid changes, delayed/out-of-order responses,
+  failed requests, stale writes, reset during a pending save, and reload/recovery.
+- Data workflow checks must cover absent vaults, empty overlay records, source
+  review status, and an approved session update reaching subsequent prep.
+- Retrieval checks must include older relevant documents beyond the current
+  500-document candidate window, source/edition conflicts, and abstention.
+- Keep synthetic fixture checks, real integration checks, and real-play evidence
+  distinct. Historical evidence remains dated and does not close newly discovered
+  defects or untested acceptance criteria.
+- Full quality acceptance includes lint, formatting, type checks, and applicable
+  Python/browser checks in declared supported environments. An unavailable tool
+  is an unverified check, not a pass. Do not reduce gates merely to obtain green CI.
+- Measure representative latency and cost first, then record numerical budgets
+  and acceptance thresholds before performance sign-off. Model-service results
+  must identify provider/model and cannot be inferred from deterministic tests.
+- Give each implementation slice sufficient/excellent criteria before coding;
+  record explicit non-applicability for evidence dimensions outside its scope.
+
+## 6. Session-cycle, agent, and Discord gates
+
+- Verify the actual external campaign-agent interaction separately from API tests:
+  a fresh conversation can load the right campaign/session, read approved state,
+  stage uncertain claims, and resume from saved records without this chat history.
+- A fictional full-cycle scenario covers prep, browser play, restart/recovery,
+  debrief, accepted/rejected/deferred candidates, separate log approval, a reviewed
+  player report, and next prep with source IDs/revisions. Include conflicting
+  recollections, a revealed fact, a GM secret, and an interrupted debrief.
+- Player visibility is enforced before retrieval and context construction. Test
+  source filtering, citations, attachments, caches, conversation history, revoked
+  visibility, and adversarial requests. A prompt to hide secrets is insufficient.
+- Discord report approval binds exact content revision and destination. Test
+  stale approval, wrong channel, failed delivery, ambiguous timeout, duplicate
+  prevention/reconciliation, long reports, disabled mentions, and corrections.
+- Discord questions require server/channel/user authorization, source-grounded
+  responses or abstention, budget/timeout handling, and review-only player
+  corrections. Player messages must not expand tool authority or write canon.
+- Use synthetic data and mocked transport first. An authorized Discord test-channel
+  interaction verifies actual delivery; a mock alone cannot close that gate.
+  Planning approval does not authorize posting to a real server.
+- Record agent, browser, Discord, automated, and play-test evidence independently,
+  including applicable environments, measured latency/cost, and remaining manual
+  steps. Core local-cycle acceptance does not imply Discord Q&A acceptance.

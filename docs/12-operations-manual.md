@@ -2,6 +2,11 @@
 
 This guide explains how to operate DMA during normal use once it has been installed.
 
+> Obsidian integration is legacy compatibility only. The campaign vault data is
+> archived and is not required for the active DMA workflow. The import/export
+> and vault-browser features should be used only when a vault has been restored
+> deliberately and `OBSIDIAN_VAULT_PATH` has been configured explicitly.
+
 ## Daily Workflow
 
 A good steady-state operating rhythm is:
@@ -12,7 +17,7 @@ A good steady-state operating rhythm is:
 4. inspect campaign state
 5. generate prep
 6. use the DM panel during live play
-7. export to Obsidian, edit the vault during prep, and sync supported edits back as needed
+7. review and update the private campaign data through DMA's import and live-play workflows
 
 ## 1. Add New Material
 
@@ -175,7 +180,8 @@ Use `Current Combat` when initiative starts.
 5. use the initiative strip to see order at a glance
 6. use `Next Turn` and `Previous Turn` to track active turn and round
 7. edit current or max HP directly if the encounter needs adjustment
-8. add PF2e conditions under each combatant as they happen
+8. add PF2e conditions under each combatant as they happen; enter magnitude or
+   descriptive value separately from optional duration
 9. use the compact cards during play; only the active combatant opens automatically
 10. open the `Strategy`, `Look`, `Recall`, and `AoN` pills only when you need extra detail
 
@@ -188,8 +194,10 @@ retry from `Find Monster`. Review and structure full unique stat blocks in the
 private bestiary JSON when PDF line wrapping makes attacks or abilities ambiguous.
 
 If a combat has several monsters of the same type, DMA splits them into separate cards
-and labels them `A`, `B`, `C`, and so on. Timed conditions with numeric durations count
-down automatically when turns advance.
+and labels them `A`, `B`, `C`, and so on. Enter a duration in affected creature turns
+when the GM wants it tracked automatically; it decreases at the end of that creature's
+turn. Condition magnitude alone does not count down. Previous Turn changes the active
+turn for navigation and does not undo effects already applied.
 
 `Suggested Strategy` is GM-facing inference unless it appears in the campaign text.
 Use it as a table aid, not as official adventure text.
@@ -436,7 +444,7 @@ adjust the visual design if needed.
 
 ## 11. Edit And Sync The Obsidian Vault
 
-Obsidian is the human-facing campaign command center. DMA is still the automation engine that
+In the retired workflow, Obsidian served as the human-facing campaign command center. DMA was the automation engine that
 maintains stable IDs, structured relationships, retrieval, session prep generation, and live
 assistant behavior.
 

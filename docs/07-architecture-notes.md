@@ -2,6 +2,37 @@
 
 > This document is intentionally high-level. Concrete implementation details can be added as the project stack is chosen.
 
+## Active direction — 2026-10-27
+
+The component sketch below is historical. The active product contract and
+delivery gates are in [the agent/session-cycle/Discord plan](22-agent-session-cycle-and-discord.md).
+Keep these responsibilities separate:
+
+- **Browser application:** operational session workspace and card-based combat.
+- **Campaign agent:** durable instructions plus tools, initially operated through
+  an existing external agent environment for prep, live help, debrief, and review.
+- **Campaign services:** shared read/write boundaries, staged changes, approved
+  facts, provenance, versioned live state, and recorded session artifacts. The
+  SQL/private-overlay ownership contract is in
+  [the data review document](20-campaign-data-ownership-and-review.md).
+- **Discord adapter:** approved outbound reports first; restricted player Q&A
+  later. Authorization and source visibility apply before retrieval/context
+  assembly, including caches and history. The bot receives no general GM toolset.
+
+Intended flow: approved campaign/history -> agent prep -> browser play and event
+capture -> agent debrief -> DM review -> accepted facts and approved GM log ->
+separate player-report approval -> optional Discord delivery -> next prep.
+Player questions use only the authorized player knowledge projection; player
+corrections return as review candidates. These connections are planned and must
+be verified; their description does not imply that synchronization or a hosted
+agent already exists.
+
+Adapters should call explicit campaign services rather than rely on unreviewed
+direct file edits or silent SQL/overlay merges. Campaign operation does not
+authorize code/Git/deployment changes. Always-on Discord hosting is optional and
+must use minimal player data rather than the entire private overlay. Archived
+panel modules and retired Obsidian workflows remain inactive.
+
 ## 1. Logical Components
 
 1. **Ingestion Layer**

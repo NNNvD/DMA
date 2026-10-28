@@ -15,6 +15,7 @@ from backend.models.base import Base, get_db
 import backend.models.campaign  # noqa: F401
 import backend.models.context  # noqa: F401
 import backend.models.document  # noqa: F401
+import backend.models.session_update_draft  # noqa: F401
 
 
 def create_documents_test_app():

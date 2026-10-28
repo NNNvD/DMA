@@ -8,7 +8,7 @@ It ingests:
 - 🗺️ Campaign text, images, and maps
 - 🧙‍♂️ Party character sheets and DM notes
 
-It then assists the DM in **three stages**:
+It assists the DM through campaign setup and a recurring session cycle:
 
 1. **Overall Campaign Preparation**
    Build a structured understanding of rules, world, factions, NPCs, and party backstories, including house rules and table conventions.
@@ -18,6 +18,26 @@ It then assists the DM in **three stages**:
 
 3. **Real-Time Session Assistance**
    Provide fast, rules-aware, context-aware support during play (rules lookups, improv NPCs, continuity reminders, pacing suggestions) with low latency and high reliability.
+
+4. **Session Debrief and Continuation**
+   Debrief the DM, review a GM log and proposed campaign changes, draft a
+   player report, and carry approved outcomes into preparation for the next session.
+
+The **DMA browser application** is the session workspace. The **DMA agent** is
+the conversational collaborator for preparation, live assistance, and debrief;
+its initial [dedicated Codex setup](docs/25-campaign-agent-review-and-acceptance.md)
+is verified with a fictional campaign.
+The planned **Discord interface** first publishes DM-approved reports and later
+answers player questions using only authorized player knowledge. These workflow
+and Discord capabilities are delivery goals, not claims of completed features.
+See [the session-cycle plan](docs/22-agent-session-cycle-and-discord.md).
+The [W0 operating/data contract](docs/23-agent-operating-and-data-contract.md)
+defines source ownership, agent tool boundaries, and a repeatable fictional
+SQL/overlay recovery rehearsal. The [read-only W1 setup](docs/24-campaign-agent-setup.md)
+provides fictional campaign onboarding, durable instructions, and a verified
+MCP connection. W1's full guarded profile now supports separately approved
+staging/review and fresh-session resume, with native Codex interaction evidence.
+Real campaign activation is a separate reviewed operation; W2 session closure is next.
 
 The DMA is *not* meant to replace the DM. It acts as a quiet, knowledgeable assistant that:
 
@@ -35,7 +55,7 @@ For a detailed description of goals and functionality, see:
 - [`docs/05-roadmap-and-milestones.md`](docs/05-roadmap-and-milestones.md)
 - [`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md)
 - [`docs/08-ingestion-governance.md`](docs/08-ingestion-governance.md)
-- [`docs/09-obsidian-vault.md`](docs/09-obsidian-vault.md)
+- [`docs/09-obsidian-vault.md`](docs/09-obsidian-vault.md) (legacy compatibility; workflow retired)
 - [`docs/10-promo-overview.md`](docs/10-promo-overview.md)
 - [`docs/11-new-campaign-setup.md`](docs/11-new-campaign-setup.md)
 - [`docs/12-operations-manual.md`](docs/12-operations-manual.md)
@@ -99,7 +119,8 @@ DMA-main/local-private-overlay/project-root/
 
 Do **not** copy or unpack this overlay into `assets/imports/...`. When `.env`
 uses the default local paths, DMA automatically prefers the root overlay for the
-private data, Obsidian vault, maps, PDFs, room keys, and bestiary images. If
+private data, maps, PDFs, room keys, and bestiary images. Obsidian is retired;
+compatibility code does not make the vault part of the active workflow. If
 anything looks stale, update GitHub **and** manually refresh
 `local-private-overlay/`.
 
@@ -143,6 +164,7 @@ python -m pip install -r backend/requirements-local.txt
 
 ```bash
 make test
+make frontend-test
 make lint
 make format
 make format-check
@@ -155,8 +177,6 @@ make phase1-benchmark
 make preview-assets
 make import-assets
 make export-ingestion-metadata
-make export-obsidian-vault VAULT=/path/to/vault
-make sync-obsidian-vault VAULT=/path/to/vault
 make maptool-bridge
 make push-maptool-fixture
 ```
@@ -206,6 +226,7 @@ make phase1-benchmark
 - `POST /api/campaign/import/notes`: import structured campaign notes, optionally store the raw note as a `campaign_note` document, and upsert entities plus relationships.
 - `POST /api/campaign/import/pc-sheet`: import either a raw text sheet or a Pathbuilder 2 JSON export into a versioned PC record, resolve faction/location links, and optionally create notable-item artifact records.
 - `POST /api/campaign/import/session-update`: import a structured session log, update campaign state, advance calendar state, and persist the raw log as a `session_log` document.
+- `POST`/`GET /api/campaign/session-update-drafts`, `GET /api/campaign/session-update-drafts/{id}`, candidate decision routes, `POST /api/campaign/session-update-drafts/{id}/promote`, and `/finalize`: stage uncertain session updates, record candidate decisions, atomically promote all accepted facts with durable provenance, and separately approve/reject the log for prep history. A log with accepted candidates must be promoted before finalization. `GET /api/campaign/entities/{id}/provenance` inspects source links. This is the review-first workflow; the legacy import endpoint above applies trusted updates immediately.
 - `GET /api/campaign/import/dropzone`: preview the files currently sitting in `assets/imports/*` or another import root, including parse summaries and unresolved-reference warnings.
 - `POST /api/campaign/import/batch`: batch import drop-zone files with optional `dry_run` preview mode and repeat-safe document refresh.
 - `POST /api/campaign/relationships`: link entities together for faction ties, contacts, enemies, mentors, and other campaign relationships.
@@ -213,18 +234,16 @@ make phase1-benchmark
 - `GET /api/campaign/overview`: inspect the current structured Phase 2 world/party state grouped by entity type.
 - `GET /api/campaign/pcs/{id}/dossier`: inspect a PC dossier with sheet history, owned artifacts, faction ties, and grouped relationships.
 - `GET /api/campaign/session-history`: inspect imported session logs and matching event entities as a prep-friendly history feed.
-- `POST /api/campaign/export/obsidian-vault`: sync campaign entities plus session logs/prep docs into an Obsidian vault with YAML frontmatter, tags, and wikilinks.
-- `POST /api/campaign/import/obsidian-vault`: pull supported edited Obsidian vault notes back into DMA using stable metadata plus managed/editable section markers.
+- `POST /api/campaign/export/obsidian-vault` and `POST /api/campaign/import/obsidian-vault`: legacy compatibility only; not part of active campaign workflow.
 - `POST /api/prep/session-brief`: generate a deterministic Phase 3 prep brief from campaign state, recent session history, hooks, continuity checks, and calendar state, with optional `session_prep` document storage.
 - `GET /api/live/session-state`: inspect the current live session state plus hydrated active PCs/NPCs, location, current date, recent sessions, and latest prep.
 - `PUT /api/live/session-state`: update the current live session state for the DM panel.
 - `DELETE /api/live/session-state`: reset the saved live session state.
 - `POST /api/live/maptool-sync`: pull a MapTool map into the live session snapshot and surface initiative, HP pressure, and conditions in the DM panel.
-- `POST /api/live/respond`: run a compact live assistant command such as `/scene`, `/rules frightened`, `/npc suspicious dock clerk`, `/search Captain Mira`, `/recap`, or `/prep`.
-- `GET /dm-panel`: open the lightweight browser DM panel for live state, collapsible modules with inline instructions, DMA chat, Map Room, vault-backed campaign/session overviews, Obsidian vault browsing, reference PDF tabs, live commands, a built-in dice roller, a session-aware soundboard, browser voice read-aloud, session mechanics, quick rules, continuity search, and quick prep.
-- `GET /api/live/vault/notes` and `GET /api/live/vault/note`: browse configured Obsidian vault notes from the live panel.
-- `GET`/`PATCH /api/live/campaign-overview`: read or update the vault-backed campaign overview at `Command Center/Campaign Overview.md`.
-- `GET /api/live/session-overviews` plus `GET`/`PATCH /api/live/session-overview`: list, read, and update vault-backed session overview tabs.
+- `POST /api/live/respond`: legacy helper compatibility route for compact commands. The browser chat workbench is archived; use the dedicated DMA agent in Codex or the IDE for conversation.
+- `PATCH /api/live/in-game-state`: save revisioned session-local location, calendar date, time, weather and environmental overrides without replacing combat. See [`docs/26-in-game-state.md`](docs/26-in-game-state.md).
+- `GET /dm-panel`: open the browser DM panel with the editable In-Game State overview and card-based combat. Eleven deferred modules, including the browser chat workbench, are intentionally archived and excluded from the active layout and tool menu; see [`docs/21-dm-panel-module-archive.md`](docs/21-dm-panel-module-archive.md) before restoring any module. Talk to the dedicated DMA agent in Codex or the IDE. Obsidian vault browsing is legacy compatibility only.
+- `GET /api/live/vault/notes`, `GET /api/live/vault/note`, and legacy vault-backed campaign/session overview routes: compatibility only; inactive unless an archived vault is deliberately restored and configured.
 - `GET /api/live/reference-pdfs` and `GET /api/live/reference-pdf`: list and open configured source PDFs in the live panel.
 - `GET /api/live/dungeon-maps` and `GET /api/live/dungeon-map`: list and open configured local dungeon map images in the live panel.
 - `GET /api/live/dungeon-room-key`: load a structured room key for a selected dungeon map.
@@ -234,16 +253,17 @@ make phase1-benchmark
 
 ### Drop-zone batch import
 
-Put source material into:
+Put approved, non-private source material into:
 
 - `assets/imports/pathbuilder/`
 - `assets/imports/session-logs/`
 - `assets/imports/campaign-notes/`
 - `assets/imports/misc/aon-rules/raw/` for Archives of Nethys rule payloads imported as `kind: "rule"`
 - `assets/imports/misc/pf2e-reference/raw/` for community reference guides imported as `kind: "guide"`
-- `assets/imports/misc/private-local/reference/raw/` for private local notes, tables, and primers imported as `kind: "reference"`
-- `assets/imports/misc/private-local/media/` for private campaign maps, handouts, and other binary assets tracked for provenance but kept outside text retrieval
-- `assets/imports/misc/private-local/room-keys/` for structured dungeon room-key JSON used by the DM panel Map Room
+
+Keep private campaign references, maps, handouts, and room keys in the ignored
+root overlay described above. They are local runtime data, not public drop-zone
+content. Do not copy the overlay into `assets/imports/` to run the batch importer.
 
 To fetch AoN rules into the rules drop-zone:
 
@@ -282,9 +302,15 @@ To generate provenance sidecars plus corpus/RAG/train manifests for everything c
 python3 -m scripts.export_ingestion_metadata
 ```
 
-### Obsidian vault export
+### Legacy Obsidian compatibility (inactive)
 
-DMA can also sync the current campaign state into an Obsidian vault. The exporter writes:
+Obsidian export/import, vault browsing, and sync routes remain for compatibility
+with deliberately restored legacy vaults. They are not part of the supported
+campaign workflow, and a fresh setup does not require or create a vault. Do not
+use these routes for routine campaign updates. See
+[`docs/18-obsidian-retirement.md`](docs/18-obsidian-retirement.md).
+
+The legacy exporter writes:
 
 - `Campaign/` entity notes grouped by type
 - `Notes/` imported campaign-note documents
@@ -357,15 +383,25 @@ make db-upgrade
 
 ### Delivery roadmap
 
-Implement the roadmap phases in order:
+Follow W0-W6 in [the roadmap](docs/05-roadmap-and-milestones.md) and
+[the detailed session-cycle plan](docs/22-agent-session-cycle-and-discord.md):
 
-- Phase 1: Rules Engine & RAG
-- Phase 2: Campaign and Party Modeling
-- Phase 3: Prep Assistant
-- Phase 4: Real-Time Session Assistant
-- Phase 5: Hardening & Polish
+1. Define data ownership and establish the dedicated campaign agent.
+2. Complete debrief, reviewed logging, player-report drafting, and next-session handoff.
+3. Add approved Discord report publication.
+4. Connect preparation/live assistance and verify a complete session cycle.
+5. Add Discord player questions after access controls and the core workflow are verified.
 
-After each phase, follow the relevant testing and QA steps in [`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md).
+M1-M5 remain engineering workstreams supporting this sequence: combat reliability,
+campaign consistency, frontend/quality baseline, grounded assistance, and
+integrations. Quality and recovery gates apply throughout, including the existing
+local engineering checkpoint requirements. AoN acquisition remains parked.
+
+The original five phases remain a capability catalogue, and the existing
+`phase1-check` through `phase4-check` commands retain their meanings. Apply
+[`docs/06-testing-and-quality.md`](docs/06-testing-and-quality.md) throughout each
+milestone; record implementation, automated verification, browser verification,
+and play-testing separately.
 
 ## 🤝 Contributing
 

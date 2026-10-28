@@ -14,6 +14,7 @@ class ContextEntry(Base):
         String(200), unique=True, index=True, nullable=False
     )
     data: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -22,3 +23,4 @@ class ContextEntry(Base):
     )
 
     __table_args__ = (Index("idx_contexts_key", "key"),)
+    __mapper_args__ = {"version_id_col": revision}

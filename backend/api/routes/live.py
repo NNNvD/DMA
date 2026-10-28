@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Header, Query, Uplo
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.exc import StaleDataError
 
 from backend.config.settings import settings
 from backend.config.local_paths import (
@@ -28,6 +29,8 @@ from backend.services.ingestion_service import ingestion_service
 from backend.services.live_assistant_service import live_assistant_service
 from backend.services.live_maptool_service import live_maptool_service
 from backend.services.live_session_service import live_session_service
+from backend.services.live_session_service import StaleLiveSessionStateError
+from backend.services.in_game_state_service import GameStateInput
 from backend.services.metrics_service import metrics_service
 from backend.services.obsidian_markdown import split_frontmatter
 from backend.services.private_campaign_data_service import private_campaign_data_service
@@ -42,6 +45,7 @@ page_router = APIRouter(include_in_schema=False)
 
 
 class LiveSessionStateUpdate(BaseModel):
+    expected_revision: Optional[int] = Field(default=None, ge=0)
     scene_title: Optional[str] = None
     focus: Optional[str] = None
     current_location_id: Optional[int] = None
@@ -65,6 +69,11 @@ class LiveAssistantRequest(BaseModel):
         "prep",
         "memory",
     ] = "auto"
+
+
+class InGameStateUpdate(BaseModel):
+    expected_revision: int = Field(ge=0)
+    state: GameStateInput
 
 
 class LiveMapToolSyncRequest(BaseModel):
@@ -2110,16 +2119,44 @@ async def update_live_session_state(
             notes=payload.notes,
             frugal_mode=payload.frugal_mode,
             combat_state=payload.combat_state,
+            expected_revision=payload.expected_revision,
         )
+    except (StaleLiveSessionStateError, StaleDataError) as exc:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except ValueError as exc:
         raise _bad_request(str(exc)) from exc
     except LookupError as exc:
         raise _not_found(str(exc)) from exc
 
 
+@router.patch("/in-game-state")
+async def update_in_game_state(
+    payload: InGameStateUpdate, db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await live_session_service.save_in_game_state(
+            db, state=payload.state.model_dump(), expected_revision=payload.expected_revision
+        )
+    except (StaleLiveSessionStateError, StaleDataError) as exc:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+
+
 @router.delete("/session-state")
-async def reset_live_session_state(db: AsyncSession = Depends(get_db)):
-    return await live_session_service.reset_state(db)
+async def reset_live_session_state(
+    expected_revision: Optional[int] = Header(default=None, alias="If-Match", ge=0),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        return await live_session_service.reset_state(
+            db, expected_revision=expected_revision
+        )
+    except (StaleLiveSessionStateError, StaleDataError) as exc:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.post("/maptool-sync")
@@ -3339,7 +3376,7 @@ async def update_private_index_dependency(
 
 @router.get("/reference-corpus/status")
 async def get_reference_corpus_status():
-    return reference_corpus_service.ensure_corpus_structure()
+    return reference_corpus_service.status()
 
 
 @router.post("/reference-corpus/normalize")
@@ -3588,6 +3625,16 @@ async def get_dm_panel():
             "Pragma": "no-cache",
         },
     )
+
+
+@router.get("/combat-conditions.js")
+async def get_combat_conditions_script():
+    script_path = (
+        Path(__file__).resolve().parent.parent
+        / "static"
+        / "combat_conditions.js"
+    )
+    return FileResponse(script_path, media_type="text/javascript")
 
 
 def _load_panel_html() -> str:

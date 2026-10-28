@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+import copy
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,9 +10,14 @@ from backend.models.document import Document
 from backend.services.campaign_service import campaign_service
 from backend.services.context_service import context_service
 from backend.services.live_maptool_service import live_maptool_service
+from backend.services.in_game_state_service import in_game_state_service
 
 
 LIVE_SESSION_CONTEXT_KEY = "live-session-state"
+
+
+class StaleLiveSessionStateError(Exception):
+    """Raised when a client tries to replace a newer live-session snapshot."""
 
 
 class LiveSessionService:
@@ -24,6 +30,7 @@ class LiveSessionService:
         "maptool_map_id": None,
         "notes": None,
         "frugal_mode": False,
+        "in_game_state": {},
         "combat_state": {
             "roomId": "",
             "roomTitle": "",
@@ -36,6 +43,7 @@ class LiveSessionService:
 
     async def load_snapshot(self, db: AsyncSession) -> dict[str, Any]:
         state = await self._load_state(db)
+        entry = await context_service.load(LIVE_SESSION_CONTEXT_KEY, db)
         current_location = await self._resolve_location(
             db, state.get("current_location_id")
         )
@@ -63,6 +71,7 @@ class LiveSessionService:
         )
         return {
             "state": state,
+            "revision": entry.revision if entry else 0,
             "current_location": current_location,
             "active_pcs": active_pcs,
             "active_npcs": active_npcs,
@@ -70,7 +79,11 @@ class LiveSessionService:
                 "locations": locations,
                 "pcs": overview.get("pcs") or [],
                 "npcs": overview.get("npcs") or [],
+                "calendars": calendars,
             },
+            "in_game_state": in_game_state_service.resolve(
+                state.get("in_game_state"), calendars, current_location, strict=False
+            ),
             "current_date": self._current_date(calendars),
             "recent_sessions": recent_sessions,
             "latest_prep": latest_prep,
@@ -90,7 +103,14 @@ class LiveSessionService:
         notes: str | None = None,
         frugal_mode: bool = False,
         combat_state: dict[str, Any] | None = None,
+        expected_revision: int | None = None,
     ) -> dict[str, Any]:
+        entry = await context_service.load(LIVE_SESSION_CONTEXT_KEY, db)
+        current_revision = entry.revision if entry else 0
+        if expected_revision is not None and expected_revision != current_revision:
+            raise StaleLiveSessionStateError(
+                "Live session state changed in another panel. Reload before saving."
+            )
         existing_state = await self._load_state(db)
         location_id = await self._validate_location_id(db, current_location_id)
         pc_ids = await self._validate_entity_ids(
@@ -111,6 +131,7 @@ class LiveSessionService:
             "maptool_map_id": normalized_maptool_map_id,
             "notes": self._normalize_optional_text(notes),
             "frugal_mode": bool(frugal_mode),
+            "in_game_state": existing_state.get("in_game_state") or {},
             "combat_state": self._normalize_combat_state(
                 combat_state
                 if combat_state is not None
@@ -118,6 +139,21 @@ class LiveSessionService:
             ),
         }
         await context_service.save(LIVE_SESSION_CONTEXT_KEY, state, db)
+        return await self.load_snapshot(db)
+
+    async def save_in_game_state(
+        self, db: AsyncSession, *, state: dict[str, Any], expected_revision: int
+    ) -> dict[str, Any]:
+        entry = await context_service.load(LIVE_SESSION_CONTEXT_KEY, db)
+        if expected_revision != (entry.revision if entry else 0):
+            raise StaleLiveSessionStateError(
+                "Live session state changed in another panel. Reload before saving."
+            )
+        current = await self._load_state(db)
+        overview = await campaign_service.get_overview(db)
+        resolved = in_game_state_service.resolve(state, overview.get("calendars") or [])
+        current["in_game_state"] = resolved["inputs"]
+        await context_service.save(LIVE_SESSION_CONTEXT_KEY, current, db)
         return await self.load_snapshot(db)
 
     async def set_maptool_map_id(
@@ -138,8 +174,20 @@ class LiveSessionService:
         await context_service.save(LIVE_SESSION_CONTEXT_KEY, state, db)
         return await self.load_snapshot(db)
 
-    async def reset_state(self, db: AsyncSession) -> dict[str, Any]:
-        await context_service.delete(LIVE_SESSION_CONTEXT_KEY, db)
+    async def reset_state(
+        self, db: AsyncSession, *, expected_revision: int | None = None
+    ) -> dict[str, Any]:
+        entry = await context_service.load(LIVE_SESSION_CONTEXT_KEY, db)
+        if expected_revision is not None and expected_revision != (
+            entry.revision if entry else 0
+        ):
+            raise StaleLiveSessionStateError(
+                "Live session state changed in another panel. Reload before saving."
+            )
+        # Reset both workspaces atomically in the same revisioned context row.
+        await context_service.save(
+            LIVE_SESSION_CONTEXT_KEY, copy.deepcopy(self.default_state), db
+        )
         await live_maptool_service.reset(db)
         return await self.load_snapshot(db)
 
@@ -164,9 +212,7 @@ class LiveSessionService:
             state.get("current_location_id")
         )
         state["frugal_mode"] = bool(state.get("frugal_mode"))
-        state["combat_state"] = self._normalize_combat_state(
-            state.get("combat_state")
-        )
+        state["combat_state"] = self._normalize_combat_state(state.get("combat_state"))
         return state
 
     async def _resolve_location(

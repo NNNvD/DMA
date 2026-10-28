@@ -77,6 +77,25 @@ class ReferenceCorpusService:
         self._write_json(root / "manifest.json", manifest)
         return manifest
 
+    def status(self) -> dict[str, Any]:
+        root = self.corpus_root()
+        saved_manifest = self._read_json(root / "manifest.json", {})
+        return {
+            "source": saved_manifest.get("source", "Archives of Nethys"),
+            "mode": saved_manifest.get("mode", "local-cache"),
+            "categories": [
+                self.category_status(category) for category in self.list_categories()
+            ],
+            "updated_at": saved_manifest.get("updated_at"),
+            "notes": saved_manifest.get(
+                "notes",
+                (
+                    "This corpus is deterministic local cache/index data. "
+                    "Populate raw category files explicitly before live lookup depends on them."
+                ),
+            ),
+        }
+
     def category_status(self, category: str) -> dict[str, Any]:
         normalized_path = self.corpus_root() / category / "normalized.json"
         payload = self._read_json(normalized_path, {"items": []})

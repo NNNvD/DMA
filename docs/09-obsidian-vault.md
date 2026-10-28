@@ -1,9 +1,14 @@
 # Obsidian Vault Workflow
 
-DMA can export the current campaign state into an Obsidian vault and import supported vault edits
+> **Retired workflow.** The active campaign workspace is DMA plus the private
+> root overlay. This document describes legacy export/import compatibility only.
+> Do not create a vault or use these steps for routine campaign work unless the
+> GM explicitly reinstates the workflow. See `docs/18-obsidian-retirement.md`.
+
+Legacy DMA versions could export the current campaign state into an Obsidian vault and import supported vault edits
 back into DMA. The intended model is now hybrid:
 
-- Obsidian is the human-facing campaign command center.
+- In the retired workflow, Obsidian served as the human-facing campaign command center.
 - DMA remains the structured engine for IDs, relationships, retrieval, prep generation, and live
   assistance.
 - The vault is portable and readable even for DMs who never install DMA.

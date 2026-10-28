@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     openai_embedding_cost_per_1m_tokens: Optional[float] = None
 
     # Database
-    # Keep the no-.env fallback aligned with the default local vault profile.
+    # Retained for legacy compatibility; Obsidian is not an active workflow.
     database_url: str = "sqlite+aiosqlite:///./dma-abomination-vaults.db"
     obsidian_vault_path: str = "./obsidian-abomination-vaults-vault"
     dma_private_data_root: str = "./assets/imports/misc/private-local"

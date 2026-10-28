@@ -34,6 +34,8 @@ async def init_db():
     import backend.models.document  # noqa: F401
     import backend.models.context  # noqa: F401
     import backend.models.chunk  # noqa: F401
+    import backend.models.session_update_draft  # noqa: F401
+    import backend.models.campaign_approval  # noqa: F401
 
     async with engine.begin() as conn:
         logger.info("Initializing DMA database tables…")

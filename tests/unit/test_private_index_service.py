@@ -117,6 +117,44 @@ def test_reference_corpus_normalizes_local_raw_entries(tmp_path, monkeypatch):
     assert mitflit[0]["summary_text"] == "Mitflits are gremlin pests"
 
 
+def test_reference_corpus_status_does_not_create_or_rewrite_overlay_files(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(
+        "backend.services.private_campaign_data_service.settings.dma_private_data_root",
+        str(tmp_path),
+    )
+    monkeypatch.setattr(
+        "backend.services.private_campaign_data_service.settings.dma_campaign_id",
+        "test-campaign",
+    )
+    root = tmp_path / "reference" / "aon"
+    creatures = root / "creatures"
+    creatures.mkdir(parents=True)
+    manifest_path = root / "manifest.json"
+    manifest_path.write_text(
+        '{"source":"Fixture","mode":"local-cache","updated_at":123}',
+        encoding="utf-8",
+    )
+    normalized_path = creatures / "normalized.json"
+    normalized_path.write_text(
+        '{"items":[{"id":"fixture"}],"updated_at":456}', encoding="utf-8"
+    )
+    manifest_before = manifest_path.read_bytes()
+    normalized_before = normalized_path.read_bytes()
+
+    status = ReferenceCorpusService().status()
+
+    assert status["source"] == "Fixture"
+    assert status["updated_at"] == 123
+    assert next(item for item in status["categories"] if item["category"] == "creatures")[
+        "item_count"
+    ] == 1
+    assert manifest_path.read_bytes() == manifest_before
+    assert normalized_path.read_bytes() == normalized_before
+    assert sorted(path.name for path in root.iterdir()) == ["creatures", "manifest.json"]
+
+
 def test_private_index_builds_indexes_and_dependency_audit(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "backend.services.private_campaign_data_service.settings.dma_private_data_root",

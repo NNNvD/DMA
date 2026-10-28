@@ -12,6 +12,9 @@ from backend.models.base import Base
 import backend.models.chunk  # noqa: F401
 import backend.models.context  # noqa: F401
 import backend.models.document  # noqa: F401
+import backend.models.session_update_draft  # noqa: F401
+import backend.models.campaign  # noqa: F401
+import backend.models.campaign_approval  # noqa: F401
 
 config = context.config
 
@@ -54,7 +57,9 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+        context.configure(
+            connection=connection, target_metadata=target_metadata, compare_type=True
+        )
 
         with context.begin_transaction():
             context.run_migrations()

@@ -157,7 +157,9 @@ const privateRoot = path.join(__dirname, '../../local-private-overlay/project-ro
 const level4Rooms = path.join(privateRoot, 'room-keys/abomination-vaults/level-4.json');
 const level4Bestiary = path.join(privateRoot, 'bestiary/abomination-vaults/level-4.json');
 test('all local level-4 encounter references match PDF blocks and have usable stats', {
-  skip: !fs.existsSync(level4Rooms) || !fs.existsSync(level4Bestiary),
+  // Real campaign data is never an implicit unit-test fixture.
+  skip: process.env.DMA_TEST_PRIVATE_OVERLAY !== '1'
+    || !fs.existsSync(level4Rooms) || !fs.existsSync(level4Bestiary),
 }, () => {
   const rooms = JSON.parse(fs.readFileSync(level4Rooms, 'utf8')).rooms;
   const entries = new Map(JSON.parse(fs.readFileSync(level4Bestiary, 'utf8')).entries.map((entry) => [entry.id, entry]));

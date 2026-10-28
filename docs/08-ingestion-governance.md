@@ -78,10 +78,11 @@ The exporter does not change the database. It governs raw imports and provenance
   - `review_status = pending`
   - `train_eligible = false`
 - `misc/aon-rules/raw/`
-  - treated as public Pathfinder 2e rules content fetched from Archives of Nethys
+  - legacy category; do not populate from automated Archives of Nethys copies
+  - use only for separately approved ORC-licensed material or private overlay files
   - imported as `kind = "rule"`
   - `source_class = retrieval_only`
-  - `review_status = approved`
+  - `review_status = pending`
   - `train_eligible = false`
 - `misc/private-local/reference/raw/player/`
   - treated as private player-safe local reference

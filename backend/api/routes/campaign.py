@@ -1,20 +1,25 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.models.base import get_db
+from backend.models.campaign import CampaignEntityProvenance
+from sqlalchemy import select
 from backend.services.campaign_asset_import_service import campaign_asset_import_service
 from backend.services.campaign_note_import_service import campaign_note_import_service
 from backend.services.campaign_service import campaign_service
 from backend.services.obsidian_vault_service import obsidian_vault_service
 from backend.services.obsidian_vault_sync_service import obsidian_vault_sync_service
 from backend.services.pc_sheet_import_service import pc_sheet_import_service
-from backend.services.session_update_service import session_update_service
+from backend.services.session_update_service import (
+    SessionUpdateConflict,
+    session_update_service,
+)
 
 
 router = APIRouter()
@@ -32,6 +37,8 @@ class LocationDetails(BaseModel):
     category: Optional[str] = None
     region: Optional[str] = None
     environment: Optional[str] = None
+    location_type: Optional[Literal["outdoors", "indoors", "underground"]] = None
+    climate: Optional[Literal["temperate", "cold", "arid", "tropical"]] = None
     languages: list[str] = Field(default_factory=list)
     secrets: list[str] = Field(default_factory=list)
 
@@ -84,11 +91,18 @@ class EventDetails(BaseModel):
     consequences: list[str] = Field(default_factory=list)
 
 
+class CalendarMonth(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    days: Optional[int] = Field(default=None, ge=1, le=400)
+    season: Optional[Literal["spring", "summer", "autumn", "winter"]] = None
+
+
 class CalendarDetails(BaseModel):
-    months: list[str] = Field(default_factory=list)
+    months: list[str | CalendarMonth] = Field(default_factory=list)
     weekdays: list[str] = Field(default_factory=list)
     seasons: list[str] = Field(default_factory=list)
     current_date: dict[str, Any] = Field(default_factory=dict)
+    weekday_anchor: Optional[dict[str, Any]] = None
 
 
 class HolidayDetails(BaseModel):
@@ -199,6 +213,31 @@ class SessionUpdateImportRequest(BaseModel):
     source_name: Optional[str] = None
     default_tags: list[str] = Field(default_factory=list)
     store_document: bool = True
+
+
+class SessionUpdateDraftRequest(BaseModel):
+    title: str = Field(min_length=1)
+    content: str = Field(min_length=1)
+    source_name: Optional[str] = None
+    default_tags: list[str] = Field(default_factory=list)
+
+
+class SessionUpdateCandidateDecisionRequest(BaseModel):
+    decision: Literal["accepted", "rejected", "deferred"]
+    reason: Optional[str] = None
+    reviewer: Optional[str] = None
+    expected_revision: Optional[int] = Field(default=None, strict=True, ge=1)
+
+
+class SessionUpdateFinalizeRequest(BaseModel):
+    decision: Literal["approved", "rejected"]
+    reason: Optional[str] = None
+    reviewer: Optional[str] = None
+    expected_revision: Optional[int] = Field(default=None, strict=True, ge=1)
+
+
+class SessionUpdatePromotionRequest(BaseModel):
+    expected_revision: Optional[int] = Field(default=None, strict=True, ge=1)
 
 
 class BatchImportRequest(BaseModel):
@@ -313,6 +352,144 @@ async def import_session_update(
         raise _bad_request(str(exc)) from exc
     except LookupError as exc:
         raise _not_found(str(exc)) from exc
+
+
+@router.post("/session-update-drafts", status_code=201)
+async def create_session_update_draft(
+    payload: SessionUpdateDraftRequest, db: AsyncSession = Depends(get_db)
+):
+    try:
+        return await session_update_service.create_review_draft(
+            db,
+            title=payload.title,
+            content=payload.content,
+            source_name=payload.source_name,
+            default_tags=payload.default_tags,
+        )
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+    except LookupError as exc:
+        raise _not_found(str(exc)) from exc
+
+
+@router.get("/session-update-drafts")
+async def list_session_update_drafts(
+    status: Optional[Literal["pending", "finalized"]] = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    return await session_update_service.list_review_drafts(
+        db, status=status, limit=limit
+    )
+
+
+@router.get("/session-update-drafts/{draft_id}")
+async def get_session_update_draft(draft_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        draft = await session_update_service.get_review_draft(db, draft_id)
+        return session_update_service.draft_to_dict(draft, include_content=True)
+    except LookupError as exc:
+        raise _not_found(str(exc)) from exc
+
+
+@router.post("/session-update-drafts/{draft_id}/candidates/{candidate_id}/decision")
+async def decide_session_update_candidate(
+    draft_id: int,
+    candidate_id: str,
+    payload: SessionUpdateCandidateDecisionRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        return await session_update_service.decide_candidate(
+            db,
+            draft_id=draft_id,
+            candidate_id=candidate_id,
+            decision=payload.decision,
+            reason=payload.reason,
+            reviewer=payload.reviewer,
+            expected_revision=payload.expected_revision,
+        )
+    except LookupError as exc:
+        raise _not_found(str(exc)) from exc
+    except SessionUpdateConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+
+
+@router.post("/session-update-drafts/{draft_id}/finalize")
+async def finalize_session_update_draft(
+    draft_id: int,
+    payload: SessionUpdateFinalizeRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        return await session_update_service.finalize_review_draft(
+            db,
+            draft_id=draft_id,
+            decision=payload.decision,
+            reason=payload.reason,
+            reviewer=payload.reviewer,
+            expected_revision=payload.expected_revision,
+        )
+    except LookupError as exc:
+        raise _not_found(str(exc)) from exc
+    except SessionUpdateConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+
+
+@router.post("/session-update-drafts/{draft_id}/promote")
+async def promote_session_update_candidates(
+    draft_id: int,
+    payload: Optional[SessionUpdatePromotionRequest] = None,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        return await session_update_service.promote_accepted_candidates(
+            db,
+            draft_id=draft_id,
+            expected_revision=payload.expected_revision if payload else None,
+        )
+    except LookupError as exc:
+        raise _not_found(str(exc)) from exc
+    except SessionUpdateConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise _bad_request(str(exc)) from exc
+
+
+@router.get("/entities/{entity_id}/provenance")
+async def get_campaign_entity_provenance(
+    entity_id: int, db: AsyncSession = Depends(get_db)
+):
+    entity = await campaign_service.get_entity(entity_id, db)
+    if entity is None:
+        raise _not_found("Campaign entity not found")
+    result = await db.execute(
+        select(CampaignEntityProvenance)
+        .where(CampaignEntityProvenance.entity_id == entity_id)
+        .order_by(CampaignEntityProvenance.created_at, CampaignEntityProvenance.id)
+    )
+    return [
+        {
+            "id": row.id,
+            "entity_id": row.entity_id,
+            "draft_id": row.draft_id,
+            "candidate_id": row.candidate_id,
+            "source_hash": row.source_hash,
+            "source_name": row.source_name,
+            "candidate_type": row.candidate_type,
+            "reviewer": row.reviewer,
+            "accepted_at": row.accepted_at.isoformat(),
+            "candidate_payload": row.candidate_payload,
+            "entity_stable_key": row.entity_stable_key,
+            "entity_type": row.entity_type,
+            "entity_name": row.entity_name,
+        }
+        for row in result.scalars().all()
+    ]
 
 
 @router.get("/import/dropzone")

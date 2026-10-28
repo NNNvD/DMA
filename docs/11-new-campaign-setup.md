@@ -1,5 +1,9 @@
 # New Campaign Setup Manual
 
+> **Partially retired.** Use `README.md` and `docs/15-novice-local-setup.md` for
+> current installation and private overlay setup. The Obsidian export workflow
+> below is legacy compatibility and is not part of active campaign setup.
+
 This guide walks through how to install DMA and stand it up for a brand-new campaign.
 
 ## 1. Install DMA
@@ -130,32 +134,12 @@ Generate prep for the next session:
 This uses campaign state, recent sessions, hooks, and continuity logic to assemble a session-prep
 document.
 
-## 11. Optional: Use Obsidian As The Campaign Command Center
+## 11. Legacy Obsidian compatibility
 
-If you want a browsable note vault or want to hand a prepared campaign to another DM:
-
-```bash
-make export-obsidian-vault VAULT=/path/to/vault
-```
-
-The exported vault is readable on its own in Obsidian. DMs can browse campaign indexes, locations,
-NPCs, source references, maps, session prep, and notes without running DMA.
-
-If the same DM later edits supported sections in Obsidian, sync those edits back before generating
-new prep:
-
-```bash
-make sync-obsidian-vault VAULT=/path/to/vault
-```
-
-Safe editable sections are:
-
-- `DM Working Notes`
-- `Player-Facing Summary`
-- `Session Changes`
-- `DMA Editable Source`
-
-Do not remove DMA YAML IDs or the `dma:managed` / `dma:editable` marker comments.
+Obsidian export/import is retired and is not part of current campaign setup.
+Do not run its sync commands as part of normal prep or campaign updates. If the
+GM explicitly reinstates that workflow, review `docs/18-obsidian-retirement.md`
+and the legacy compatibility notes first.
 
 ## 12. Optional: Enable The Live Bridge Workflow
 
@@ -184,5 +168,6 @@ For a new campaign, the most practical order is:
 2. preview and import notes, session logs, and character sheets
 3. verify campaign entities and dossiers
 4. generate session prep
-5. export to Obsidian as the human-facing campaign command center if desired
+5. follow the campaign's explicit review process before carrying session changes
+   into accepted campaign state
 6. only then experiment with live-session and bridge workflows

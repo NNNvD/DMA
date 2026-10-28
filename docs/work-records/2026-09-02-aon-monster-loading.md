@@ -113,3 +113,20 @@ empty states can be checked in the live interface.
 Excellent completion remains optional follow-up work: exercise more
 representative creatures and polish or verify remote image loading where the
 browser/network permits.
+
+## Excellent-completion verification — 2026-09-02
+
+- The in-app browser loaded the live DM panel and rendered Current Combat.
+- A Giant Scorpion (Level 3, Remastered, Monster Core) was added successfully;
+  its card displayed HP 45/45, AC 18, level, traits, and active-turn state.
+- A Ghoul (Level 1, Legacy, Bestiary) was then added successfully, confirming
+  that multiple creature additions remain supported.
+- The non-matching search state displayed `No PF2e creatures matched that
+  search.` without a page error.
+- The remote creature portrait did not load in the browser environment, so
+  image delivery remains environment-dependent and is not treated as a DMA
+  data or card-rendering failure.
+
+Excellent completion is now achieved for cached creature loading and the
+card-based Current Combat flow. Remote image delivery remains a separate
+network/environment follow-up.

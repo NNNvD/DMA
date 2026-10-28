@@ -177,3 +177,40 @@ class CharacterSheetVersion(Base):
             name="uq_character_sheet_versions_entity_version",
         ),
     )
+
+
+class CampaignEntityProvenance(Base):
+    """Immutable link from an accepted entity to its reviewed source candidate."""
+
+    __tablename__ = "campaign_entity_provenance"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    entity_id: Mapped[int | None] = mapped_column(
+        ForeignKey("campaign_entities.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    draft_id: Mapped[int] = mapped_column(
+        ForeignKey("session_update_drafts.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    candidate_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    source_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    candidate_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    reviewer: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    accepted_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    candidate_payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    entity_stable_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    entity_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "draft_id", "candidate_id", name="uq_provenance_draft_candidate"
+        ),
+    )

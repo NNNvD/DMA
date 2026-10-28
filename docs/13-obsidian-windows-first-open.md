@@ -1,5 +1,8 @@
 # Obsidian First-Open Guide For The Abomination Vaults Vault
 
+> **Retired workflow.** The archived vault is not required for current DMA use.
+> Follow this only if the GM explicitly reinstates the legacy Obsidian workflow.
+
 This guide is for someone who:
 
 - has just installed Obsidian on a Windows PC

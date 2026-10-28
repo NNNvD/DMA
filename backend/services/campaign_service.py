@@ -55,6 +55,7 @@ class CampaignService:
         parent_entity_id: Optional[int] = None,
         current_location_id: Optional[int] = None,
         owner_entity_id: Optional[int] = None,
+        commit: bool = True,
     ) -> CampaignEntity:
         normalized_type = self._normalize_entity_type(entity_type)
         await self._validate_references(
@@ -77,7 +78,7 @@ class CampaignService:
             owner_entity_id=owner_entity_id,
         )
         db.add(entity)
-        await self._commit(db, "Campaign entity already exists")
+        await self._commit(db, "Campaign entity already exists", commit=commit)
         loaded = await self.get_entity(entity.id, db)
         if loaded is None:
             raise LookupError("Campaign entity was created but could not be reloaded")
@@ -101,6 +102,7 @@ class CampaignService:
         clear_parent_entity: bool = False,
         clear_current_location: bool = False,
         clear_owner_entity: bool = False,
+        commit: bool = True,
     ) -> CampaignEntity:
         entity = await self.get_entity(entity_id, db)
         if entity is None:
@@ -144,7 +146,9 @@ class CampaignService:
         elif owner_entity_id is not None:
             entity.owner_entity_id = owner_entity_id
 
-        await self._commit(db, "Campaign entity update conflicts with existing data")
+        await self._commit(
+            db, "Campaign entity update conflicts with existing data", commit=commit
+        )
         loaded = await self.get_entity(entity.id, db)
         if loaded is None:
             raise LookupError("Campaign entity disappeared during update")
@@ -214,6 +218,7 @@ class CampaignService:
         parent_entity_id: Optional[int] = None,
         current_location_id: Optional[int] = None,
         owner_entity_id: Optional[int] = None,
+        commit: bool = True,
     ) -> tuple[CampaignEntity, bool]:
         existing = None
         if stable_key:
@@ -237,6 +242,7 @@ class CampaignService:
                 parent_entity_id=parent_entity_id,
                 current_location_id=current_location_id,
                 owner_entity_id=owner_entity_id,
+                commit=commit,
             )
             return entity, True
 
@@ -255,6 +261,7 @@ class CampaignService:
             current_location_id=current_location_id,
             owner_entity_id=owner_entity_id,
             parent_entity_id=parent_entity_id,
+            commit=commit,
         )
         return entity, False
 
@@ -355,6 +362,7 @@ class CampaignService:
         relationship_type: str,
         strength: Optional[int] = None,
         notes: Optional[str] = None,
+        commit: bool = True,
     ) -> CampaignRelationship:
         if source_entity_id == target_entity_id:
             raise ValueError("Relationships must connect two different entities")
@@ -371,7 +379,7 @@ class CampaignService:
             notes=notes,
         )
         db.add(relationship)
-        await self._commit(db, "Relationship already exists")
+        await self._commit(db, "Relationship already exists", commit=commit)
 
         stmt = (
             select(CampaignRelationship)
@@ -396,6 +404,7 @@ class CampaignService:
         relationship_type: str,
         strength: Optional[int] = None,
         notes: Optional[str] = None,
+        commit: bool = True,
     ) -> tuple[CampaignRelationship, bool]:
         stmt = (
             select(CampaignRelationship)
@@ -417,6 +426,7 @@ class CampaignService:
                 relationship_type=relationship_type,
                 strength=strength,
                 notes=notes,
+                commit=commit,
             )
             return relationship, True
 
@@ -424,7 +434,9 @@ class CampaignService:
             existing.strength = strength
         if notes:
             existing.notes = notes
-        await self._commit(db, "Relationship update conflicts with existing data")
+        await self._commit(
+            db, "Relationship update conflicts with existing data", commit=commit
+        )
         refreshed = await self._get_relationship(existing.id, db)
         if refreshed is None:
             raise LookupError("Relationship disappeared during update")
@@ -600,6 +612,7 @@ class CampaignService:
         document_result = await db.execute(
             select(Document)
             .where(Document.kind == "session_log")
+            .where(Document.review_status == "approved")
             .order_by(Document.updated_at.desc())
         )
         documents = list(document_result.scalars().all())
@@ -752,11 +765,17 @@ class CampaignService:
             "created_at": version.created_at.isoformat(),
         }
 
-    async def _commit(self, db: AsyncSession, error_message: str) -> None:
+    async def _commit(
+        self, db: AsyncSession, error_message: str, *, commit: bool = True
+    ) -> None:
         try:
-            await db.commit()
+            if commit:
+                await db.commit()
+            else:
+                await db.flush()
         except IntegrityError as exc:
-            await db.rollback()
+            if commit:
+                await db.rollback()
             raise ValueError(error_message) from exc
 
     async def _next_stable_key(self, entity_type: str, db: AsyncSession) -> str:

@@ -133,6 +133,43 @@ Location: Greyhaven Docks
         asyncio.run(engine.dispose())
 
 
+def test_live_session_state_revisions_reject_stale_saves_and_resets():
+    app, engine, _ = create_documents_test_app()
+    client = TestClient(app)
+
+    try:
+        initial = client.get("/api/live/session-state")
+        assert initial.status_code == 200
+        assert initial.json()["revision"] == 0
+
+        first_save = client.put(
+            "/api/live/session-state",
+            json={"scene_title": "Saved state", "expected_revision": 0},
+        )
+        assert first_save.status_code == 200
+        assert first_save.json()["revision"] == 1
+
+        stale_save = client.put(
+            "/api/live/session-state",
+            json={"scene_title": "Stale overwrite", "expected_revision": 0},
+        )
+        assert stale_save.status_code == 409
+        assert client.get("/api/live/session-state").json()["state"]["scene_title"] == "Saved state"
+
+        stale_reset = client.delete(
+            "/api/live/session-state", headers={"If-Match": "0"}
+        )
+        assert stale_reset.status_code == 409
+
+        reset = client.delete("/api/live/session-state", headers={"If-Match": "1"})
+        assert reset.status_code == 200
+        assert reset.json()["revision"] == 2
+        assert reset.json()["state"]["scene_title"] is None
+        assert client.get("/api/live/session-state").json()["revision"] == 2
+    finally:
+        asyncio.run(engine.dispose())
+
+
 def test_live_dungeon_map_and_room_key_routes(monkeypatch, tmp_path):
     map_root = tmp_path / "media"
     map_folder = map_root / "abomination-vaults" / "maps" / "BOOK 1"
@@ -1522,6 +1559,7 @@ def test_dm_panel_route_serves_browser_panel():
         response = client.get("/dm-panel")
         assert response.status_code == 200
         assert "DMA DM Panel" in response.text
+        assert "/api/live/combat-conditions.js" in response.text
         assert "/api/live/session-state" in response.text
         assert "/api/live/maptool-sync" in response.text
         assert "/api/live/respond" in response.text
@@ -1557,6 +1595,9 @@ def test_dm_panel_route_serves_browser_panel():
         assert "/prep" in response.text
         assert "/search" in response.text
         assert "Continuity Search" in response.text
+        script_response = client.get("/api/live/combat-conditions.js")
+        assert script_response.status_code == 200
+        assert "finishCombatantTurn" in script_response.text
     finally:
         asyncio.run(engine.dispose())
 

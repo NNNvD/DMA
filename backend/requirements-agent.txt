@@ -1,0 +1,2 @@
+# Isolated MCP reader environment; do not merge into the backend's pinned set.
+mcp==1.26.0

@@ -102,6 +102,7 @@ class IngestionService:
         visibility_scope: str = "gm_only",
         rag_eligible: bool = True,
         train_eligible: bool = False,
+        commit: bool = True,
     ) -> Document:
         governance_fields = {
             "source_class": source_class,
@@ -123,7 +124,7 @@ class IngestionService:
                 existing.url = url
                 self._apply_governance_fields(existing, governance_fields)
                 return await self.refresh_document(
-                    db, existing, rechunk=content_changed
+                    db, existing, rechunk=content_changed, commit=commit
                 )
 
         document = Document(
@@ -141,8 +142,11 @@ class IngestionService:
         chunks = self.chunk_strategy.chunk(content or "")
         await self._attach_chunks(document, chunks, db)
         await self._maybe_embed_document(document)
-        await db.commit()
-        await db.refresh(document)
+        if commit:
+            await db.commit()
+            await db.refresh(document)
+        else:
+            await db.flush()
         return document
 
     def _apply_governance_fields(
@@ -183,7 +187,12 @@ class IngestionService:
         await db.flush()
 
     async def refresh_document(
-        self, db: AsyncSession, document: Document, *, rechunk: bool = False
+        self,
+        db: AsyncSession,
+        document: Document,
+        *,
+        rechunk: bool = False,
+        commit: bool = True,
     ) -> Document:
         if rechunk:
             await db.execute(
@@ -194,8 +203,11 @@ class IngestionService:
             await self._attach_chunks(document, chunks, db)
 
         await self._maybe_embed_document(document)
-        await db.commit()
-        await db.refresh(document)
+        if commit:
+            await db.commit()
+            await db.refresh(document)
+        else:
+            await db.flush()
         return document
 
     async def _maybe_embed_document(self, document: Document) -> None:
