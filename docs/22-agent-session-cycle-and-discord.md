@@ -49,6 +49,15 @@ contract/recovery evidence is in the
 [W0 work record](work-records/2026-10-27-w0-operating-contract-and-recovery.md).
 Focused fixture verification does not establish full CI or release readiness.
 
+The DM's next priority is a guided and adaptive preparation/debrief experience
+before an end-to-end manual. The [interaction and feedback contract](27-guided-agent-workflows-and-feedback.md)
+defines numbered choices, suggestions, context-triggered reminders, durable scoped
+preferences and feedback, and interruption/recovery acceptance. These are missing
+product workflows, not already-delivered W1 features. Preferred local sequence:
+W2a workflow/learning foundation → W2b closure/report/handoff → W4a preparation →
+local W5 rehearsal → tested DM manual. W3 publishing remains optional afterward;
+existing milestone IDs and approval boundaries are unchanged.
+
 ## Active product delivery sequence
 
 W0 is complete for its contract/fixture scope in the
@@ -72,6 +81,8 @@ W3 is the first Discord increment and can follow session closure without waiting
 for broad assistant or reference-corpus expansion. It does not block a local-only
 W5 rehearsal when Discord is not configured. Always-on Discord hosting and bot
 deployment are separate operational decisions, not prerequisites for local DMA.
+For the current DM usability priority, complete the local preparation/closure
+rehearsal and manual gate first; Discord availability must not block either.
 
 Engineering hardening runs throughout W0-W6. Before a slice relies on a service,
 verify its relevant M1-M3 gates. Full checkpoint/release acceptance still requires

@@ -88,7 +88,7 @@ def build_server(reader: CampaignReader, gateway: GatewayClient | None = None):
             "Read one exact overlay item with its file hash; no SQL/vault fallback.",
             {
                 "note_type": {
-                    "enum": ["campaign_overview", "session", "npc", "pc", "settlement"]
+                    "enum": ["campaign_overview", "session", "npc", "pc", "settlement", "room", "bestiary"]
                 },
                 "item_id": {"type": "string", "minLength": 1, "maxLength": 128},
             },

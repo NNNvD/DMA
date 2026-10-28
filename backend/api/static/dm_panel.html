@@ -3943,6 +3943,7 @@
     let pdfTabs = [];
     let activePdfPath = "";
     let dungeonMaps = [];
+    let preferredDungeonMap = "";
     let activeRoomKey = null;
     let maptoolRoomState = null;
     let appendMaptoolArea = false;
@@ -5197,7 +5198,7 @@
       try {
         const payload = await fetchJson(endpoints.sessionOverviews);
         sessionOverviews = payload.items || [];
-        const preferred = sessionOverviews.find((item) => item.title === "Next Session") || sessionOverviews[0];
+        const preferred = sessionOverviews.find((item) => item.path === payload.preferred_session_path) || sessionOverviews.find((item) => item.title === "Next Session") || sessionOverviews[0];
         renderSessionTabs();
         if (preferred) {
           await openSessionOverview(preferred.path);
@@ -6111,7 +6112,7 @@
       select.innerHTML = dungeonMaps.map((item) => `
         <option value="${escapeHtml(item.map_id)}">${escapeHtml(item.title)}${item.folder ? ` — ${escapeHtml(item.folder)}` : ""}</option>
       `).join("");
-      const preferred = dungeonMaps.find((item) => item.map_id === "level1")
+      const preferred = dungeonMaps.find((item) => item.map_id === (panelSnapshot?.in_game_state?.map_id || preferredDungeonMap)) || dungeonMaps.find((item) => item.map_id === "level1")
         || dungeonMaps.find((item) => /level ?1/i.test(item.title))
         || dungeonMaps[0];
       if (preferred) {
@@ -6127,6 +6128,7 @@
           `${endpoints.dungeonMaps}?q=${encodeURIComponent(query)}`,
         );
         dungeonMaps = payload.items || [];
+        preferredDungeonMap = payload.preferred_map_id || "";
         renderMapSelect();
       } catch (error) {
         select.innerHTML = `<option value="">${escapeHtml(error.message)}</option>`;
@@ -11028,10 +11030,13 @@
     }
 
     function renderShellStatus(snapshot) {
+      const rehearsal = snapshot?.deployment_mode === "rehearsal";
+      document.querySelector(".status-strip .eyebrow").textContent = rehearsal ? "DMA Command Center · PRIVATE REHEARSAL" : "DMA Command Center";
+      document.title = rehearsal ? "PRIVATE REHEARSAL — DMA DM Panel" : "DMA DM Panel";
       const game = snapshot?.in_game_state || {};
       const active = activeCombatant();
       document.getElementById("shell-location-title").textContent =
-        game.location_name || "In-Game State";
+        (rehearsal ? "REHEARSAL — " : "") + (game.location_name || "In-Game State");
       document.getElementById("shell-status-meta").innerHTML = [
         `<span class="stat-badge">${escapeHtml(game.day_label || "Day not set")}</span>`,
         `<span class="stat-badge">${escapeHtml(game.time_of_day === "unspecified" ? "Time not set" : titleCaseName(game.time_of_day || "Time not set"))}</span>`,

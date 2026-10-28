@@ -1,6 +1,6 @@
 # Development Roadmap and Build Requirements
 
-Last reviewed: 2026-10-28 (W1 acceptance); engineering evidence below is
+Last reviewed: 2026-10-28 (W1 acceptance and guided-workflow priorities); engineering evidence below is
 dated 2026-10-08 unless stated otherwise.
 
 The active product sequence now centers on the complete session cycle and the
@@ -42,6 +42,29 @@ not a prerequisite. Discord configuration is optional for a local-only W5
 rehearsal. W6 follows the verified core cycle and Discord publication. Hardening
 applies throughout; full release/checkpoint gates below still apply.
 
+### DM usability gate before the manual — 2026-10-28
+
+The DM requests guided multiple-choice preparation/debrief, grounded suggestions
+and reminders, durable learning from responses, and appropriately timed feedback.
+The [guided interaction and feedback contract](27-guided-agent-workflows-and-feedback.md)
+sets the concrete behavior, record classes and acceptance cases. These capabilities
+are planned; W1's guarded primitives do not yet deliver the complete experience.
+
+Initial implementation: the [guided operator-runner prototype](28-guided-agent-prototype.md)
+provides durable interviews, note capture, confirmed preferences and native Codex
+prep/debrief drafts without expanding MCP permissions. Fictional fixtures and
+verified private rehearsal copies are supported; this does not close W2/W4/W5
+or the final DM-manual usability gate.
+
+Keep W0–W6 IDs stable. Prioritize W2a workflow/answer/capture and scoped preference
+records plus interactive entry; W2b debrief, separate GM/player artifacts and
+handoff; W4a guided preparation; then a local W5 full-cycle rehearsal and the
+requested setup/before/during/after DM manual. Optional W3 Discord publishing can
+follow that local usability gate; broader W4 live assistance continues afterward.
+Reuse existing prep and W1 review services. Streamline trusted human review
+without granting the agent approval authority. Learning adjusts explicit scoped
+preferences, not model weights, system instructions or security boundaries.
+
 The browser remains the operational session workspace; the external campaign
 agent becomes the intended conversational preparation/review surface. The agent
 setup now has native fixture-host verification beyond the read-only adapter. Archived panel
@@ -49,10 +72,11 @@ modules stay archived; no reactivation is needed to plan the agent review path.
 Player answers must exclude GM-only material before retrieval/context assembly.
 Player input never automatically becomes accepted campaign fact.
 
-Next implementation slice: W2 guided debrief and resumable session closure,
-reusing the W1 receipt/review gateway. Add uncertainty handling, corrections,
-separate player-report drafting and next-session intentions without weakening
-the distinct approvals for facts, GM log and publication. The earlier
+Next implementation slice: W2a durable guided workflow state, capture inbox,
+scoped preferences/feedback and convenient interactive start/resume. Then deliver
+W2b debrief and resumable closure using the W1 receipt/review gateway. Add
+uncertainty handling, corrections, separate player-report drafting and next-session
+intentions without weakening distinct fact, GM-log and publication approvals. The earlier
 [read-only slice](work-records/2026-10-27-w1-read-only-agent-connection.md) and
 [primitive guards](work-records/2026-10-27-w1-review-revision-and-transaction-guards.md)
 remain dated evidence; W1's final outcome is in its completion record.

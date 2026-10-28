@@ -15,9 +15,18 @@ for the local fictional GM workflow: [dedicated Codex setup, guarded staging/rev
 and restart](docs/25-campaign-agent-review-and-acceptance.md) are verified.
 The [completion record](docs/work-records/2026-10-28-w1-campaign-agent-completion.md)
 distinguishes native host, protocol, operator simulation and platform evidence.
-Next complete W2 guided debrief, reviewed session closure and player reports,
-add approved Discord publishing, connect prep/live context, and rehearse the full
-cycle. Discord player questions follow the core rehearsal and player access tests.
+Next implement the [guided workflow and feedback contract](docs/27-guided-agent-workflows-and-feedback.md):
+W2a durable interviews, capture, preferences/feedback and interactive entry; W2b
+debrief, reviewed log, player-report drafts and handoff; W4a guided preparation;
+then local W5 rehearsal and the tested setup/before/during/after DM manual.
+Optional approved Discord publishing follows that usability gate. Discord player
+questions follow the core rehearsal and player access tests.
+
+W2a implementation update: [the guided operator-runner prototype](docs/28-guided-agent-prototype.md)
+now supplies private revisioned interviews, capture, confirmed preferences,
+prep/debrief drafting and restart. It does not close the full manual gate: native
+human usability, canonical packet-to-W1 review integration, richer reminder/report
+management and recovery including the private workflow sidecar remain required.
 
 M1-M5 remain supporting engineering workstreams. Implemented combat reliability
 and atomic session-update promotion/provenance are reused. Full CI, prep source

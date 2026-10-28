@@ -11,6 +11,7 @@ from backend.services.campaign_service import campaign_service
 from backend.services.context_service import context_service
 from backend.services.live_maptool_service import live_maptool_service
 from backend.services.in_game_state_service import in_game_state_service
+from backend.config.settings import settings
 
 
 LIVE_SESSION_CONTEXT_KEY = "live-session-state"
@@ -70,6 +71,7 @@ class LiveSessionService:
             key=lambda item: item["name"],
         )
         return {
+            "deployment_mode": settings.app_env,
             "state": state,
             "revision": entry.revision if entry else 0,
             "current_location": current_location,

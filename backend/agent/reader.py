@@ -326,6 +326,13 @@ class CampaignReader:
         links, _, _ = self._overlay("agent-session-links.json")
         data = {
             **self.binding.identity,
+            "deployment_mode": (
+                "private-rehearsal"
+                if self.binding.binding_id.startswith("rehearsal-")
+                else "bound-campaign"
+            ),
+            "note_types": [*NOTE_FILES, "room", "bestiary"],
+            "material_access": "Use item_id=catalog for bounded headers, then an exact ID. Room IDs are map_id/room_id. Raw PDFs are not a reader tool.",
             "schema_revision": self.binding.schema_revision,
             "tools": list(TOOL_NAMES),
             "mutations_enabled": False,
@@ -483,6 +490,8 @@ class CampaignReader:
         return self._result(selected, sources)
 
     def _campaign_read_notes(self, db, note_type: str, item_id: str) -> dict:
+        if note_type in {"room", "bestiary"}:
+            return self._read_material(note_type, item_id)
         if (
             note_type not in NOTE_FILES
             or not isinstance(item_id, str)
@@ -501,6 +510,29 @@ class CampaignReader:
         ):
             raise AgentReadError(
                 "source_invalid", "Selected note collection is invalid"
+            )
+        if item_id == "catalog":
+            headers = [
+                {
+                    "id": item.get("id"),
+                    "name": item.get("name")
+                    or item.get("title")
+                    or item.get("character_name"),
+                }
+                for item in items[:50]
+            ]
+            return self._result(
+                headers,
+                [
+                    self._source(
+                        "overlay",
+                        note_type + "_catalog",
+                        "catalog",
+                        headers,
+                        file=relative,
+                        file_sha256=digest,
+                    )
+                ],
             )
         matches = [
             item
@@ -522,6 +554,72 @@ class CampaignReader:
                     item,
                     file=relative,
                     file_sha256=digest,
+                )
+            ],
+        )
+
+    def _read_material(self, note_type, item_id):
+        if not isinstance(item_id, str) or not 1 <= len(item_id) <= 128:
+            raise AgentReadError(
+                "invalid_arguments", "Select an exact material ID or catalog"
+            )
+        folder = "room-keys" if note_type == "room" else "bestiary"
+        root = self._private_path(folder)
+        headers, found = [], []
+        for path in sorted(root.rglob("*.json"))[:100]:
+            relative = path.relative_to(self.binding.private_root).as_posix()
+            safe = self._private_path(relative)
+            payload, token = _json_file(safe)
+            if (
+                payload.get("campaign_id")
+                not in (
+                    None,
+                    self.binding.campaign_id,
+                )
+                or str(payload.get("campaign") or self.binding.campaign_id)
+                .casefold()
+                .replace(" ", "-")
+                != self.binding.campaign_id
+            ):
+                continue
+            key = "rooms" if note_type == "room" else "entries"
+            for entry in payload.get(key) or []:
+                if not isinstance(entry, dict):
+                    continue
+                identifier = (
+                    f"{payload.get('map_id')}/{entry.get('room_id')}"
+                    if note_type == "room"
+                    else str(entry.get("id", ""))
+                )
+                headers.append(
+                    {"id": identifier, "name": entry.get("title") or entry.get("name")}
+                )
+                if identifier == item_id:
+                    found.append((entry, relative, token))
+        if item_id == "catalog":
+            return self._result(
+                headers[:100],
+                [
+                    self._source(
+                        "overlay", note_type + "_catalog", "catalog", headers[:100]
+                    )
+                ],
+            )
+        if len(found) > 1:
+            raise AgentReadError("source_invalid", "Ambiguous material ID")
+        if not found:
+            return self._result(None, [])
+        entry, relative, token = found[0]
+        return self._result(
+            entry,
+            [
+                self._source(
+                    "overlay",
+                    note_type,
+                    item_id,
+                    entry,
+                    file=relative,
+                    file_sha256=token,
                 )
             ],
         )

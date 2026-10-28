@@ -2621,6 +2621,7 @@ async def list_session_overviews():
     private_items = private_campaign_data_service.session_items()
     if private_items:
         return {
+            "preferred_session_path": settings.dma_session_note_path,
             "source": "private-local",
             "root_path": str(private_campaign_data_service.private_root()),
             "items": [
@@ -2967,6 +2968,7 @@ async def list_dungeon_maps(q: Optional[str] = Query(default=None)):
         canonical_items.append(item)
     if canonical_items:
         return {
+            "preferred_map_id": settings.dma_initial_map_id,
             "root_path": str(root),
             "items": canonical_items,
             "total": len(canonical_items),
@@ -2986,7 +2988,7 @@ async def list_dungeon_maps(q: Optional[str] = Query(default=None)):
         if query and query not in searchable:
             continue
         items.append(_dungeon_map_item(root, path))
-    return {"root_path": str(root), "items": items, "total": len(items)}
+    return {"preferred_map_id": settings.dma_initial_map_id, "root_path": str(root), "items": items, "total": len(items)}
 
 
 def _dungeon_map_item(

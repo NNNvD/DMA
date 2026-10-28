@@ -38,6 +38,16 @@ provides fictional campaign onboarding, durable instructions, and a verified
 MCP connection. W1's full guarded profile now supports separately approved
 staging/review and fresh-session resume, with native Codex interaction evidence.
 Real campaign activation is a separate reviewed operation; W2 session closure is next.
+Before the DM manual, prioritize [guided preparation/debrief, reminders and
+durable scoped feedback](docs/27-guided-agent-workflows-and-feedback.md), then
+verify the local session cycle. Those interaction/learning capabilities are
+planned improvements rather than claims about the current W1 profile.
+An initial [guided operator-runner prototype](docs/28-guided-agent-prototype.md)
+now adds resumable prep/debrief interviews, private note capture and confirmed
+campaign preferences around the restricted W1 agent. It supports fictional fixtures
+and verified private rehearsal copies; the full guided-workflow/manual acceptance
+gate is still open. Follow the [cross-system agent setup](docs/30-agent-cross-system-setup.md)
+when moving development to another computer.
 
 The DMA is *not* meant to replace the DM. It acts as a quiet, knowledgeable assistant that:
 

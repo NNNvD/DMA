@@ -1,4 +1,4 @@
-"""Operator-only approval console, initially restricted to generated W1 fixtures.
+"""Operator-only approval console for fixtures and verified private rehearsal copies.
 
 Uses the backend Python, never the isolated MCP environment. No live paths or
 default .env database are selected automatically. There is no --yes option.
@@ -25,8 +25,47 @@ def fixture_binding(path: Path):
         )
     except (OSError, ValueError) as exc:
         raise ValueError(
-            "Select a generated agent fixture with its onboarding record"
+            "Select an isolated fixture or verified rehearsal with its onboarding record"
         ) from exc
+    rehearsal = onboarding.get("mode") == "private-rehearsal"
+    if rehearsal:
+        root = Path(__file__).resolve().parents[1] / ".codex-temp"
+        ready = json.loads(
+            (path.parent / "REHEARSAL_READY.json").read_text(encoding="utf-8")
+        )
+        sources = (
+            Path(onboarding["source_database"]).resolve(),
+            Path(onboarding["source_private"]).resolve(),
+        )
+        if (
+            onboarding.get("fixture_only") is not False
+            or onboarding.get("publication_enabled") is not False
+            or not path.is_relative_to(root.resolve())
+            or not binding.binding_id.startswith("rehearsal-")
+            or ready.get("identity") != binding.identity
+            or ready.get("source_unchanged") is not True
+            or ready.get("snapshot_verified") is not True
+            or Path(onboarding.get("binding_file", "")).resolve() != path
+            or any(
+                not member.is_relative_to(path.parent)
+                for member in (binding.database, binding.private_root)
+            )
+            or Path(ready["database"]).resolve() != binding.database
+            or Path(ready["private_root"]).resolve() != binding.private_root
+            or Path(ready["source_database"]).resolve() != sources[0]
+            or Path(ready["source_private"]).resolve() != sources[1]
+            or sources[0] == binding.database
+            or sources[1] == binding.private_root
+            or any(source.is_relative_to(path.parent) for source in sources)
+            or any(
+                member.is_relative_to(sources[1])
+                for member in (binding.database, binding.private_root)
+            )
+        ):
+            raise ValueError(
+                "Select a verified isolated private rehearsal; live paths are forbidden"
+            )
+        return binding
     if (
         onboarding.get("fixture_only") is not True
         or Path(onboarding.get("binding_file", "")).resolve() != path
